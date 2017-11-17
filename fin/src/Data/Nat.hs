@@ -1,0 +1,170 @@
+{-# LANGUAGE DeriveDataTypeable #-}
+-- | 'Nat' numbers.
+--
+-- This module is designed to be imported qualified.
+--
+module Data.Nat (
+    -- * Natural, Nat numbers
+    Nat(..),
+    toNatural,
+    fromNatural,
+    cata,
+    -- * Showing
+    explicitShow,
+    explicitShowsPrec,
+    -- * Aliases
+    zero, one, two, three, four, five, six, seven, eight, nine,
+    ) where
+
+import Control.DeepSeq (NFData (..))
+import Data.Data       (Data)
+import Data.Hashable   (Hashable (..))
+import Data.Typeable   (Typeable)
+import GHC.Exception   (ArithException (..), throw)
+import Numeric.Natural (Natural)
+
+-------------------------------------------------------------------------------
+-- Nat
+-------------------------------------------------------------------------------
+
+-- | Nat natural numbers.
+--
+-- Better than GHC's built-in 'GHC.TypeLits.Nat' for some use cases.
+--
+data Nat = Z | S Nat deriving (Eq, Ord, Typeable, Data)
+
+-- | 'Nat' is printed as 'Natural'.
+--
+-- To see explicit structure, use 'explicitShow' or 'explicitShowsPrec'
+--
+instance Show Nat where
+    showsPrec d = showsPrec d . toNatural
+
+instance Num Nat where
+    fromInteger = fromNatural . fromInteger
+
+    Z   + m = m
+    S n + m = S (n + m)
+
+    Z   * _ = Z
+    S n * m = (n * m) + m
+
+    abs = id
+
+    signum Z     = Z
+    signum (S _) = S Z
+
+    negate _ = error "negate @Nat"
+
+instance Real Nat where
+    toRational = toRational . toInteger
+
+instance Integral Nat where
+    toInteger = cata 0 succ
+
+    quotRem _ Z = throw DivideByZero
+    quotRem _ _ = error "un-implemented"
+
+{- TODO: make <= with witness
+instance Ix Nat where
+    range = _
+
+    inRange = _
+-}
+
+instance Enum Nat where
+    toEnum n
+        | n < 0     = throw Underflow
+        | otherwise = iterate S Z !! n
+
+    fromEnum = cata 0 succ
+
+    succ       = S
+    pred Z     = throw Underflow
+    pred (S n) = n
+
+instance NFData Nat where
+    rnf Z     = ()
+    rnf (S n) = rnf n
+
+instance Hashable Nat where
+    hashWithSalt salt = hashWithSalt salt . toInteger
+
+-------------------------------------------------------------------------------
+-- Showing
+-------------------------------------------------------------------------------
+
+-- | 'show' displaying a structure of 'Nat'.
+--
+-- >>> explicitShow 0
+-- "Z"
+--
+-- >>> explicitShow 2
+-- "S (S Z)"
+--
+explicitShow :: Nat -> String
+explicitShow n = explicitShowsPrec 0 n ""
+
+-- | 'showsPrec' displaying a structure of 'Nat'.
+explicitShowsPrec :: Int -> Nat -> ShowS
+explicitShowsPrec _ Z     = showString "Z"
+explicitShowsPrec d (S n) = showParen (d > 10)
+    $ showString "S "
+    . explicitShowsPrec 11 n
+
+-------------------------------------------------------------------------------
+-- Conversions
+-------------------------------------------------------------------------------
+
+-- | Fold 'Nat'.
+--
+-- >>> cata [] ('x' :) 2
+-- "xx"
+--
+cata :: a -> (a -> a) -> Nat -> a
+cata z f = go where
+    go Z     = z
+    go (S n) = f (go n)
+
+-- | Convert 'Nat' to 'Natural'
+--
+-- >>> toNatural 0
+-- 0
+--
+-- >>> toNatural 2
+-- 2
+--
+-- >>> toNatural $ S $ S $ Z
+-- 2
+--
+toNatural :: Nat -> Natural
+toNatural Z = 0
+toNatural (S n) = succ (toNatural n)
+
+-- | Convert 'Natural' to 'Nat'
+--
+-- >>> fromNatural 4
+-- 4
+--
+-- >>> explicitShow (fromNatural 4)
+-- "S (S (S (S Z)))"
+--
+fromNatural :: Natural -> Nat
+fromNatural 0 = Z
+fromNatural n = S (fromNatural (pred n))
+
+-------------------------------------------------------------------------------
+-- Aliases
+-------------------------------------------------------------------------------
+
+zero, one, two, three, four, five, six, seven, eight, nine :: Nat
+zero  = Z
+one   = S zero
+two   = S one
+three = S two
+four  = S three
+five  = S four
+six   = S five
+seven = S six
+eight = S seven
+nine  = S eight

@@ -1,0 +1,7 @@
+packages: fin vec
+
+package fin
+  ghc-options: -Wall
+
+package vec
+  ghc-options: -Wall

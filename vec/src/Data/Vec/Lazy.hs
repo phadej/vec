@@ -1,0 +1,593 @@
+{-# LANGUAGE BangPatterns           #-}
+{-# LANGUAGE CPP                    #-}
+{-# LANGUAGE DataKinds              #-}
+{-# LANGUAGE EmptyCase              #-}
+{-# LANGUAGE FlexibleInstances      #-}
+{-# LANGUAGE FunctionalDependencies #-}
+{-# LANGUAGE GADTs                  #-}
+{-# LANGUAGE KindSignatures         #-}
+{-# LANGUAGE RankNTypes             #-}
+{-# LANGUAGE ScopedTypeVariables    #-}
+{-# LANGUAGE TypeFamilies           #-}
+{-# LANGUAGE UndecidableInstances   #-}
+-- | Lazy length-indexed list: 'Vec'.
+module Data.Vec.Lazy (
+    Vec (..),
+    -- * Construction
+    empty,
+    singleton,
+    withDict,
+    -- * Conversions
+    toPull,
+    fromPull,
+    toList,
+    fromList,
+    fromListPrefix,
+    reifyList,
+    -- * Indexing
+    (!),
+    ix,
+    _Cons,
+    _head,
+    _tail,
+    head,
+    tail,
+    -- * Concatenation and splitting
+    (++),
+    concatMap,
+    concat,
+    split,
+    -- * Folds
+    foldMap,
+    foldMap1,
+    ifoldMap,
+    ifoldMap1,
+    foldr,
+    ifoldr,
+    foldl',
+    -- * Special folds
+    length,
+    null,
+    sum,
+    product,
+    -- * Mapping
+    imap,
+    traverse1,
+    itraverse,
+    itraverse_,
+    -- * Zipping
+    zipWith,
+    izipWith,
+    -- * VecEach
+    VecEach (..),
+    )  where
+
+import Prelude ()
+import Prelude.Compat
+       (Applicative (..), Bool (..), Functor (..), Int, Maybe (..), Monad (..),
+       Monoid (..), Num (..), Ord (..), Show (..), id, seq, showParen,
+       showString, ($), (.), (<$>))
+
+import Control.Lens       ((<&>))
+import Control.DeepSeq    (NFData (..))
+import Data.Boring        (Boring (..))
+import Data.Distributive  (Distributive (..))
+import Data.Fin           (Fin)
+import Data.Functor.Apply (Apply (..))
+import Data.Functor.Bind  (Bind (..))
+import Data.Functor.Rep   (Representable (..), bindRep, distributeRep)
+import Data.Hashable      (Hashable (..))
+import Data.Nat
+import Data.Semigroup     (Semigroup (..))
+
+--- Instances
+import qualified Control.Lens               as I
+import qualified Data.Foldable              as I (Foldable (..))
+import qualified Data.Semigroup.Foldable    as I (Foldable1 (..))
+import qualified Data.Semigroup.Traversable as I (Traversable1 (..))
+import qualified Data.Traversable           as I (Traversable (..))
+
+import qualified Data.Fin      as F
+import qualified Data.Type.Nat as N
+import qualified Data.Vec.Pull as P
+
+infixr 5 :::
+
+-- | Vector, i.e. length-indexed list.
+data Vec (n :: Nat) a where
+    VNil  :: Vec 'Z a
+    (:::) :: a -> Vec n a -> Vec ('S n) a
+
+-------------------------------------------------------------------------------
+-- Instances
+-------------------------------------------------------------------------------
+
+instance Show a => Show (Vec n a) where
+    showsPrec _ VNil       = showString "VNil"
+    showsPrec d (x ::: xs) = showParen (d > 5)
+        $ showsPrec 6 x
+        . showString " ::: "
+        . showsPrec 5 xs
+
+instance Functor (Vec n) where
+    fmap _ VNil       = VNil
+    fmap f (x ::: xs) = f x ::: fmap f xs
+
+instance I.Foldable (Vec n) where
+    foldMap = foldMap
+
+    foldr  = foldr
+    foldl' = foldl'
+
+#if MIN_VERSION_base(4,8,0)
+    null    = null
+    length  = length
+    sum     = sum
+    product = product
+#endif
+
+instance n ~ 'S m => I.Foldable1 (Vec n) where
+    foldMap1 = foldMap1
+
+instance I.Traversable (Vec n) where
+    traverse = traverse
+
+instance n ~ 'S m => I.Traversable1 (Vec n) where
+    traverse1 = traverse1
+
+instance NFData a => NFData (Vec n a) where
+    rnf VNil       = ()
+    rnf (x ::: xs) = rnf x `seq` rnf xs
+
+instance Hashable a => Hashable (Vec n a) where
+    hashWithSalt salt VNil = hashWithSalt salt (0 :: Int)
+    hashWithSalt salt (x ::: xs) = salt
+        `hashWithSalt` x
+        `hashWithSalt` xs
+
+instance N.SNatI n => Applicative (Vec n) where
+    pure x = N.induction1 VNil (x :::)
+    (<*>) = zipWith ($)
+
+instance N.SNatI n => Monad (Vec n) where
+    return = pure
+    (>>=) = bindRep
+
+instance N.SNatI n => Distributive (Vec n) where
+    distribute = distributeRep
+
+instance N.SNatI n => Representable (Vec n) where
+    type Rep (Vec n) = Fin n
+    tabulate = fromPull . tabulate
+    index    = index . toPull
+
+instance Semigroup a => Semigroup (Vec n a) where
+    (<>) = zipWith (<>)
+
+instance (Monoid a, N.SNatI n) => Monoid (Vec n a) where
+    mempty = pure mempty
+    mappend = zipWith mappend
+
+instance n ~ 'N.Z => Boring (Vec n a) where
+    boring = VNil
+
+instance Apply (Vec n) where
+    (<.>) = zipWith ($)
+
+instance N.SNatI n => Bind (Vec n) where
+    (>>-) = bindRep
+
+instance I.FunctorWithIndex (Fin n) (Vec n) where
+    imap = imap
+
+instance I.FoldableWithIndex (Fin n) (Vec n) where
+    ifoldMap = ifoldMap
+    ifoldr   = ifoldr
+
+instance I.TraversableWithIndex (Fin n) (Vec n) where
+    itraverse = itraverse
+
+instance I.Each (Vec n a) (Vec n b) a b where
+    each = traverse
+
+type instance I.Index (Vec n a)   = Fin n
+type instance I.IxValue (Vec n a) = a
+
+-- | 'Vec' doesn't have 'I.At' instance, as we __cannot__ remove value from 'Vec'.
+-- See 'ix' in "Data.Vec.Lazy" module for an 'I.Lens' (not 'I.Traversal').
+instance I.Ixed (Vec n a) where
+    ix = ix
+
+instance I.Field1 (Vec ('S n) a) (Vec ('S n) a) a a where
+    _1 = _head
+
+instance I.Field2 (Vec ('S ('S n)) a) (Vec ('S ('S n)) a) a a where
+    _2 = _tail . _head
+
+-------------------------------------------------------------------------------
+-- Construction
+-------------------------------------------------------------------------------
+
+-- | Empty 'Vec'.
+empty :: Vec 'Z a
+empty = VNil
+
+-- | 'Vec' with exactly one element.
+--
+-- >>> singleton True
+-- True ::: VNil
+--
+singleton :: a -> Vec ('S 'Z) a
+singleton x = x ::: VNil
+
+-- | /O(n)/. Recover 'N.InlineInduction' (and 'N.SNatI') dictionary from a 'Vec' value.
+--
+-- Example: 'N.reflect' is constrained with @'N.SNatI' n@, but if we have a
+-- @'Vec' n a@, we can recover that dictionary:
+--
+-- >>> let f :: forall n a. Vec n a -> N.Nat; f v = withDict v (N.reflect (Proxy :: Proxy n)) in f (True ::: VNil)
+-- 1
+--
+-- /Note:/ using 'N.InlineInduction' will be suboptimal, as if GHC has no
+-- opportunity to optimise the code, the recusion won't be unfold.
+-- How bad such code will perform? I don't know, we'll need benchmarks.
+--
+withDict :: Vec n a -> (N.InlineInduction n => r) -> r
+withDict VNil       r = r
+withDict (_ ::: xs) r = withDict xs r
+
+-------------------------------------------------------------------------------
+-- Conversions
+-------------------------------------------------------------------------------
+
+-- | Convert to pull 'P.Vec'.
+toPull :: Vec n a -> P.Vec n a
+toPull VNil       = P.Vec F.absurd
+toPull (x ::: xs) = P.Vec $ \n -> case n of
+    F.Z   -> x
+    F.S m -> P.unVec (toPull xs) m
+
+-- | Convert from pull 'P.Vec'.
+fromPull :: forall n a. N.SNatI n => P.Vec n a -> Vec n a
+fromPull (P.Vec f) = case N.snat :: N.SNat n of
+    N.SZ -> VNil
+    N.SS -> f F.Z ::: fromPull (P.Vec (f . F.S))
+
+-- | Convert 'Vec' to list.
+--
+-- >>> toList $ 'f' ::: 'o' ::: 'o' ::: VNil
+-- "foo"
+toList :: Vec n a -> [a]
+toList VNil       = []
+toList (x ::: xs) = x : toList xs
+
+-- | Convert list @[a]@ to @'Vec' n a@.
+-- Returns 'Nothing' if lengths don't match exactly.
+--
+-- >>> fromList "foo" :: Maybe (Vec N.Three Char)
+-- Just ('f' ::: 'o' ::: 'o' ::: VNil)
+--
+-- >>> fromList "quux" :: Maybe (Vec N.Three Char)
+-- Nothing
+--
+-- >>> fromList "xy" :: Maybe (Vec N.Three Char)
+-- Nothing
+--
+fromList :: N.SNatI n => [a] -> Maybe (Vec n a)
+fromList = getFromList (N.induction1 start step) where
+    start :: FromList 'Z a
+    start = FromList $ \xs -> case xs of
+        []      -> Just VNil
+        (_ : _) -> Nothing
+
+    step :: FromList n a -> FromList ('N.S n) a
+    step (FromList f) = FromList $ \xs -> case xs of
+        []       -> Nothing
+        (x : xs') -> (x :::) <$> f xs'
+
+newtype FromList n a = FromList { getFromList :: [a] -> Maybe (Vec n a) }
+
+-- | Convert list @[a]@ to @'Vec' n a@.
+-- Returns 'Nothing' if input list is too short.
+--
+-- >>> fromListPrefix "foo" :: Maybe (Vec N.Three Char)
+-- Just ('f' ::: 'o' ::: 'o' ::: VNil)
+--
+-- >>> fromListPrefix "quux" :: Maybe (Vec N.Three Char)
+-- Just ('q' ::: 'u' ::: 'u' ::: VNil)
+--
+-- >>> fromListPrefix "xy" :: Maybe (Vec N.Three Char)
+-- Nothing
+--
+fromListPrefix :: N.SNatI n => [a] -> Maybe (Vec n a)
+fromListPrefix = getFromList (N.induction1 start step) where
+    start :: FromList 'Z a
+    start = FromList $ \_ -> Just VNil -- different than in fromList case
+
+    step :: FromList n a -> FromList ('N.S n) a
+    step (FromList f) = FromList $ \xs -> case xs of
+        []       -> Nothing
+        (x : xs') -> (x :::) <$> f xs'
+
+-- | Reify any list @[a]@ to @'Vec' n a@.
+--
+-- >>> reifyList "foo" length
+-- 3
+reifyList :: [a] -> (forall n. N.InlineInduction n => Vec n a -> r) -> r
+reifyList []       f = f VNil
+reifyList (x : xs) f = reifyList xs $ \xs' -> f (x ::: xs')
+
+-------------------------------------------------------------------------------
+-- Indexing
+-------------------------------------------------------------------------------
+
+-- | Indexing.
+--
+-- >>> ('a' ::: 'b' ::: 'c' ::: VNil) ! F.S F.Z
+-- 'b'
+--
+(!) :: Vec n a -> Fin n -> a
+(!) (x ::: _)  (F.Z)   = x
+(!) (_ ::: xs) (F.S n) = xs ! n
+(!) VNil n = case n of {}
+
+-- | Index lens.
+--
+-- >>> ('a' ::: 'b' ::: 'c' ::: VNil) ^. ix (F.S F.Z)
+-- 'b'
+--
+-- >>> ('a' ::: 'b' ::: 'c' ::: VNil) & ix (F.S F.Z) .~ 'x'
+-- 'a' ::: 'x' ::: 'c' ::: VNil
+--
+ix :: Fin n -> I.Lens' (Vec n a) a
+ix F.Z     f (x ::: xs) = (::: xs) <$> f x
+ix (F.S n) f (x ::: xs) = (x :::)  <$> ix n f xs
+
+-- | Match on non-empty 'Vec'.
+--
+-- /Note:/ @lens@ 'I._Cons' is a 'I.Prism'.
+-- In fact, @'Vec' n a@ cannot have an instance of 'I.Cons' as types don't match.
+--
+_Cons :: I.Iso (Vec ('S n) a) (Vec ('S n) b) (a, Vec n a) (b, Vec n b)
+_Cons = I.iso (\(x ::: xs) -> (x, xs)) (\(x, xs) -> x ::: xs)
+
+-- | Head lens. /Note:/ @lens@ 'I._head' is a 'I.Traversal''.
+--
+-- >>> ('a' ::: 'b' ::: 'c' ::: VNil) ^. _head
+-- 'a'
+--
+-- >>> ('a' ::: 'b' ::: 'c' ::: VNil) & _head .~ 'x'
+-- 'x' ::: 'b' ::: 'c' ::: VNil
+--
+_head :: I.Lens' (Vec ('S n) a) a
+_head = ix F.Z
+
+-- | Head lens. /Note:/ @lens@ 'I._head' is a 'I.Traversal''.
+_tail :: I.Lens' (Vec ('S n) a) (Vec n a)
+_tail f (x ::: xs) = (x :::) <$> f xs
+
+-- | The first element of a 'Vec'.
+head :: Vec ('S n) a -> a
+head (x ::: _) = x
+
+-- | The elements after the 'head' of a 'Vec'.
+tail :: Vec ('S n) a -> Vec n a
+tail (_ ::: xs) = xs
+
+-------------------------------------------------------------------------------
+-- Concatenation
+-------------------------------------------------------------------------------
+
+infixr 5 ++
+
+-- | Append two 'Vec'.
+--
+-- >>> ('a' ::: 'b' ::: VNil) ++ ('c' ::: 'd' ::: VNil)
+-- 'a' ::: 'b' ::: 'c' ::: 'd' ::: VNil
+--
+(++) :: Vec n a -> Vec m a -> Vec (N.Plus n m) a
+VNil       ++ ys = ys
+(x ::: xs) ++ ys = x ::: xs ++ ys
+
+-- | Map over all the elements of a 'Vec' and concatenate the resulting 'Vec's.
+--
+-- >>> concatMap (\x -> x ::: x ::: VNil) ('a' ::: 'b' ::: VNil)
+-- 'a' ::: 'a' ::: 'b' ::: 'b' ::: VNil
+--
+concatMap :: (a -> Vec m b) -> Vec n a -> Vec (N.Mult n m) b
+concatMap _ VNil       = VNil
+concatMap f (x ::: xs) = f x ++ concatMap f xs
+
+-- | @'concatMap' 'id'@
+concat :: Vec n (Vec m a) -> Vec (N.Mult n m) a
+concat = concatMap id
+
+-- | Split vector into two parts
+--
+-- >>> split ('a' ::: 'b' ::: 'c' ::: VNil) :: (Vec N.One Char, Vec N.Two Char)
+-- ('a' ::: VNil,'b' ::: 'c' ::: VNil)
+--
+split :: N.SNatI n => Vec (N.Plus n m) a -> (Vec n a, Vec m a)
+split = appSplit (N.induction1 start step) where
+    start :: Split m 'Z a
+    start = Split $ \xs -> (VNil, xs)
+
+    step :: Split m n a -> Split m ('S n) a
+    step (Split f) = Split $ \(x ::: xs) -> case f xs of
+        (ys, zs) -> (x ::: ys, zs)
+
+newtype Split m n a = Split { appSplit :: Vec (N.Plus n m) a -> (Vec n a, Vec m a) }
+
+-------------------------------------------------------------------------------
+-- Mapping
+-------------------------------------------------------------------------------
+
+-- | >>> imap (,) $ 'a' ::: 'b' ::: 'c' ::: VNil
+-- (0,'a') ::: (1,'b') ::: (2,'c') ::: VNil
+--
+imap :: (Fin n -> a -> b) -> Vec n a -> Vec n b
+imap _ VNil       = VNil
+imap f (x ::: xs) = f F.Z x ::: imap (f . F.S) xs
+
+-- | Apply an action to every element of a 'Vec', yielding a 'Vec' of results.
+traverse :: forall n f a b. Applicative f => (a -> f b) -> Vec n a -> f (Vec n b)
+traverse f = go where
+    go :: Vec m a -> f (Vec m b)
+    go VNil       = pure VNil
+    go (x ::: xs) = (:::) <$> f x <*> go xs
+
+-- | Apply an action to non-empty 'Vec', yielding a 'Vec' of results.
+traverse1 :: forall n f a b. Apply f => (a -> f b) -> Vec ('S n) a -> f (Vec ('S n) b)
+traverse1 f = go where
+    go :: Vec ('S m) a -> f (Vec ('S m) b)
+    go (x ::: VNil)         = (::: VNil) <$> f x
+    go (x ::: xs@(_ ::: _)) = (:::) <$> f x <.> go xs
+
+-- | Apply an action to every element of a 'Vec' and its index, yielding a 'Vec' of results.
+itraverse :: Applicative f => (Fin n -> a -> f b) -> Vec n a -> f (Vec n b)
+itraverse _ VNil       = pure VNil
+itraverse f (x ::: xs) = (:::) <$> f F.Z x <*> I.itraverse (f . F.S) xs
+
+-- | Apply an action to every element of a 'Vec' and its index, ignoring the results.
+itraverse_ :: Applicative f => (Fin n -> a -> f b) -> Vec n a -> f ()
+itraverse_ _ VNil       = pure ()
+itraverse_ f (x ::: xs) = f F.Z x *> itraverse_ (f . F.S) xs
+
+-------------------------------------------------------------------------------
+-- Folding
+-------------------------------------------------------------------------------
+
+-- | See 'I.Foldable'.
+foldMap :: Monoid m => (a -> m) -> Vec n a -> m
+foldMap _ VNil       = mempty
+foldMap f (x ::: xs) = mappend (f x) (foldMap f xs)
+
+-- | See 'I.Foldable1'.
+foldMap1 :: Semigroup s => (a -> s) -> Vec ('S n) a -> s
+foldMap1 f (x ::: VNil)         = f x
+foldMap1 f (x ::: xs@(_ ::: _)) = f x <> foldMap1 f xs
+
+-- | See 'I.FoldableWithIndex'.
+ifoldMap :: Monoid m => (Fin n -> a -> m) -> Vec n a -> m
+ifoldMap _ VNil       = mempty
+ifoldMap f (x ::: xs) = mappend (f F.Z x) (ifoldMap (f . F.S) xs)
+
+-- | There is no type-class for this :(
+ifoldMap1 :: Semigroup s => (Fin ('S n) -> a -> s) -> Vec ('S n) a -> s
+ifoldMap1 f (x ::: VNil)         = f F.Z x
+ifoldMap1 f (x ::: xs@(_ ::: _)) = f F.Z x <> ifoldMap1 (f . F.S) xs
+
+-- | Right fold.
+foldr :: forall a b n. (a -> b -> b) -> b -> Vec n a -> b
+foldr f z = go where
+    go :: Vec m a -> b
+    go VNil       = z
+    go (x ::: xs) = f x (go xs)
+
+-- | Right fold with an index.
+ifoldr :: forall a b n. (Fin n -> a -> b -> b) -> b -> Vec n a -> b
+ifoldr _ z VNil       = z
+ifoldr f z (x ::: xs) = f F.Z x (ifoldr (f . F.S) z xs)
+
+-- | Strict left fold.
+foldl' :: forall a b n. (b -> a -> b) -> b -> Vec n a -> b
+foldl' f z = go z where
+    go :: b -> Vec m a -> b
+    go !acc VNil       = acc
+    go !acc (x ::: xs) = go (f acc x) xs
+
+-- | Yield the length of a 'Vec'. /O(n)/
+length :: Vec n a -> Int
+length VNil = 0
+length (_ ::: xs) = 1 + length xs
+
+-- | Test whether a 'Vec' is empty. /O(1)/
+null :: Vec n a -> Bool
+null VNil      = True
+null (_ ::: _) = False
+
+-------------------------------------------------------------------------------
+-- Special folds
+-------------------------------------------------------------------------------
+
+-- | Non-strict 'sum'.
+sum :: Num a => Vec n a -> a
+sum VNil       = 0
+sum (x ::: xs) = x + sum xs
+
+-- | Non-strict 'product'.
+product :: Num a => Vec n a -> a
+product VNil       = 1
+product (x ::: xs) = x * sum xs
+
+-------------------------------------------------------------------------------
+-- Zipping
+-------------------------------------------------------------------------------
+
+-- | Zip two 'Vec's with a function.
+zipWith ::  (a -> b -> c) -> Vec n a -> Vec n b -> Vec n c
+zipWith _ VNil       VNil       = VNil
+zipWith f (x ::: xs) (y ::: ys) = f x y ::: zipWith f xs ys
+
+-- | Zip two 'Vec's. with a function that also takes the elements' indices.
+izipWith :: (Fin n -> a -> b -> c) -> Vec n a -> Vec n b -> Vec n c
+izipWith _ VNil       VNil       = VNil
+izipWith f (x ::: xs) (y ::: ys) = f F.Z x y ::: izipWith (f . F.S) xs ys
+
+-------------------------------------------------------------------------------
+-- VecEach
+-------------------------------------------------------------------------------
+
+-- | Write functions on 'Vec'. Use them with tuples.
+--
+-- 'VecEach' can be used to avoid "this function won't change the length of the
+-- list" in DSLs.
+--
+-- __bad:__ Instead of
+--
+-- @
+-- [x, y] <- badDslMagic ["foo", "bar"]  -- list!
+-- @
+--
+-- __good:__ we can write
+--
+-- @
+-- (x, y) <- betterDslMagic ("foo", "bar") -- homogenic tuple!
+-- @
+--
+-- where @betterDslMagic@ can be defined using 'traverseWithVec'.
+--
+class I.Each s t a b => VecEach s t a b | s -> a, t -> b, s b -> t, t a -> s where
+    mapWithVec :: (forall n. N.InlineInduction n => Vec n a -> Vec n b) -> s -> t
+    traverseWithVec :: Applicative f => (forall n. N.InlineInduction n => Vec n a -> f (Vec n b)) -> s -> f t
+
+instance (a ~ a', b ~ b') => VecEach (a, a') (b, b') a b where
+    mapWithVec f ~(x, y) = case f (x ::: y ::: VNil) of
+        x' ::: y' ::: VNil -> (x', y')
+
+    traverseWithVec f ~(x, y) = f (x ::: y ::: VNil) <&> \res -> case res of
+        x' ::: y' ::: VNil -> (x', y')
+
+instance (a ~ a2, a ~ a3, b ~ b2, b ~ b3) => VecEach (a, a2, a3) (b, b2, b3) a b where
+    mapWithVec f ~(x, y, z) = case f (x ::: y ::: z ::: VNil) of
+        x' ::: y' ::: z' ::: VNil -> (x', y', z')
+
+    traverseWithVec f ~(x, y, z) = f (x ::: y ::: z ::: VNil) <&> \res -> case res of
+        x' ::: y' ::: z' ::: VNil -> (x', y', z')
+
+instance (a ~ a2, a ~ a3, a ~ a4, b ~ b2, b ~ b3, b ~ b4) => VecEach (a, a2, a3, a4) (b, b2, b3, b4) a b where
+    mapWithVec f ~(x, y, z, u) = case f (x ::: y ::: z ::: u ::: VNil) of
+        x' ::: y' ::: z' ::: u' ::: VNil -> (x', y', z', u')
+
+    traverseWithVec f ~(x, y, z, u) = f (x ::: y ::: z ::: u ::: VNil) <&> \res -> case res of
+        x' ::: y' ::: z' ::: u' ::: VNil -> (x', y', z', u')
+
+-------------------------------------------------------------------------------
+-- Doctest
+-------------------------------------------------------------------------------
+
+-- $setup
+-- >>> :set -XScopedTypeVariables
+-- >>> import Control.Lens ((^.), (&), (.~))
+-- >>> import Data.Proxy (Proxy (..))
+-- >>> import Prelude.Compat (Char)
