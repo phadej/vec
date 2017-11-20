@@ -39,6 +39,9 @@ module Data.Type.Nat (
     -- * Arithmetic
     Plus,
     Mult,
+    -- * Conversion to GHC Nat
+    ToGHC,
+    FromGHC,
     -- * Aliases
     -- ** Nat
     nat0, nat1, nat2, nat3, nat4, nat5, nat6, nat7, nat8, nat9,
@@ -57,6 +60,8 @@ import Data.Nat
 import Data.Proxy         (Proxy (..))
 import Data.Type.Equality
 import Numeric.Natural    (Natural)
+
+import qualified GHC.TypeLits as GHC
 
 -------------------------------------------------------------------------------
 -- SNat
@@ -213,6 +218,30 @@ inlineInduction z f = unConst' $ inlineInduction1 (Const' z) (Const' . f . unCon
 newtype Const' (f :: Nat -> *) (n :: Nat) a = Const' { unConst' :: f n }
 
 -------------------------------------------------------------------------------
+-- Conversion to GHC Nat
+-------------------------------------------------------------------------------
+
+-- | Convert to GHC 'GHC.Nat'.
+--
+-- >>> :kind! ToGHC Nat5
+-- ToGHC Nat5 :: GHC.Nat
+-- = 5
+--
+type family ToGHC (n :: Nat) :: GHC.Nat where
+    ToGHC 'Z     = 0
+    ToGHC ('S n) = 1 GHC.+ ToGHC n
+
+-- | Convert from GHC 'GHC.Nat'.
+--
+-- >>> :kind! FromGHC 7
+-- FromGHC 7 :: Nat
+-- = 'S ('S ('S ('S ('S ('S ('S 'Z))))))
+--
+type family FromGHC (n :: GHC.Nat) :: Nat where
+    FromGHC 0 = 'Z
+    FromGHC n = 'S (FromGHC (n GHC.- 1))
+
+-------------------------------------------------------------------------------
 -- Arithmetic
 -------------------------------------------------------------------------------
 
@@ -309,4 +338,4 @@ retagMap :: (a -> b) -> Tagged n a -> Tagged m b
 retagMap f = Tagged . f . unTagged
 
 -- $setup
--- >>> :set -XTypeOperators
+-- >>> :set -XTypeOperators -XDataKinds
