@@ -276,9 +276,15 @@ tail (Vec v) = Vec (v . F.S)
 -- Mapping
 -------------------------------------------------------------------------------
 
+-- | >>> over L._Pull (map not) (True L.::: False L.::: L.VNil)
+-- False ::: True ::: VNil
+--
 map :: (a -> b) -> Vec n a -> Vec n b
 map f (Vec v) = Vec (f . v)
 
+-- | >>> over L._Pull (imap (,)) ('a' L.::: 'b' L.::: 'c' L.::: L.VNil)
+-- (0,'a') ::: (1,'b') ::: (2,'c') ::: VNil
+--
 imap :: (Fin n -> a -> b) -> Vec n a -> Vec n b
 imap f (Vec v) = Vec $ \i -> f i (v i)
 
@@ -354,7 +360,7 @@ izipWith f (Vec xs) (Vec ys) = Vec $ \i -> f i (xs i) (ys i)
 
 -- $setup
 -- >>> :set -XScopedTypeVariables
--- >>> import Control.Lens ((^.), (&), (.~))
+-- >>> import Control.Lens ((^.), (&), (.~), over)
 -- >>> import Data.Proxy (Proxy (..))
--- >>> import Prelude.Compat (Char)
+-- >>> import Prelude.Compat (Char, Bool (..), not)
 -- >>> import qualified Data.Vec.Lazy as L

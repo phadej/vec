@@ -97,6 +97,15 @@ test-suite inspection
   if !impl(ghc >= 8.0)
     buildable: False
 
+  -- useful for development
+  ghc-options:
+    -- -dsuppress-idinfo
+    -- -dsuppress-coercions
+    -- -dsuppress-type-applications
+    -- -dsuppress-module-prefixes
+    -- -dsuppress-type-signatures
+    -- -dsuppress-uniques
+
 benchmark bench
   type:                exitcode-stdio-1.0
   main-is:             Bench.hs
