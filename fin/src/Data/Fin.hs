@@ -272,7 +272,9 @@ instance one ~ N.One => Boring (Fin z) where
 -- Aliases
 -------------------------------------------------------------------------------
 
+-- | We start counting from zero.
 zeroth  :: Fin (N.Plus N.Zero  ('N.S n))
+
 first   :: Fin (N.Plus N.One   ('N.S n))
 second  :: Fin (N.Plus N.Two   ('N.S n))
 third   :: Fin (N.Plus N.Three ('N.S n))
