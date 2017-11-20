@@ -16,11 +16,11 @@ import qualified Data.Type.Nat as N
 
 -- | This doesn't evaluate compile time.
 lhsInline :: Int
-lhsInline = unTagged (N.inlineInduction1 (pure 0) (retag . fmap succ) :: Tagged N.Five Int)
+lhsInline = unTagged (N.inlineInduction1 (pure 0) (retag . fmap succ) :: Tagged N.Nat5 Int)
 
 -- | This doesn't evaluate compile time.
 lhsNormal :: Int
-lhsNormal = unTagged (N.induction1 (pure 0) (retag . fmap succ) :: Tagged N.Five Int)
+lhsNormal = unTagged (N.induction1 (pure 0) (retag . fmap succ) :: Tagged N.Nat5 Int)
 
 rhs :: Int
 rhs = 5
@@ -35,10 +35,10 @@ inspect $ 'lhsNormal =/= 'rhs
 {-
 -- inspection testing isn't smart enough here.
 
-lhsEnum :: Ordering -> F.Fin N.Three
+lhsEnum :: Ordering -> F.Fin N.Nat3
 lhsEnum = E.gfrom
 
-rhsEnum :: Ordering -> F.Fin N.Three
+rhsEnum :: Ordering -> F.Fin N.Nat3
 rhsEnum LT = F.Z
 rhsEnum EQ = F.S F.Z
 rhsEnum GT = F.S (F.S F.Z)

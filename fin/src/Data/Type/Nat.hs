@@ -39,11 +39,14 @@ module Data.Type.Nat (
     -- * Arithmetic
     Plus,
     Mult,
+    -- * Conversion to GHC Nat
+    ToGHC,
+    FromGHC,
     -- * Aliases
     -- ** Nat
-    zero, one, two, three, four, five, six, seven, eight, nine,
+    nat0, nat1, nat2, nat3, nat4, nat5, nat6, nat7, nat8, nat9,
     -- ** promoted Nat
-    Zero, One, Two, Three, Four, Five, Six, Seven, Eight, Nine,
+    Nat0, Nat1, Nat2, Nat3, Nat4, Nat5, Nat6, Nat7, Nat8, Nat9,
     -- * Proofs
     proofPlusZeroN,
     proofPlusNZero,
@@ -57,6 +60,8 @@ import Data.Nat
 import Data.Proxy         (Proxy (..))
 import Data.Type.Equality
 import Numeric.Natural    (Natural)
+
+import qualified GHC.TypeLits as GHC
 
 -------------------------------------------------------------------------------
 -- SNat
@@ -84,7 +89,7 @@ reflectToNum _ = unTagged (induction1 (Tagged 0) (retagMap (1+)) :: Tagged n m)
 
 -- | Reify 'Nat'.
 --
--- >>> reify three reflect
+-- >>> reify nat3 reflect
 -- 3
 reify :: forall r. Nat -> (forall n. SNatI n => Proxy n -> r) -> r
 reify Z     f = f (Proxy :: Proxy 'Z)
@@ -92,7 +97,7 @@ reify (S n) f =  reify n (\(_p :: Proxy n) -> f (Proxy :: Proxy ('S n)))
 
 -- | Convert 'SNat' to 'Nat'.
 --
--- >>> snatToNat (snat :: SNat One)
+-- >>> snatToNat (snat :: SNat Nat1)
 -- 1
 --
 snatToNat :: forall n. SNat n -> Nat
@@ -101,10 +106,10 @@ snatToNat SS = unTagged (induction1 (Tagged Z) (retagMap S) :: Tagged n Nat)
 
 -- | Convert 'SNat' to 'Natural'
 --
--- >>> snatToNatural (snat :: SNat Zero)
+-- >>> snatToNatural (snat :: SNat Nat0)
 -- 0
 --
--- >>> snatToNatural (snat :: SNat Two)
+-- >>> snatToNatural (snat :: SNat Nat2)
 -- 2
 --
 snatToNatural :: forall n. SNat n -> Natural
@@ -117,10 +122,10 @@ snatToNatural SS = unTagged (induction1 (Tagged 0) (retagMap succ) :: Tagged n N
 
 -- | Decide equality of type-level numbers.
 --
--- >>> eqNat :: Maybe (Three :~: Plus One Two)
+-- >>> eqNat :: Maybe (Nat3 :~: Plus Nat1 Nat2)
 -- Just Refl
 --
--- >>> eqNat :: Maybe (Three :~: Mult Two Two)
+-- >>> eqNat :: Maybe (Nat3 :~: Mult Nat2 Nat2)
 -- Nothing
 --
 eqNat :: forall n m. (SNatI n, SNatI m) => Maybe (n :~: m)
@@ -162,7 +167,7 @@ type instance n == m = EqNat n m
 
 -- | Induction on 'Nat', functor form. Useful for computation.
 --
--- >>> induction1 (Tagged 0) $ retagMap (+2) :: Tagged Three Int
+-- >>> induction1 (Tagged 0) $ retagMap (+2) :: Tagged Nat3 Int
 -- Tagged 6
 --
 induction1
@@ -213,12 +218,36 @@ inlineInduction z f = unConst' $ inlineInduction1 (Const' z) (Const' . f . unCon
 newtype Const' (f :: Nat -> *) (n :: Nat) a = Const' { unConst' :: f n }
 
 -------------------------------------------------------------------------------
+-- Conversion to GHC Nat
+-------------------------------------------------------------------------------
+
+-- | Convert to GHC 'GHC.Nat'.
+--
+-- >>> :kind! ToGHC Nat5
+-- ToGHC Nat5 :: GHC.Nat
+-- = 5
+--
+type family ToGHC (n :: Nat) :: GHC.Nat where
+    ToGHC 'Z     = 0
+    ToGHC ('S n) = 1 GHC.+ ToGHC n
+
+-- | Convert from GHC 'GHC.Nat'.
+--
+-- >>> :kind! FromGHC 7
+-- FromGHC 7 :: Nat
+-- = 'S ('S ('S ('S ('S ('S ('S 'Z))))))
+--
+type family FromGHC (n :: GHC.Nat) :: Nat where
+    FromGHC 0 = 'Z
+    FromGHC n = 'S (FromGHC (n GHC.- 1))
+
+-------------------------------------------------------------------------------
 -- Arithmetic
 -------------------------------------------------------------------------------
 
 -- | Addition.
 --
--- >>> reflect (snat :: SNat (Plus One Two))
+-- >>> reflect (snat :: SNat (Plus Nat1 Nat2))
 -- 3
 type family Plus (n :: Nat) (m :: Nat) :: Nat where
     Plus 'Z     m = m
@@ -226,7 +255,7 @@ type family Plus (n :: Nat) (m :: Nat) :: Nat where
 
 -- | Multiplication.
 --
--- >>> reflect (snat :: SNat (Mult Two Three))
+-- >>> reflect (snat :: SNat (Mult Nat2 Nat3))
 -- 6
 type family Mult (n :: Nat) (m :: Nat) :: Nat where
     Mult 'Z     m = 'Z
@@ -236,60 +265,60 @@ type family Mult (n :: Nat) (m :: Nat) :: Nat where
 -- Aliases
 -------------------------------------------------------------------------------
 
-type Zero   = 'Z
-type One    = 'S Zero
-type Two    = 'S One
-type Three  = 'S Two
-type Four   = 'S Three
-type Five   = 'S Four
-type Six    = 'S Five
-type Seven  = 'S Six
-type Eight  = 'S Seven
-type Nine   = 'S Eight
+type Nat0  = 'Z
+type Nat1  = 'S Nat0
+type Nat2  = 'S Nat1
+type Nat3  = 'S Nat2
+type Nat4  = 'S Nat3
+type Nat5  = 'S Nat4
+type Nat6  = 'S Nat5
+type Nat7  = 'S Nat6
+type Nat8  = 'S Nat7
+type Nat9  = 'S Nat8
 
 -------------------------------------------------------------------------------
 -- proofs
 -------------------------------------------------------------------------------
 
 -- | @0 + n = n@
-proofPlusZeroN :: Plus Zero n :~: n
+proofPlusZeroN :: Plus Nat0 n :~: n
 proofPlusZeroN = Refl
 
 -- | @n + 0 = n@
-proofPlusNZero :: SNatI n => Plus n Zero :~: n
+proofPlusNZero :: SNatI n => Plus n Nat0 :~: n
 proofPlusNZero = getProofPlusNZero $ induction (ProofPlusNZero Refl) step where
     step :: forall m. ProofPlusNZero m -> ProofPlusNZero ('S m)
     step (ProofPlusNZero Refl) = ProofPlusNZero Refl
 
-newtype ProofPlusNZero n = ProofPlusNZero { getProofPlusNZero :: Plus n Zero :~: n }
+newtype ProofPlusNZero n = ProofPlusNZero { getProofPlusNZero :: Plus n Nat0 :~: n }
 
 -- TODO: plusAssoc
 
 -- | @0 * n = 0@
-proofMultZeroN :: Mult Zero n :~: Zero
+proofMultZeroN :: Mult Nat0 n :~: Nat0
 proofMultZeroN = Refl
 
 -- | @n * 0 = n@
-proofMultNZero :: forall n. SNatI n => Proxy n -> Mult n Zero :~: Zero
+proofMultNZero :: forall n. SNatI n => Proxy n -> Mult n Nat0 :~: Nat0
 proofMultNZero _ =
     getProofMultNZero (induction (ProofMultNZero Refl) step :: ProofMultNZero n)
   where
     step :: forall m. ProofMultNZero m -> ProofMultNZero ('S m)
     step (ProofMultNZero Refl) = ProofMultNZero Refl
 
-newtype ProofMultNZero n = ProofMultNZero { getProofMultNZero :: Mult n Zero :~: Zero }
+newtype ProofMultNZero n = ProofMultNZero { getProofMultNZero :: Mult n Nat0 :~: Nat0 }
 
 -- | @1 * n = n@
-proofMultOneN :: SNatI n => Mult One n :~: n
+proofMultOneN :: SNatI n => Mult Nat1 n :~: n
 proofMultOneN = proofPlusNZero
 
 -- | @n * 1 = n@
-proofMultNOne :: SNatI n => Mult n One :~: n
+proofMultNOne :: SNatI n => Mult n Nat1 :~: n
 proofMultNOne = getProofMultNOne $ induction (ProofMultNOne Refl) step where
     step :: forall m. ProofMultNOne m -> ProofMultNOne ('S m)
     step (ProofMultNOne Refl) = ProofMultNOne Refl
 
-newtype ProofMultNOne n = ProofMultNOne { getProofMultNOne :: Mult n One :~: n }
+newtype ProofMultNOne n = ProofMultNOne { getProofMultNOne :: Mult n Nat1 :~: n }
 
 -- TODO: multAssoc
 
@@ -309,4 +338,4 @@ retagMap :: (a -> b) -> Tagged n a -> Tagged m b
 retagMap f = Tagged . f . unTagged
 
 -- $setup
--- >>> :set -XTypeOperators
+-- >>> :set -XTypeOperators -XDataKinds

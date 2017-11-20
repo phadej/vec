@@ -29,7 +29,7 @@ module Data.Fin (
     absurd,
     boring,
     -- * Aliases
-    zeroth, first, second, third, fourth, fifth, sixth, seventh, eighth, ninth,
+    fin0, fin1, fin2, fin3, fin4, fin5, fin6, fin7, fin8, fin9,
     ) where
 
 import Control.DeepSeq    (NFData (..))
@@ -64,26 +64,31 @@ instance Show (Fin n) where
 
 -- | Operations module @n@.
 --
--- >>> map fromInteger [0, 1, 2, 3, 4, -5] :: [Fin N.Three]
+-- >>> map fromInteger [0, 1, 2, 3, 4, -5] :: [Fin N.Nat3]
 -- [0,1,2,0,1,1]
 --
--- >>> fromInteger 42 :: Fin N.Zero
+-- >>> fromInteger 42 :: Fin N.Nat0
 -- *** Exception: divide by zero
 -- ...
 --
--- >>> signum (Z :: Fin N.One)
--- *** Exception: signum @(Fin n): not implemented
--- ...
+-- >>> signum (Z :: Fin N.Nat1)
+-- 0
 --
--- >>> 2 + 3 :: Fin N.Four
+-- >>> signum (3 :: Fin N.Nat4)
 -- 1
 --
--- >>> 2 * 3 :: Fin N.Four
+-- >>> 2 + 3 :: Fin N.Nat4
+-- 1
+--
+-- >>> 2 * 3 :: Fin N.Nat4
 -- 2
 --
 instance N.SNatI n => Num (Fin n) where
     abs = id
-    signum = error "signum @(Fin n): not implemented"
+
+    signum Z         = Z
+    signum (S Z)     = S Z
+    signum (S (S _)) = S Z
 
     fromInteger = unsafeFromNum . (`mod` (N.reflectToNum (Proxy :: Proxy n)))
 
@@ -107,10 +112,10 @@ instance N.SNatI n => Integral (Fin n) where
 --
 -- Works for @'Fin' n@ where @n@ is coprime with an argument, i.e. in general when @n@ is prime.
 --
--- >>> map inverse universe :: [Fin N.Five]
+-- >>> map inverse universe :: [Fin N.Nat5]
 -- [0,1,3,2,4]
 --
--- >>> zipWith (*) universe (map inverse universe) :: [Fin N.Five]
+-- >>> zipWith (*) universe (map inverse universe) :: [Fin N.Nat5]
 -- [0,1,1,1,1]
 --
 -- Adaptation of [pseudo-code in Wikipedia](https://en.wikipedia.org/wiki/Extended_Euclidean_algorithm#Modular_integers)
@@ -155,10 +160,10 @@ instance Hashable (Fin n) where
 
 -- | 'show' displaying a structure of 'Fin'.
 --
--- >>> explicitShow (0 :: Fin N.One)
+-- >>> explicitShow (0 :: Fin N.Nat1)
 -- "Z"
 --
--- >>> explicitShow (2 :: Fin N.Three)
+-- >>> explicitShow (2 :: Fin N.Nat3)
 -- "S (S Z)"
 --
 explicitShow :: Fin n -> String
@@ -188,10 +193,10 @@ toNat = cata N.Z N.S
 
 -- | Convert from 'Nat'.
 --
--- >>> fromNat N.one :: Maybe (Fin N.Two)
+-- >>> fromNat N.nat1 :: Maybe (Fin N.Nat2)
 -- Just 1
 --
--- >>> fromNat N.one :: Maybe (Fin N.One)
+-- >>> fromNat N.nat1 :: Maybe (Fin N.Nat1)
 -- Nothing
 --
 fromNat :: N.SNatI n => N.Nat -> Maybe (Fin n)
@@ -231,9 +236,9 @@ newtype UnsafeFromNum i n = UnsafeFromNum { appUnsafeFromNum :: i -> Fin n }
 -- "Interesting" stuff
 -------------------------------------------------------------------------------
 
--- | All values. @[minBound .. maxBound]@ won't work for @'Fin' 'N.Zero'@.
+-- | All values. @[minBound .. maxBound]@ won't work for @'Fin' 'N.Nat0'@.
 --
--- >>> universe :: [Fin N.Three]
+-- >>> universe :: [Fin N.Nat3]
 -- [0,1,2]
 universe :: N.SNatI n => [Fin n]
 universe = getUniverse $ N.induction (Universe []) step where
@@ -242,7 +247,7 @@ universe = getUniverse $ N.induction (Universe []) step where
 
 -- | Like 'universe' but 'NonEmpty'.
 --
--- >>> universe1 :: NonEmpty (Fin N.Three)
+-- >>> universe1 :: NonEmpty (Fin N.Nat3)
 -- 0 :| [1,2]
 universe1 :: N.SNatI n => NonEmpty (Fin ('N.S n))
 universe1 = getUniverse1 $ N.induction (Universe1 (Z :| [])) step where
@@ -251,14 +256,14 @@ universe1 = getUniverse1 $ N.induction (Universe1 (Z :| [])) step where
 
 -- | 'universe' which will be fully inlined, if @n@ is known at compile time.
 --
--- >>> inlineUniverse :: [Fin N.Three]
+-- >>> inlineUniverse :: [Fin N.Nat3]
 -- [0,1,2]
 inlineUniverse :: N.InlineInduction n => [Fin n]
 inlineUniverse = getUniverse $ N.inlineInduction (Universe []) step where
     step :: Universe n -> Universe ('N.S n)
     step (Universe xs) = Universe (Z : map S xs)
 
--- | >>> inlineUniverse1 :: NonEmpty (Fin N.Three)
+-- | >>> inlineUniverse1 :: NonEmpty (Fin N.Nat3)
 -- 0 :| [1,2]
 inlineUniverse1 :: N.InlineInduction n => NonEmpty (Fin ('N.S n))
 inlineUniverse1 = getUniverse1 $ N.inlineInduction (Universe1 (Z :| [])) step where
@@ -268,51 +273,39 @@ inlineUniverse1 = getUniverse1 $ N.inlineInduction (Universe1 (Z :| [])) step wh
 newtype Universe  n = Universe  { getUniverse  :: [Fin n] }
 newtype Universe1 n = Universe1 { getUniverse1 :: NonEmpty (Fin ('N.S n)) }
 
--- | @'Fin' 'N.Zero'@ is inhabited.
-absurd :: Fin N.Zero -> b
+-- | @'Fin' 'N.Nat0'@ is inhabited.
+absurd :: Fin N.Nat0 -> b
 absurd n = case n of {}
 
 -- | Counting to one is boring.
 --
 -- >>> boring
 -- 0
-boring :: Fin N.One
+boring :: Fin N.Nat1
 boring = Z
-
-{-
-import Data.Boring (Boring (..), Absurd (..))
-
-instance z ~ N.Zero => Absurd (Fin z) where
-    absurd n = case n of {}
-
-instance one ~ N.One => Boring (Fin z) where
-    boring = Z
--}
 
 -------------------------------------------------------------------------------
 -- Aliases
 -------------------------------------------------------------------------------
 
--- | We start counting from zero.
-zeroth  :: Fin (N.Plus N.Zero  ('N.S n))
+fin0 :: Fin (N.Plus N.Nat0 ('N.S n))
+fin1 :: Fin (N.Plus N.Nat1 ('N.S n))
+fin2 :: Fin (N.Plus N.Nat2 ('N.S n))
+fin3 :: Fin (N.Plus N.Nat3 ('N.S n))
+fin4 :: Fin (N.Plus N.Nat4 ('N.S n))
+fin5 :: Fin (N.Plus N.Nat5 ('N.S n))
+fin6 :: Fin (N.Plus N.Nat6 ('N.S n))
+fin7 :: Fin (N.Plus N.Nat7 ('N.S n))
+fin8 :: Fin (N.Plus N.Nat8 ('N.S n))
+fin9 :: Fin (N.Plus N.Nat9 ('N.S n))
 
-first   :: Fin (N.Plus N.One   ('N.S n))
-second  :: Fin (N.Plus N.Two   ('N.S n))
-third   :: Fin (N.Plus N.Three ('N.S n))
-fourth  :: Fin (N.Plus N.Four  ('N.S n))
-fifth   :: Fin (N.Plus N.Five  ('N.S n))
-sixth   :: Fin (N.Plus N.Six   ('N.S n))
-seventh :: Fin (N.Plus N.Seven ('N.S n))
-eighth  :: Fin (N.Plus N.Eight ('N.S n))
-ninth   :: Fin (N.Plus N.Nine  ('N.S n))
-
-zeroth  = Z
-first   = S zeroth
-second  = S first
-third   = S second
-fourth  = S third
-fifth   = S fourth
-sixth   = S fifth
-seventh = S sixth
-eighth  = S seventh
-ninth   = S eighth
+fin0 = Z
+fin1 = S fin0
+fin2 = S fin1
+fin3 = S fin2
+fin4 = S fin3
+fin5 = S fin4
+fin6 = S fin5
+fin7 = S fin6
+fin8 = S fin7
+fin9 = S fin8

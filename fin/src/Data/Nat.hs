@@ -13,7 +13,7 @@ module Data.Nat (
     explicitShow,
     explicitShowsPrec,
     -- * Aliases
-    zero, one, two, three, four, five, six, seven, eight, nine,
+    nat0, nat1, nat2, nat3, nat4, nat5, nat6, nat7, nat8, nat9,
     ) where
 
 import Control.DeepSeq (NFData (..))
@@ -157,14 +157,14 @@ fromNatural n = S (fromNatural (pred n))
 -- Aliases
 -------------------------------------------------------------------------------
 
-zero, one, two, three, four, five, six, seven, eight, nine :: Nat
-zero  = Z
-one   = S zero
-two   = S one
-three = S two
-four  = S three
-five  = S four
-six   = S five
-seven = S six
-eight = S seven
-nine  = S eight
+nat0, nat1, nat2, nat3, nat4, nat5, nat6, nat7, nat8, nat9 :: Nat
+nat0 = Z
+nat1 = S nat0
+nat2 = S nat1
+nat3 = S nat2
+nat4 = S nat3
+nat5 = S nat4
+nat6 = S nat5
+nat7 = S nat6
+nat8 = S nat7
+nat9 = S nat8

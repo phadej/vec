@@ -18,20 +18,20 @@ import qualified Data.Vec.Lazy.Inline as I
 -------------------------------------------------------------------------------
 
 -- | This doesn't evaluate compile time.
-lhsInline :: Vec N.Two Int
+lhsInline :: Vec N.Nat2 Int
 lhsInline = I.zipWith (+) xs ys
 
 -- | This doesn't evaluate compile time.
-lhsNormal :: Vec N.Two Int
+lhsNormal :: Vec N.Nat2 Int
 lhsNormal = L.zipWith (+) xs ys
 
-xs :: Vec N.Two Int
+xs :: Vec N.Nat2 Int
 xs = 1 ::: 2 ::: VNil
 
-ys :: Vec N.Two Int
+ys :: Vec N.Nat2 Int
 ys = 2 ::: 3 ::: VNil
 
-rhsZipWith :: Vec N.Two Int
+rhsZipWith :: Vec N.Nat2 Int
 rhsZipWith = 3 ::: 5 ::: VNil
 
 inspect $ 'lhsInline === 'rhsZipWith
@@ -41,13 +41,13 @@ inspect $ 'lhsNormal =/= 'rhsZipWith
 -- imap
 -------------------------------------------------------------------------------
 
-lhsIMap :: Vec N.Two (F.Fin N.Two, Char)
+lhsIMap :: Vec N.Nat2 (F.Fin N.Nat2, Char)
 lhsIMap = I.imap (,) $ 'a' ::: 'b' ::: VNil
 
-lhsIMap' :: Vec N.Two (F.Fin N.Two, Char)
+lhsIMap' :: Vec N.Nat2 (F.Fin N.Nat2, Char)
 lhsIMap' = L.imap (,) $ 'a' ::: 'b' ::: VNil
 
-rhsIMap :: Vec N.Two (F.Fin N.Two, Char)
+rhsIMap :: Vec N.Nat2 (F.Fin N.Nat2, Char)
 rhsIMap = (F.Z,'a') ::: (F.S F.Z,'b') ::: VNil
 
 inspect $ 'lhsIMap  === 'rhsIMap
@@ -61,10 +61,10 @@ inspect $ 'lhsIMap' =/= 'rhsIMap
  -- TODO: for this example LHS produces better core :O
  -- though, inlining isn't done if element is Num a => a
  --
-lhsDotProduct :: Vec N.Two Int -> Vec N.Two Int -> Int
+lhsDotProduct :: Vec N.Nat2 Int -> Vec N.Nat2 Int -> Int
 lhsDotProduct xs ys = I.sum (I.zipWith (+) xs ys)
 
-rhsDotProduct :: Vec N.Two Int -> Vec N.Two Int -> Int
+rhsDotProduct :: Vec N.Nat2 Int -> Vec N.Nat2 Int -> Int
 rhsDotProduct (x0 ::: x1 ::: _) (y0 ::: y1 ::: _) =
     x0 * y0 + x1 * y1
 
@@ -75,13 +75,13 @@ inspect $ 'lhsDotProduct === 'rhsDotProduct
 -- join
 -------------------------------------------------------------------------------
 
-lhsJoin :: Vec N.Two Char
+lhsJoin :: Vec N.Nat2 Char
 lhsJoin = I.join $ ('a' ::: 'b' ::: VNil) ::: ('c' ::: 'd' ::: VNil) ::: VNil
 
-lhsJoin' :: Vec N.Two Char
+lhsJoin' :: Vec N.Nat2 Char
 lhsJoin' = L.join $ ('a' ::: 'b' ::: VNil) ::: ('c' ::: 'd' ::: VNil) ::: VNil
 
-rhsJoin :: Vec N.Two Char
+rhsJoin :: Vec N.Nat2 Char
 rhsJoin = 'a' ::: 'd' ::: VNil
 
 inspect $ 'lhsJoin  === 'rhsJoin

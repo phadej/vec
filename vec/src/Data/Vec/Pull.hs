@@ -171,13 +171,13 @@ toList v = unVec v <$> F.universe
 -- | Convert list @[a]@ to @'Vec' n a@.
 -- Returns 'Nothing' if lengths don't match exactly.
 --
--- >>> L.fromPull <$> fromList "foo" :: Maybe (L.Vec N.Three Char)
+-- >>> L.fromPull <$> fromList "foo" :: Maybe (L.Vec N.Nat3 Char)
 -- Just ('f' ::: 'o' ::: 'o' ::: VNil)
 --
--- >>> L.fromPull <$> fromList "quux" :: Maybe (L.Vec N.Three Char)
+-- >>> L.fromPull <$> fromList "quux" :: Maybe (L.Vec N.Nat3 Char)
 -- Nothing
 --
--- >>> L.fromPull <$> fromList "xy" :: Maybe (L.Vec N.Three Char)
+-- >>> L.fromPull <$> fromList "xy" :: Maybe (L.Vec N.Nat3 Char)
 -- Nothing
 --
 fromList :: N.SNatI n => [a] -> Maybe (Vec n a)
@@ -201,13 +201,13 @@ _Vec = I.prism' toList fromList
 -- | Convert list @[a]@ to @'Vec' n a@.
 -- Returns 'Nothing' if input list is too short.
 --
--- >>> L.fromPull <$> fromListPrefix "foo" :: Maybe (L.Vec N.Three Char)
+-- >>> L.fromPull <$> fromListPrefix "foo" :: Maybe (L.Vec N.Nat3 Char)
 -- Just ('f' ::: 'o' ::: 'o' ::: VNil)
 --
--- >>> L.fromPull <$> fromListPrefix "quux" :: Maybe (L.Vec N.Three Char)
+-- >>> L.fromPull <$> fromListPrefix "quux" :: Maybe (L.Vec N.Nat3 Char)
 -- Just ('q' ::: 'u' ::: 'u' ::: VNil)
 --
--- >>> L.fromPull <$> fromListPrefix "xy" :: Maybe (L.Vec N.Three Char)
+-- >>> L.fromPull <$> fromListPrefix "xy" :: Maybe (L.Vec N.Nat3 Char)
 -- Nothing
 --
 fromListPrefix :: N.SNatI n => [a] -> Maybe (Vec n a)
