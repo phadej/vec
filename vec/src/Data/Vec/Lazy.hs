@@ -204,6 +204,27 @@ instance I.Field1 (Vec ('S n) a) (Vec ('S n) a) a a where
 instance I.Field2 (Vec ('S ('S n)) a) (Vec ('S ('S n)) a) a a where
     _2 = _tail . _head
 
+instance I.Field3 (Vec ('S ('S ('S n))) a) (Vec ('S ('S ('S n))) a) a a where
+    _3 = _tail . _tail . _head
+
+instance I.Field4 (Vec ('S ('S ('S ('S n)))) a) (Vec ('S ('S ('S ('S n)))) a) a a where
+    _4 = _tail . _tail . _tail . _head
+
+instance I.Field5 (Vec ('S ('S ('S ('S ('S n))))) a) (Vec ('S ('S ('S ('S ('S n))))) a) a a where
+    _5 = _tail . _tail . _tail . _tail . _head
+
+instance I.Field6 (Vec ('S ('S ('S ('S ('S ('S n)))))) a) (Vec ('S ('S ('S ('S ('S ('S n)))))) a) a a where
+    _6 = _tail . _tail . _tail . _tail . _tail . _head
+
+instance I.Field7 (Vec ('S ('S ('S ('S ('S ('S ('S n))))))) a) (Vec ('S ('S ('S ('S ('S ('S ('S n))))))) a) a a where
+    _7 = _tail . _tail . _tail . _tail . _tail . _tail . _head
+
+instance I.Field8 (Vec ('S ('S ('S ('S ('S ('S ('S ('S n)))))))) a) (Vec ('S ('S ('S ('S ('S ('S ('S ('S n)))))))) a) a a where
+    _8 = _tail . _tail . _tail . _tail . _tail . _tail . _tail . _head
+
+instance I.Field9 (Vec ('S ('S ('S ('S ('S ('S ('S ('S ('S n))))))))) a) (Vec ('S ('S ('S ('S ('S ('S ('S ('S ('S n))))))))) a) a a where
+    _9 = _tail . _tail . _tail . _tail . _tail . _tail . _tail . _tail . _head
+
 -------------------------------------------------------------------------------
 -- Construction
 -------------------------------------------------------------------------------
@@ -360,11 +381,13 @@ _Cons = I.iso (\(x ::: xs) -> (x, xs)) (\(x, xs) -> x ::: xs)
 -- 'x' ::: 'b' ::: 'c' ::: VNil
 --
 _head :: I.Lens' (Vec ('S n) a) a
-_head = ix F.Z
+_head f (x ::: xs) = (::: xs) <$> f x
+{-# INLINE head #-}
 
 -- | Head lens. /Note:/ @lens@ 'I._head' is a 'I.Traversal''.
 _tail :: I.Lens' (Vec ('S n) a) (Vec n a)
 _tail f (x ::: xs) = (x :::) <$> f xs
+{-# INLINE _tail #-}
 
 -- | The first element of a 'Vec'.
 head :: Vec ('S n) a -> a
