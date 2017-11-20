@@ -44,10 +44,14 @@ inspect $ 'lhsNormal =/= 'rhsZipWith
 lhsIMap :: Vec N.Two (F.Fin N.Two, Char)
 lhsIMap = I.imap (,) $ 'a' ::: 'b' ::: VNil
 
+lhsIMap' :: Vec N.Two (F.Fin N.Two, Char)
+lhsIMap' = L.imap (,) $ 'a' ::: 'b' ::: VNil
+
 rhsIMap :: Vec N.Two (F.Fin N.Two, Char)
 rhsIMap = (F.Z,'a') ::: (F.S F.Z,'b') ::: VNil
 
-inspect $ 'lhsIMap === 'rhsIMap
+inspect $ 'lhsIMap  === 'rhsIMap
+inspect $ 'lhsIMap' =/= 'rhsIMap
 
 -------------------------------------------------------------------------------
 -- dotProduct
@@ -66,6 +70,22 @@ rhsDotProduct (x0 ::: x1 ::: _) (y0 ::: y1 ::: _) =
 
 inspect $ 'lhsDotProduct === 'rhsDotProduct
 -}
+
+-------------------------------------------------------------------------------
+-- join
+-------------------------------------------------------------------------------
+
+lhsJoin :: Vec N.Two Char
+lhsJoin = I.join $ ('a' ::: 'b' ::: VNil) ::: ('c' ::: 'd' ::: VNil) ::: VNil
+
+lhsJoin' :: Vec N.Two Char
+lhsJoin' = L.join $ ('a' ::: 'b' ::: VNil) ::: ('c' ::: 'd' ::: VNil) ::: VNil
+
+rhsJoin :: Vec N.Two Char
+rhsJoin = 'a' ::: 'd' ::: VNil
+
+inspect $ 'lhsJoin  === 'rhsJoin
+inspect $ 'lhsJoin' =/= 'rhsJoin
 
 -------------------------------------------------------------------------------
 -- Main to make GHC happy

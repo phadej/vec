@@ -64,6 +64,9 @@ module Data.Vec.Lazy.Inline (
     -- * Zipping
     zipWith,
     izipWith,
+    -- * Monadic
+    bind,
+    join,
     -- * VecEach
     VecEach (..)
     )  where
@@ -488,6 +491,35 @@ izipWith = getIZipWith $ N.inlineInduction start step where
     step (IZipWith go) = IZipWith $ \f (x ::: xs) (y ::: ys) -> f F.Z x y ::: go (f . F.S) xs ys
 
 newtype IZipWith a b c n = IZipWith { getIZipWith :: (Fin n -> a -> b -> c) -> Vec n a -> Vec n b -> Vec n c }
+
+-------------------------------------------------------------------------------
+-- Monadic
+-------------------------------------------------------------------------------
+
+-- | Monadic bind.
+bind :: N.InlineInduction n => Vec n a -> (a -> Vec n b) -> Vec n b
+bind = getBind $ N.inlineInduction1 start step where
+    start :: Bind a 'Z b
+    start = Bind $ \_ _ -> VNil
+
+    step :: Bind a m b -> Bind a ('S m) b
+    step (Bind go) = Bind $ \(x ::: xs) f -> head (f x) ::: go xs (tail . f)
+
+newtype Bind a n b = Bind { getBind :: Vec n a -> (a -> Vec n b) -> Vec n b }
+
+-- | Monadic join.
+--
+-- >>> join $ ('a' ::: 'b' ::: VNil) ::: ('c' ::: 'd' ::: VNil) ::: VNil
+-- 'a' ::: 'd' ::: VNil
+join :: N.InlineInduction n => Vec n (Vec n a) -> Vec n a
+join = getJoin $ N.inlineInduction1 start step where
+    start :: Join 'Z a
+    start = Join $ \_ -> VNil
+
+    step :: N.InlineInduction m => Join m a -> Join ('S m) a
+    step (Join go) = Join $ \(x ::: xs) -> head x ::: go (map tail xs)
+
+newtype Join n a = Join { getJoin :: Vec n (Vec n a) -> Vec n a }
 
 -------------------------------------------------------------------------------
 -- Doctest

@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP                   #-}
 {-# LANGUAGE DataKinds             #-}
 {-# LANGUAGE DeriveDataTypeable    #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
@@ -48,27 +49,32 @@ module Data.Vec.Pull (
     -- * Zipping
     zipWith,
     izipWith,
+    -- * Monadic
+    bind,
+    join,
     ) where
 
 import Prelude ()
 import Prelude.Compat
-       (Applicative (..), Bool (..), Eq (..), Functor (..), Int, Maybe (..),
+       (Bool (..), Eq (..), Functor (..), Int, Maybe (..),
        Monad (..), Monoid (..), Num (..), all, const, ($), (.), (<$>))
 
-import Control.Lens       ((<&>))
-import Data.Boring        (Boring (..))
-import Data.Distributive  (Distributive (..))
-import Data.Fin           (Fin)
-import Data.Functor.Apply (Apply (..))
-import Data.Functor.Rep   (Representable (..))
+import Control.Applicative (Applicative (..))
+import Control.Lens        ((<&>))
+import Data.Boring         (Boring (..))
+import Data.Distributive   (Distributive (..))
+import Data.Fin            (Fin)
+import Data.Functor.Apply  (Apply (..))
+import Data.Functor.Rep    (Representable (..))
 import Data.Nat
-import Data.Proxy         (Proxy (..))
-import Data.Semigroup     (Semigroup (..))
-import Data.Typeable      (Typeable)
+import Data.Proxy          (Proxy (..))
+import Data.Semigroup      (Semigroup (..))
+import Data.Typeable       (Typeable)
 
 --- Instances
 import qualified Control.Lens            as I
 import qualified Data.Foldable           as I (Foldable (..))
+import qualified Data.Functor.Bind       as I (Bind (..))
 import qualified Data.Semigroup.Foldable as I (Foldable1 (..))
 
 import qualified Data.Fin      as F
@@ -91,12 +97,18 @@ instance N.SNatI n => I.Foldable (Vec n) where
     foldMap = foldMap
 
 instance Applicative (Vec n) where
-    pure = Vec . pure
-    (<*>) = zipWith ($)
+    pure   = Vec . pure
+    (<*>)  = zipWith ($)
+    _ *> x = x
+    x <* _ = x
+#if MIN_VERSION_base(4,10,0)
+    liftA2 = zipWith
+#endif
 
 instance Monad (Vec n) where
     return = pure
-    m >>= k = Vec $ unVec m >>= unVec . k
+    (>>=)  = bind
+    _ >> x = x
 
 instance Distributive (Vec n) where
     distribute = Vec . distribute . fmap unVec
@@ -117,7 +129,13 @@ instance n ~ 'N.Z => Boring (Vec n a) where
     boring = empty
 
 instance Apply (Vec n) where
-    (<.>) = zipWith ($)
+    (<.>)  = zipWith ($)
+    _ .> x = x
+    x <. _ = x
+
+instance I.Bind (Vec n) where
+    (>>-) = bind
+    join  = join
 
 instance I.FunctorWithIndex (Fin n) (Vec n) where
     imap = imap
@@ -353,6 +371,18 @@ zipWith f (Vec xs) (Vec ys) = Vec $ \i -> f (xs i) (ys i)
 -- | Zip two 'Vec's. with a function that also takes the elements' indices.
 izipWith :: (Fin n -> a -> b -> c) -> Vec n a -> Vec n b -> Vec n c
 izipWith f (Vec xs) (Vec ys) = Vec $ \i -> f i (xs i) (ys i)
+
+-------------------------------------------------------------------------------
+-- Monadic
+-------------------------------------------------------------------------------
+
+-- | Monadic bind.
+bind :: Vec n a -> (a -> Vec n b) -> Vec n b
+bind m k = Vec $ unVec m >>= unVec . k
+
+-- | Monadic join.
+join :: Vec n (Vec n a) -> Vec n a
+join (Vec v) = Vec $ \i -> unVec (v i) i
 
 -------------------------------------------------------------------------------
 -- Doctest
