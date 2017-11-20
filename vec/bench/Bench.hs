@@ -4,7 +4,7 @@ module Main (main) where
 import Criterion.Main
 
 import Data.Fin      (Fin (..))
-import Data.Type.Nat (Five)
+import Data.Type.Nat (Nat5)
 import Data.Vec.Lazy (Vec (..))
 
 import qualified Data.Vec.Pull       as P
@@ -25,11 +25,11 @@ xsu, ysu :: U.Vector Int
 xsu = U.fromList xsl
 ysu = U.fromList ysl
 
-xs, ys :: Vec Five Int
+xs, ys :: Vec Nat5 Int
 xs = 1 ::: 2 ::: 3 ::: 4 ::: 5 ::: VNil
 ys = 6 ::: 7 ::: 8 ::: 9 ::: 0 ::: VNil
 
-xsp, ysp :: P.Vec Five Int
+xsp, ysp :: P.Vec Nat5 Int
 xsp = P.Vec $ \i -> case i of
     Z               -> 1
     S Z             -> 2

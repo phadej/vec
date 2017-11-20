@@ -74,7 +74,7 @@ class Enum a where
 -- | 'Void' ~ 0
 instance Enum V.Void where
     -- this should be written by hand to work with all @base@
-    type EnumSize V.Void = N.Zero
+    type EnumSize V.Void = N.Nat0
     from = V.absurd
     to   = F.absurd
 
@@ -92,7 +92,7 @@ instance Enum Ordering
 -------------------------------------------------------------------------------
 
 -- | Compute the size from the type.
-type GEnumSize a = EnumSizeRep (G.Rep a) N.Zero
+type GEnumSize a = EnumSizeRep (G.Rep a) N.Nat0
 
 type family EnumSizeRep (a :: * -> *) (n :: Nat) :: Nat where
     EnumSizeRep (a :+: b )   n = EnumSizeRep a (EnumSizeRep b n)
@@ -107,7 +107,7 @@ type family EnumSizeRep (a :: * -> *) (n :: Nat) :: Nat where
 
 -- | Generic version of 'from'.
 gfrom :: (G.Generic a, GFrom a) => a -> Fin (GEnumSize a)
-gfrom = \x -> gfromRep (G.from x) (error "gfrom: internal error" :: Fin N.Zero)
+gfrom = \x -> gfromRep (G.from x) (error "gfrom: internal error" :: Fin N.Nat0)
 {-# INLINE gfrom #-}
 
 -- | Constraint for the class that computes 'gfrom'.

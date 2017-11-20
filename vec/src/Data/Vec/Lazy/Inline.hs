@@ -141,13 +141,13 @@ newtype ToList n a = ToList { getToList :: Vec n a -> [a] }
 -- | Convert list @[a]@ to @'Vec' n a@.
 -- Returns 'Nothing' if lengths don't match exactly.
 --
--- >>> fromList "foo" :: Maybe (Vec N.Three Char)
+-- >>> fromList "foo" :: Maybe (Vec N.Nat3 Char)
 -- Just ('f' ::: 'o' ::: 'o' ::: VNil)
 --
--- >>> fromList "quux" :: Maybe (Vec N.Three Char)
+-- >>> fromList "quux" :: Maybe (Vec N.Nat3 Char)
 -- Nothing
 --
--- >>> fromList "xy" :: Maybe (Vec N.Three Char)
+-- >>> fromList "xy" :: Maybe (Vec N.Nat3 Char)
 -- Nothing
 --
 fromList :: N.InlineInduction n => [a] -> Maybe (Vec n a)
@@ -166,10 +166,10 @@ newtype FromList n a = FromList { getFromList :: [a] -> Maybe (Vec n a) }
 
 -- | Prism from list.
 --
--- >>> "foo" ^? _Vec :: Maybe (Vec N.Three Char)
+-- >>> "foo" ^? _Vec :: Maybe (Vec N.Nat3 Char)
 -- Just ('f' ::: 'o' ::: 'o' ::: VNil)
 --
--- >>> "foo" ^? _Vec :: Maybe (Vec N.Two Char)
+-- >>> "foo" ^? _Vec :: Maybe (Vec N.Nat2 Char)
 -- Nothing
 --
 -- >>> _Vec # (True ::: False ::: VNil)
@@ -181,13 +181,13 @@ _Vec = I.prism' toList fromList
 -- | Convert list @[a]@ to @'Vec' n a@.
 -- Returns 'Nothing' if input list is too short.
 --
--- >>> fromListPrefix "foo" :: Maybe (Vec N.Three Char)
+-- >>> fromListPrefix "foo" :: Maybe (Vec N.Nat3 Char)
 -- Just ('f' ::: 'o' ::: 'o' ::: VNil)
 --
--- >>> fromListPrefix "quux" :: Maybe (Vec N.Three Char)
+-- >>> fromListPrefix "quux" :: Maybe (Vec N.Nat3 Char)
 -- Just ('q' ::: 'u' ::: 'u' ::: VNil)
 --
--- >>> fromListPrefix "xy" :: Maybe (Vec N.Three Char)
+-- >>> fromListPrefix "xy" :: Maybe (Vec N.Nat3 Char)
 -- Nothing
 --
 fromListPrefix :: N.InlineInduction n => [a] -> Maybe (Vec n a)
@@ -284,7 +284,7 @@ concat = concatMap id
 
 -- | Split vector into two parts
 --
--- >>> split ('a' ::: 'b' ::: 'c' ::: VNil) :: (Vec N.One Char, Vec N.Two Char)
+-- >>> split ('a' ::: 'b' ::: 'c' ::: VNil) :: (Vec N.Nat1 Char, Vec N.Nat2 Char)
 -- ('a' ::: VNil,'b' ::: 'c' ::: VNil)
 --
 split :: N.InlineInduction n => Vec (N.Plus n m) a -> (Vec n a, Vec m a)
