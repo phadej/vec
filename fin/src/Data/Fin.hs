@@ -24,20 +24,24 @@ module Data.Fin (
     inverse,
     universe,
     inlineUniverse,
+    universe1,
+    inlineUniverse1,
     absurd,
     boring,
     -- * Aliases
     zeroth, first, second, third, fourth, fifth, sixth, seventh, eighth, ninth,
     ) where
 
-import Control.DeepSeq (NFData (..))
-import Data.Hashable   (Hashable (..))
-import Data.Proxy      (Proxy (..))
-import Data.Typeable   (Typeable)
-import GHC.Exception   (ArithException (..), throw)
-import Numeric.Natural (Natural)
+import Control.DeepSeq    (NFData (..))
+import Data.Hashable      (Hashable (..))
+import Data.List.NonEmpty (NonEmpty (..))
+import Data.Proxy         (Proxy (..))
+import Data.Typeable      (Typeable)
+import GHC.Exception      (ArithException (..), throw)
+import Numeric.Natural    (Natural)
 
-import qualified Data.Type.Nat as N
+import qualified Data.List.NonEmpty as NE
+import qualified Data.Type.Nat      as N
 
 -- | Finite Numbers up to 'n'.
 data Fin (n :: N.Nat) where
@@ -236,7 +240,16 @@ universe = getUniverse $ N.induction (Universe []) step where
     step :: Universe n -> Universe ('N.S n)
     step (Universe xs) = Universe (Z : map S xs)
 
--- |.SNatI  'universe' which will be fully inlined, if @n@ is known at compile time.
+-- | Like 'universe' but 'NonEmpty'.
+--
+-- >>> universe1 :: NonEmpty (Fin N.Three)
+-- 0 :| [1,2]
+universe1 :: N.SNatI n => NonEmpty (Fin ('N.S n))
+universe1 = getUniverse1 $ N.induction (Universe1 (Z :| [])) step where
+    step :: Universe1 n -> Universe1 ('N.S n)
+    step (Universe1 xs) = Universe1 (NE.cons Z (fmap S xs))
+
+-- | 'universe' which will be fully inlined, if @n@ is known at compile time.
 --
 -- >>> inlineUniverse :: [Fin N.Three]
 -- [0,1,2]
@@ -245,7 +258,15 @@ inlineUniverse = getUniverse $ N.inlineInduction (Universe []) step where
     step :: Universe n -> Universe ('N.S n)
     step (Universe xs) = Universe (Z : map S xs)
 
-newtype Universe n = Universe { getUniverse :: [Fin n] }
+-- | >>> inlineUniverse1 :: NonEmpty (Fin N.Three)
+-- 0 :| [1,2]
+inlineUniverse1 :: N.InlineInduction n => NonEmpty (Fin ('N.S n))
+inlineUniverse1 = getUniverse1 $ N.inlineInduction (Universe1 (Z :| [])) step where
+    step :: Universe1 n -> Universe1 ('N.S n)
+    step (Universe1 xs) = Universe1 (NE.cons Z (fmap S xs))
+
+newtype Universe  n = Universe  { getUniverse  :: [Fin n] }
+newtype Universe1 n = Universe1 { getUniverse1 :: NonEmpty (Fin ('N.S n)) }
 
 -- | @'Fin' 'N.Zero'@ is inhabited.
 absurd :: Fin N.Zero -> b
