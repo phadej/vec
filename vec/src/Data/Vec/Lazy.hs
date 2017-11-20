@@ -1,6 +1,7 @@
 {-# LANGUAGE BangPatterns           #-}
 {-# LANGUAGE CPP                    #-}
 {-# LANGUAGE DataKinds              #-}
+{-# LANGUAGE DeriveDataTypeable     #-}
 {-# LANGUAGE EmptyCase              #-}
 {-# LANGUAGE FlexibleInstances      #-}
 {-# LANGUAGE FunctionalDependencies #-}
@@ -8,6 +9,7 @@
 {-# LANGUAGE KindSignatures         #-}
 {-# LANGUAGE RankNTypes             #-}
 {-# LANGUAGE ScopedTypeVariables    #-}
+{-# LANGUAGE StandaloneDeriving     #-}
 {-# LANGUAGE TypeFamilies           #-}
 {-# LANGUAGE UndecidableInstances   #-}
 -- | Lazy length-indexed list: 'Vec'.
@@ -20,8 +22,10 @@ module Data.Vec.Lazy (
     -- * Conversions
     toPull,
     fromPull,
+    _Pull,
     toList,
     fromList,
+    _Vec,
     fromListPrefix,
     reifyList,
     -- * Indexing
@@ -30,6 +34,7 @@ module Data.Vec.Lazy (
     _Cons,
     _head,
     _tail,
+    cons,
     head,
     tail,
     -- * Concatenation and splitting
@@ -51,6 +56,7 @@ module Data.Vec.Lazy (
     sum,
     product,
     -- * Mapping
+    map,
     imap,
     traverse1,
     itraverse,
@@ -64,12 +70,12 @@ module Data.Vec.Lazy (
 
 import Prelude ()
 import Prelude.Compat
-       (Applicative (..), Bool (..), Functor (..), Int, Maybe (..), Monad (..),
-       Monoid (..), Num (..), Ord (..), Show (..), id, seq, showParen,
-       showString, ($), (.), (<$>))
+       (Applicative (..), Bool (..), Eq (..), Functor (..), Int, Maybe (..),
+       Monad (..), Monoid (..), Num (..), Ord (..), Show (..), id, seq,
+       showParen, showString, ($), (.), (<$>))
 
-import Control.Lens       ((<&>))
 import Control.DeepSeq    (NFData (..))
+import Control.Lens       ((<&>))
 import Data.Boring        (Boring (..))
 import Data.Distributive  (Distributive (..))
 import Data.Fin           (Fin)
@@ -79,6 +85,7 @@ import Data.Functor.Rep   (Representable (..), bindRep, distributeRep)
 import Data.Hashable      (Hashable (..))
 import Data.Nat
 import Data.Semigroup     (Semigroup (..))
+import Data.Typeable      (Typeable)
 
 --- Instances
 import qualified Control.Lens               as I
@@ -97,10 +104,14 @@ infixr 5 :::
 data Vec (n :: Nat) a where
     VNil  :: Vec 'Z a
     (:::) :: a -> Vec n a -> Vec ('S n) a
+  deriving (Typeable)
 
 -------------------------------------------------------------------------------
 -- Instances
 -------------------------------------------------------------------------------
+
+deriving instance Eq a => Eq (Vec n a)
+deriving instance Ord a => Ord (Vec n a)
 
 instance Show a => Show (Vec n a) where
     showsPrec _ VNil       = showString "VNil"
@@ -110,8 +121,7 @@ instance Show a => Show (Vec n a) where
         . showsPrec 5 xs
 
 instance Functor (Vec n) where
-    fmap _ VNil       = VNil
-    fmap f (x ::: xs) = f x ::: fmap f xs
+    fmap = map
 
 instance I.Foldable (Vec n) where
     foldMap = foldMap
@@ -204,6 +214,27 @@ instance I.Field1 (Vec ('S n) a) (Vec ('S n) a) a a where
 instance I.Field2 (Vec ('S ('S n)) a) (Vec ('S ('S n)) a) a a where
     _2 = _tail . _head
 
+instance I.Field3 (Vec ('S ('S ('S n))) a) (Vec ('S ('S ('S n))) a) a a where
+    _3 = _tail . _tail . _head
+
+instance I.Field4 (Vec ('S ('S ('S ('S n)))) a) (Vec ('S ('S ('S ('S n)))) a) a a where
+    _4 = _tail . _tail . _tail . _head
+
+instance I.Field5 (Vec ('S ('S ('S ('S ('S n))))) a) (Vec ('S ('S ('S ('S ('S n))))) a) a a where
+    _5 = _tail . _tail . _tail . _tail . _head
+
+instance I.Field6 (Vec ('S ('S ('S ('S ('S ('S n)))))) a) (Vec ('S ('S ('S ('S ('S ('S n)))))) a) a a where
+    _6 = _tail . _tail . _tail . _tail . _tail . _head
+
+instance I.Field7 (Vec ('S ('S ('S ('S ('S ('S ('S n))))))) a) (Vec ('S ('S ('S ('S ('S ('S ('S n))))))) a) a a where
+    _7 = _tail . _tail . _tail . _tail . _tail . _tail . _head
+
+instance I.Field8 (Vec ('S ('S ('S ('S ('S ('S ('S ('S n)))))))) a) (Vec ('S ('S ('S ('S ('S ('S ('S ('S n)))))))) a) a a where
+    _8 = _tail . _tail . _tail . _tail . _tail . _tail . _tail . _head
+
+instance I.Field9 (Vec ('S ('S ('S ('S ('S ('S ('S ('S ('S n))))))))) a) (Vec ('S ('S ('S ('S ('S ('S ('S ('S ('S n))))))))) a) a a where
+    _9 = _tail . _tail . _tail . _tail . _tail . _tail . _tail . _tail . _head
+
 -------------------------------------------------------------------------------
 -- Construction
 -------------------------------------------------------------------------------
@@ -253,6 +284,10 @@ fromPull (P.Vec f) = case N.snat :: N.SNat n of
     N.SZ -> VNil
     N.SS -> f F.Z ::: fromPull (P.Vec (f . F.S))
 
+-- | An 'I.Iso' from 'toPull' and 'fromPull'.
+_Pull :: N.SNatI n => I.Iso (Vec n a) (Vec n b) (P.Vec n a) (P.Vec n b)
+_Pull = I.iso toPull fromPull
+
 -- | Convert 'Vec' to list.
 --
 -- >>> toList $ 'f' ::: 'o' ::: 'o' ::: VNil
@@ -286,6 +321,20 @@ fromList = getFromList (N.induction1 start step) where
         (x : xs') -> (x :::) <$> f xs'
 
 newtype FromList n a = FromList { getFromList :: [a] -> Maybe (Vec n a) }
+
+-- | Prism from list.
+--
+-- >>> "foo" ^? _Vec :: Maybe (Vec N.Three Char)
+-- Just ('f' ::: 'o' ::: 'o' ::: VNil)
+--
+-- >>> "foo" ^? _Vec :: Maybe (Vec N.Two Char)
+-- Nothing
+--
+-- >>> _Vec # (True ::: False ::: VNil)
+-- [True,False]
+--
+_Vec :: N.SNatI n => I.Prism' [a] (Vec n a)
+_Vec = I.prism' toList fromList
 
 -- | Convert list @[a]@ to @'Vec' n a@.
 -- Returns 'Nothing' if input list is too short.
@@ -360,11 +409,17 @@ _Cons = I.iso (\(x ::: xs) -> (x, xs)) (\(x, xs) -> x ::: xs)
 -- 'x' ::: 'b' ::: 'c' ::: VNil
 --
 _head :: I.Lens' (Vec ('S n) a) a
-_head = ix F.Z
+_head f (x ::: xs) = (::: xs) <$> f x
+{-# INLINE head #-}
 
 -- | Head lens. /Note:/ @lens@ 'I._head' is a 'I.Traversal''.
 _tail :: I.Lens' (Vec ('S n) a) (Vec n a)
 _tail f (x ::: xs) = (x :::) <$> f xs
+{-# INLINE _tail #-}
+
+-- | Cons an element in front of a 'Vec'.
+cons :: a -> Vec n a -> Vec ('S n) a
+cons = (:::)
 
 -- | The first element of a 'Vec'.
 head :: Vec ('S n) a -> a
@@ -421,6 +476,13 @@ newtype Split m n a = Split { appSplit :: Vec (N.Plus n m) a -> (Vec n a, Vec m 
 -------------------------------------------------------------------------------
 -- Mapping
 -------------------------------------------------------------------------------
+
+-- | >>> map not $ True ::: False ::: VNil
+-- False ::: True ::: VNil
+--
+map :: (a -> b) -> Vec n a -> Vec n b
+map _ VNil       = VNil
+map f (x ::: xs) = f x ::: fmap f xs
 
 -- | >>> imap (,) $ 'a' ::: 'b' ::: 'c' ::: VNil
 -- (0,'a') ::: (1,'b') ::: (2,'c') ::: VNil
@@ -588,6 +650,6 @@ instance (a ~ a2, a ~ a3, a ~ a4, b ~ b2, b ~ b3, b ~ b4) => VecEach (a, a2, a3,
 
 -- $setup
 -- >>> :set -XScopedTypeVariables
--- >>> import Control.Lens ((^.), (&), (.~))
+-- >>> import Control.Lens ((^.), (&), (.~), (^?), (#))
 -- >>> import Data.Proxy (Proxy (..))
--- >>> import Prelude.Compat (Char)
+-- >>> import Prelude.Compat (Char, not)
