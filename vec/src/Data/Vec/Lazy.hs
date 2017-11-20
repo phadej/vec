@@ -58,6 +58,7 @@ module Data.Vec.Lazy (
     -- * Mapping
     map,
     imap,
+    traverse,
     traverse1,
     itraverse,
     itraverse_,

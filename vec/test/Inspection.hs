@@ -7,6 +7,7 @@ import Prelude hiding (zipWith)
 import Data.Vec.Lazy   (Vec (..))
 import Test.Inspection
 
+import qualified Data.Fin             as F
 import qualified Data.Type.Nat        as N
 import qualified Data.Vec.Lazy        as L
 import qualified Data.Vec.Lazy.Inline as I
@@ -29,11 +30,23 @@ xs = 1 ::: 2 ::: VNil
 ys :: Vec N.Two Int
 ys = 2 ::: 3 ::: VNil
 
-rhs :: Vec N.Two Int
-rhs = 3 ::: 5 ::: VNil
+rhsZipWith :: Vec N.Two Int
+rhsZipWith = 3 ::: 5 ::: VNil
 
-inspect $ 'lhsInline === 'rhs
-inspect $ 'lhsNormal =/= 'rhs
+inspect $ 'lhsInline === 'rhsZipWith
+inspect $ 'lhsNormal =/= 'rhsZipWith
+
+-------------------------------------------------------------------------------
+-- imap
+-------------------------------------------------------------------------------
+
+lhsIMap :: Vec N.Two (F.Fin N.Two, Char)
+lhsIMap = I.imap (,) $ 'a' ::: 'b' ::: VNil
+
+rhsIMap :: Vec N.Two (F.Fin N.Two, Char)
+rhsIMap = (F.Z,'a') ::: (F.S F.Z,'b') ::: VNil
+
+inspect $ 'lhsIMap === 'rhsIMap
 
 -------------------------------------------------------------------------------
 -- Main to make GHC happy
