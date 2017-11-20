@@ -65,32 +65,36 @@ module Data.Vec.Lazy (
     -- * Zipping
     zipWith,
     izipWith,
+    -- * Monadic
+    bind,
+    join,
     -- * VecEach
     VecEach (..),
     )  where
 
 import Prelude ()
 import Prelude.Compat
-       (Applicative (..), Bool (..), Eq (..), Functor (..), Int, Maybe (..),
+       (Bool (..), Eq (..), Functor (..), Int, Maybe (..),
        Monad (..), Monoid (..), Num (..), Ord (..), Show (..), id, seq,
        showParen, showString, ($), (.), (<$>))
 
-import Control.DeepSeq    (NFData (..))
-import Control.Lens       ((<&>))
-import Data.Boring        (Boring (..))
-import Data.Distributive  (Distributive (..))
-import Data.Fin           (Fin)
-import Data.Functor.Apply (Apply (..))
-import Data.Functor.Bind  (Bind (..))
-import Data.Functor.Rep   (Representable (..), bindRep, distributeRep)
-import Data.Hashable      (Hashable (..))
+import Control.Applicative (Applicative (..))
+import Control.DeepSeq     (NFData (..))
+import Control.Lens        ((<&>))
+import Data.Boring         (Boring (..))
+import Data.Distributive   (Distributive (..))
+import Data.Fin            (Fin)
+import Data.Functor.Apply  (Apply (..))
+import Data.Functor.Rep    (Representable (..), distributeRep)
+import Data.Hashable       (Hashable (..))
 import Data.Nat
-import Data.Semigroup     (Semigroup (..))
-import Data.Typeable      (Typeable)
+import Data.Semigroup      (Semigroup (..))
+import Data.Typeable       (Typeable)
 
 --- Instances
 import qualified Control.Lens               as I
 import qualified Data.Foldable              as I (Foldable (..))
+import qualified Data.Functor.Bind          as I (Bind (..))
 import qualified Data.Semigroup.Foldable    as I (Foldable1 (..))
 import qualified Data.Semigroup.Traversable as I (Traversable1 (..))
 import qualified Data.Traversable           as I (Traversable (..))
@@ -158,11 +162,17 @@ instance Hashable a => Hashable (Vec n a) where
 
 instance N.SNatI n => Applicative (Vec n) where
     pure x = N.induction1 VNil (x :::)
-    (<*>) = zipWith ($)
+    (<*>)  = zipWith ($)
+    _ *> x = x
+    x <* _ = x
+#if MIN_VERSION_base(4,10,0)
+    liftA2 = zipWith
+#endif
 
 instance N.SNatI n => Monad (Vec n) where
     return = pure
-    (>>=) = bindRep
+    (>>=)  = bind
+    _ >> x = x
 
 instance N.SNatI n => Distributive (Vec n) where
     distribute = distributeRep
@@ -184,9 +194,12 @@ instance n ~ 'N.Z => Boring (Vec n a) where
 
 instance Apply (Vec n) where
     (<.>) = zipWith ($)
+    _ .> x = x
+    x <. _ = x
 
-instance N.SNatI n => Bind (Vec n) where
-    (>>-) = bindRep
+instance I.Bind (Vec n) where
+    (>>-) = bind
+    join  = join
 
 instance I.FunctorWithIndex (Fin n) (Vec n) where
     imap = imap
@@ -596,6 +609,23 @@ zipWith f (x ::: xs) (y ::: ys) = f x y ::: zipWith f xs ys
 izipWith :: (Fin n -> a -> b -> c) -> Vec n a -> Vec n b -> Vec n c
 izipWith _ VNil       VNil       = VNil
 izipWith f (x ::: xs) (y ::: ys) = f F.Z x y ::: izipWith (f . F.S) xs ys
+
+-------------------------------------------------------------------------------
+-- Monadic
+-------------------------------------------------------------------------------
+
+-- | Monadic bind.
+bind :: Vec n a -> (a -> Vec n b) -> Vec n b
+bind VNil       _ = VNil
+bind (x ::: xs) f = head (f x) ::: bind xs (tail . f)
+
+-- | Monadic join.
+--
+-- >>> join $ ('a' ::: 'b' ::: VNil) ::: ('c' ::: 'd' ::: VNil) ::: VNil
+-- 'a' ::: 'd' ::: VNil
+join :: Vec n (Vec n a) -> Vec n a
+join VNil       = VNil
+join (x ::: xs) = head x ::: join (map tail xs)
 
 -------------------------------------------------------------------------------
 -- VecEach

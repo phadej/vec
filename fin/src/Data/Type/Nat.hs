@@ -194,7 +194,7 @@ induction z f = go where
 --
 -- See @test/Inspection.hs@.
 class SNatI n => InlineInduction (n :: Nat) where
-    inlineInduction1 :: f 'Z a -> (forall m. SNatI m => f m a -> f ('S m) a) -> f n a
+    inlineInduction1 :: f 'Z a -> (forall m. InlineInduction m => f m a -> f ('S m) a) -> f n a
 
 instance InlineInduction 'Z where
     inlineInduction1 z _ = z
@@ -205,8 +205,8 @@ instance InlineInduction n => InlineInduction ('S n) where
 -- | See 'InlineInduction'.
 inlineInduction
     :: forall n f. InlineInduction n
-    => f 'Z                                    -- ^ zero case
-    -> (forall m. SNatI m => f m -> f ('S m))  -- ^ induction step
+    => f 'Z                                              -- ^ zero case
+    -> (forall m. InlineInduction m => f m -> f ('S m))  -- ^ induction step
     -> f n
 inlineInduction z f = unConst' $ inlineInduction1 (Const' z) (Const' . f . unConst')
 
