@@ -1,3 +1,4 @@
+{-# LANGUAGE GADTs           #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# OPTIONS_GHC -O -fplugin Test.Inspection.Plugin #-}
 module Main (main) where
@@ -47,6 +48,24 @@ rhsIMap :: Vec N.Two (F.Fin N.Two, Char)
 rhsIMap = (F.Z,'a') ::: (F.S F.Z,'b') ::: VNil
 
 inspect $ 'lhsIMap === 'rhsIMap
+
+-------------------------------------------------------------------------------
+-- dotProduct
+-------------------------------------------------------------------------------
+
+{-
+ -- TODO: for this example LHS produces better core :O
+ -- though, inlining isn't done if element is Num a => a
+ --
+lhsDotProduct :: Vec N.Two Int -> Vec N.Two Int -> Int
+lhsDotProduct xs ys = I.sum (I.zipWith (+) xs ys)
+
+rhsDotProduct :: Vec N.Two Int -> Vec N.Two Int -> Int
+rhsDotProduct (x0 ::: x1 ::: _) (y0 ::: y1 ::: _) =
+    x0 * y0 + x1 * y1
+
+inspect $ 'lhsDotProduct === 'rhsDotProduct
+-}
 
 -------------------------------------------------------------------------------
 -- Main to make GHC happy
