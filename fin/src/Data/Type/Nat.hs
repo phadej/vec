@@ -63,6 +63,8 @@ import Numeric.Natural    (Natural)
 
 import qualified GHC.TypeLits as GHC
 
+import Unsafe.Coerce (unsafeCoerce)
+
 -------------------------------------------------------------------------------
 -- SNat
 -------------------------------------------------------------------------------
@@ -301,6 +303,9 @@ proofPlusNZero = getProofPlusNZero $ induction (ProofPlusNZero Refl) step where
     step :: forall m. ProofPlusNZero m -> ProofPlusNZero ('S m)
     step (ProofPlusNZero Refl) = ProofPlusNZero Refl
 
+{-# NOINLINE [1] proofPlusNZero #-}
+{-# RULES "Nat: n + 0 = n" proofPlusNZero = unsafeCoerce (Refl :: () :~: ()) #-}
+
 newtype ProofPlusNZero n = ProofPlusNZero { getProofPlusNZero :: Plus n Nat0 :~: n }
 
 -- TODO: plusAssoc
@@ -317,17 +322,26 @@ proofMultNZero _ =
     step :: forall m. ProofMultNZero m -> ProofMultNZero ('S m)
     step (ProofMultNZero Refl) = ProofMultNZero Refl
 
+{-# NOINLINE [1] proofMultNZero #-}
+{-# RULES "Nat: n * 0 = n" proofMultNZero = unsafeCoerce (Refl :: () :~: ()) #-}
+
 newtype ProofMultNZero n = ProofMultNZero { getProofMultNZero :: Mult n Nat0 :~: Nat0 }
 
 -- | @1 * n = n@
 proofMultOneN :: SNatI n => Mult Nat1 n :~: n
 proofMultOneN = proofPlusNZero
 
+{-# NOINLINE [1] proofMultOneN #-}
+{-# RULES "Nat: 1 * n = n" proofMultOneN = unsafeCoerce (Refl :: () :~: ()) #-}
+
 -- | @n * 1 = n@
 proofMultNOne :: SNatI n => Mult n Nat1 :~: n
 proofMultNOne = getProofMultNOne $ induction (ProofMultNOne Refl) step where
     step :: forall m. ProofMultNOne m -> ProofMultNOne ('S m)
     step (ProofMultNOne Refl) = ProofMultNOne Refl
+
+{-# NOINLINE [1] proofMultNOne #-}
+{-# RULES "Nat: n * 1 = n" proofMultNOne = unsafeCoerce (Refl :: () :~: ()) #-}
 
 newtype ProofMultNOne n = ProofMultNOne { getProofMultNOne :: Mult n Nat1 :~: n }
 
