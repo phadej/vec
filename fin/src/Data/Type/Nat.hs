@@ -36,6 +36,8 @@ module Data.Type.Nat (
     induction1,
     InlineInduction (..),
     inlineInduction,
+    -- ** Example: unfoldedFix
+    unfoldedFix,
     -- * Arithmetic
     Plus,
     Mult,
@@ -56,6 +58,7 @@ module Data.Type.Nat (
     proofMultNOne,
     )  where
 
+import Data.Function      (fix)
 import Data.Nat
 import Data.Proxy         (Proxy (..))
 import Data.Type.Equality
@@ -230,6 +233,27 @@ inlineInduction z f = unConst' $ inlineInduction1 (Const' z) (Const' . f . unCon
 
 newtype Const' (f :: Nat -> *) (n :: Nat) a = Const' { unConst' :: f n }
 
+-- | Unfold @n@ steps of a general recursion.
+--
+-- /Note:/ Always __benchmark__. This function may give you both /bad/ properties:
+-- a lot of code (increased binary size), and worse performance.
+--
+-- For known @n@ 'unfoldedFix' will unfold recursion, for example
+--
+-- @
+-- 'unfoldedFix' ('Proxy' :: 'Proxy' 'Nat3') f = f (f (f (fix f)))
+-- @
+--
+unfoldedFix :: forall n a proxy. InlineInduction n => proxy n -> (a -> a) -> a
+unfoldedFix _ = getFix (inlineInduction1 start step :: Fix n a) where
+    start :: Fix 'Z a
+    start = Fix fix
+
+    step :: Fix m a -> Fix ('S m) a
+    step (Fix go) = Fix $ \f -> f (go f)
+
+newtype Fix (n :: Nat) a = Fix { getFix :: (a -> a) -> a }
+
 -------------------------------------------------------------------------------
 -- Conversion to GHC Nat
 -------------------------------------------------------------------------------
@@ -315,7 +339,7 @@ proofMultZeroN :: Mult Nat0 n :~: Nat0
 proofMultZeroN = Refl
 
 -- | @n * 0 = n@
-proofMultNZero :: forall n. SNatI n => Proxy n -> Mult n Nat0 :~: Nat0
+proofMultNZero :: forall n proxy. SNatI n => proxy n -> Mult n Nat0 :~: Nat0
 proofMultNZero _ =
     getProofMultNZero (induction (ProofMultNZero Refl) step :: ProofMultNZero n)
   where

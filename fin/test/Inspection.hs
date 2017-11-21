@@ -6,6 +6,8 @@
 {-# OPTIONS_GHC -O -fplugin Test.Inspection.Plugin #-}
 module Main (main) where
 
+import Data.Function      (fix)
+import Data.Proxy         (Proxy (..))
 import Data.Tagged        (Tagged (..), retag)
 import Data.Type.Equality
 import GHC.Generics       (Generic)
@@ -53,7 +55,7 @@ rhsEnum LT' = F.Z
 rhsEnum EQ' = F.S F.Z
 rhsEnum GT' = F.S (F.S F.Z)
 
-inspect $  'lhsEnum ==- 'rhsEnum
+inspect $ 'lhsEnum ==- 'rhsEnum
 
 -------------------------------------------------------------------------------
 -- Proofs
@@ -66,7 +68,34 @@ lhsProof x = case N.proofMultNOne :: N.Mult n N.Nat1 :~: n of
 rhsProof :: forall n. N.SNatI n => F.Fin (N.Mult n N.Nat1) -> F.Fin n
 rhsProof x = unsafeCoerce x
 
-inspect $  'lhsProof ==- 'rhsProof
+inspect $ 'lhsProof ==- 'rhsProof
+
+-------------------------------------------------------------------------------
+-- unfoldedFix
+-------------------------------------------------------------------------------
+
+foldrF :: (a -> b -> b) -> b -> ([a] -> b) -> [a] -> b
+foldrF _f  z _go []     = z
+foldrF  f _z  go (x : xs) = f x (go xs)
+
+superfold :: [Int] -> Int
+superfold = N.unfoldedFix (Proxy :: Proxy N.Nat5) (foldrF (+) 0)
+
+-- Note: we need to write list explicitly, cannot use shorthand [1..4]
+-- 'enumFromTo' is a recursive function!
+--
+-- Try to change [1,2,4,] to [1..4] to see the generated core :)
+lhsFold :: Int
+lhsFold = superfold [1,2,3,4]
+
+lhsFold' :: Int
+lhsFold' = fix (foldrF (+) 0) [1,2,3,4]
+
+rhsFold :: Int
+rhsFold = 10
+
+inspect $ 'lhsFold  === 'rhsFold
+inspect $ 'lhsFold' =/= 'rhsFold
 
 -------------------------------------------------------------------------------
 -- Main to make GHC happy

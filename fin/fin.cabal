@@ -93,9 +93,9 @@ test-suite inspection
 
   -- useful for development
   ghc-options:
-     -dsuppress-idinfo
-     -dsuppress-coercions
-     -dsuppress-type-applications
-     -dsuppress-module-prefixes
-    -- -dsuppress-type-signatures
-    -- -dsuppress-uniques
+  -- -dsuppress-idinfo
+  -- -dsuppress-coercions
+  -- -dsuppress-type-applications
+  -- -dsuppress-module-prefixes
+  -- -dsuppress-type-signatures
+  -- -dsuppress-uniques
