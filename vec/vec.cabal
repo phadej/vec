@@ -1,13 +1,13 @@
 name:                vec
 version:             0
-synopsis:            Nat, Fin and Vec types.
+synopsis:            Vec: length-indexed list
 description:
   This package provides length indexed lists, i.e. 'Vec'.
   .
   @
   data Vec n a where
-      VNil  :: Vec 'Nat.Z a
-      (:::) :: a -> Vec n a -> Vec ('Nat.S n) a
+  \    VNil  :: Vec 'Nat.Z a
+  \    (:::) :: a -> Vec n a -> Vec ('Nat.S n) a
   @
   .
   The functions are implemented in three flavours:

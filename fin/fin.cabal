@@ -1,15 +1,18 @@
 name:                fin
 version:             0
-synopsis:            Nat and Fin
+synopsis:            Nat and Fin: peano naturals and finite numbers
 description:
   This package provides two simple types, and some tools to work with them.
   Also on type level as @DataKinds@.
   .
   @
+  \-- Peano naturals
   data Nat = Z | S Nat
+  .
+  \-- Finite naturals
   data Fin (n :: Nat) where
-    Z :: Fin ('S n)
-    S :: Fin n -> Fin ('Nat.S n)
+  \    Z :: Fin ('S n)
+  \    S :: Fin n -> Fin ('Nat.S n)
   @
   .
   The "Data.Fin.Enum" module let's work generically with enumerations.
