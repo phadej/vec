@@ -97,6 +97,14 @@ rhsFold = 10
 inspect $ 'lhsFold  === 'rhsFold
 inspect $ 'lhsFold' =/= 'rhsFold
 
+lhsUnfold :: (a -> a) -> a
+lhsUnfold f = N.unfoldedFix (Proxy :: Proxy N.Nat3) f
+
+rhsUnfold :: (a -> a) -> a
+rhsUnfold f = f (f (f (fix f)))
+
+inspect $  'lhsUnfold === 'rhsUnfold
+
 -------------------------------------------------------------------------------
 -- Main to make GHC happy
 -------------------------------------------------------------------------------

@@ -32,6 +32,14 @@ description:
   * [sized-vector](http://hackage.haskell.org/package/sized-vector) depends
     on @singletons@ package. `vec` isn't light on dependencies either,
     but try to provide wide GHC support.
+  .
+  * [sized](https://hackage.haskell.org/package/sized) also depends
+    on a @singletons@ package. The @Sized f n a@ type is generalisation of
+    @linear@'s @V@ for any @ListLike@.
+  .
+  * [clash-prelude](https://hackage.haskell.org/package/clash-prelude)
+    is a kitchen sink package, which has @CLaSH.Sized.Vector@ module.
+    Also depends on @singletons@.
 
 homepage:            https://github.com/phadej/vec
 bug-reports:         https://github.com/phadej/vec/issues
