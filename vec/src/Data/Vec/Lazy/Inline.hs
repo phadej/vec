@@ -68,6 +68,8 @@ module Data.Vec.Lazy.Inline (
     -- * Monadic
     bind,
     join,
+    -- * Universe
+    universe,
     -- * VecEach
     VecEach (..)
     )  where
@@ -544,6 +546,24 @@ join = getJoin $ N.inlineInduction1 start step where
     step (Join go) = Join $ \(x ::: xs) -> head x ::: go (map tail xs)
 
 newtype Join n a = Join { getJoin :: Vec n (Vec n a) -> Vec n a }
+
+-------------------------------------------------------------------------------
+-- universe
+-------------------------------------------------------------------------------
+
+-- | Get all @'Fin' n@ in a @'Vec' n@.
+--
+-- >>> universe :: Vec N.Nat3 (Fin N.Nat3)
+-- 0 ::: 1 ::: 2 ::: VNil
+universe :: N.InlineInduction n => Vec n (Fin n)
+universe = getUniverse (N.inlineInduction first step) where
+    first :: Universe 'Z
+    first = Universe VNil
+
+    step :: N.InlineInduction m => Universe m -> Universe ('S m)
+    step (Universe go) = Universe (F.Z ::: map F.S go)
+
+newtype Universe n = Universe { getUniverse :: Vec n (Fin n) }
 
 -------------------------------------------------------------------------------
 -- Doctest

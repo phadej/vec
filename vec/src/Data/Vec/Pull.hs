@@ -52,12 +52,14 @@ module Data.Vec.Pull (
     -- * Monadic
     bind,
     join,
+    -- * Universe
+    universe,
     ) where
 
 import Prelude ()
 import Prelude.Compat
        (Bool (..), Eq (..), Functor (..), Int, Maybe (..),
-       Monad (..), Monoid (..), Num (..), all, const, ($), (.), (<$>))
+       Monad (..), Monoid (..), Num (..), all, const, id, ($), (.), (<$>))
 
 import Control.Applicative (Applicative (..))
 import Control.Lens        ((<&>))
@@ -383,6 +385,17 @@ bind m k = Vec $ unVec m >>= unVec . k
 -- | Monadic join.
 join :: Vec n (Vec n a) -> Vec n a
 join (Vec v) = Vec $ \i -> unVec (v i) i
+
+-------------------------------------------------------------------------------
+-- Universe
+-------------------------------------------------------------------------------
+
+-- | Get all @'Fin' n@ in a @'Vec' n@.
+--
+-- >>> L.fromPull (universe :: Vec N.Nat3 (Fin N.Nat3))
+-- 0 ::: 1 ::: 2 ::: VNil
+universe :: N.SNatI n => Vec n (Fin n)
+universe = Vec id
 
 -------------------------------------------------------------------------------
 -- Doctest

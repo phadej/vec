@@ -16,6 +16,10 @@
     - makes code to unroll completely for staticaly known sizes
     - fast in that case
 
+## Dependencies
+
+![](https://raw.githubusercontent.com/phadej/vec/master/deps.png)
+
 ## Benchmarks: dotProduct
 
 - `list` version sets the baseline, built-in fusion seems to kick in.

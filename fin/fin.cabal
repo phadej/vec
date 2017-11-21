@@ -24,6 +24,9 @@ description:
   .
   * [nat](http://hackage.haskell.org/package/nat) as well.
   .
+  * [PeanoWitnesses](https://hackage.haskell.org/package/PeanoWitnesses)
+    doesn't use @DataKinds@.
+  .
   * [type-combinators](http://hackage.haskell.org/package/type-combinators)
     is big package too.
 homepage:            https://github.com/phadej/vec

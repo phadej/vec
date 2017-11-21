@@ -69,6 +69,8 @@ module Data.Vec.Lazy (
     -- * Monadic
     bind,
     join,
+    -- * Universe
+    universe,
     -- * VecEach
     VecEach (..),
     )  where
@@ -651,6 +653,24 @@ bind (x ::: xs) f = head (f x) ::: bind xs (tail . f)
 join :: Vec n (Vec n a) -> Vec n a
 join VNil       = VNil
 join (x ::: xs) = head x ::: join (map tail xs)
+
+-------------------------------------------------------------------------------
+-- universe
+-------------------------------------------------------------------------------
+
+-- | Get all @'Fin' n@ in a @'Vec' n@.
+--
+-- >>> universe :: Vec N.Nat3 (Fin N.Nat3)
+-- 0 ::: 1 ::: 2 ::: VNil
+universe :: N.SNatI n => Vec n (Fin n)
+universe = getUniverse (N.induction first step) where
+    first :: Universe 'Z
+    first = Universe VNil
+
+    step :: Universe m -> Universe ('S m)
+    step (Universe go) = Universe (F.Z ::: map F.S go)
+
+newtype Universe n = Universe { getUniverse :: Vec n (Fin n) }
 
 -------------------------------------------------------------------------------
 -- VecEach
