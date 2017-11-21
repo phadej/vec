@@ -43,7 +43,7 @@ import Numeric.Natural    (Natural)
 import qualified Data.List.NonEmpty as NE
 import qualified Data.Type.Nat      as N
 
--- | Finite Numbers up to 'n'.
+-- | Finite numbers: @[0..n-1]@.
 data Fin (n :: N.Nat) where
     Z :: Fin ('N.S n)
     S :: Fin n -> Fin ('N.S n)

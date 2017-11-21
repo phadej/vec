@@ -8,7 +8,7 @@ description:
   @
   data Nat = Z | S Nat
   data Fin (n :: Nat) where
-    Z :: Fin n
+    Z :: Fin ('S n)
     S :: Fin n -> Fin ('Nat.S n)
   @
   .
@@ -63,7 +63,7 @@ library
 
   if !impl(ghc >= 8.0)
     build-depends:
-      semigroups >=0.18.3 && <0.18.4
+      semigroups >=0.18.3 && <0.19
 
   if !impl(ghc >= 7.10)
     build-depends:
