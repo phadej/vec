@@ -108,7 +108,6 @@ type family EnumSizeRep (a :: * -> *) (n :: Nat) :: Nat where
 -- | Generic version of 'from'.
 gfrom :: (G.Generic a, GFrom a) => a -> Fin (GEnumSize a)
 gfrom = \x -> gfromRep (G.from x) (error "gfrom: internal error" :: Fin N.Nat0)
-{-# INLINE gfrom #-}
 
 -- | Constraint for the class that computes 'gfrom'.
 type GFrom a = GFromRep (G.Rep a)
