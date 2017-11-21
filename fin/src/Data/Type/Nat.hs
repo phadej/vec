@@ -207,6 +207,17 @@ instance InlineInduction 'Z where
 instance InlineInduction n => InlineInduction ('S n) where
     inlineInduction1 z f = f (inlineInduction1 z f)
 
+    -- Specialise this to few first numerals.
+    {-# SPECIALIZE instance InlineInduction ('S 'Z) #-}
+    {-# SPECIALIZE instance InlineInduction ('S ('S 'Z)) #-}
+    {-# SPECIALIZE instance InlineInduction ('S ('S ('S 'Z))) #-}
+    {-# SPECIALIZE instance InlineInduction ('S ('S ('S ('S 'Z)))) #-}
+    {-# SPECIALIZE instance InlineInduction ('S ('S ('S ('S ('S 'Z))))) #-}
+    {-# SPECIALIZE instance InlineInduction ('S ('S ('S ('S ('S ('S 'Z)))))) #-}
+    {-# SPECIALIZE instance InlineInduction ('S ('S ('S ('S ('S ('S ('S 'Z))))))) #-}
+    {-# SPECIALIZE instance InlineInduction ('S ('S ('S ('S ('S ('S ('S ('S 'Z)))))))) #-}
+    {-# SPECIALIZE instance InlineInduction ('S ('S ('S ('S ('S ('S ('S ('S ('S 'Z))))))))) #-}
+
 -- | See 'InlineInduction'.
 inlineInduction
     :: forall n f. InlineInduction n
