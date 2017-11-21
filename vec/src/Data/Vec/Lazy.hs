@@ -39,9 +39,10 @@ module Data.Vec.Lazy (
     tail,
     -- * Concatenation and splitting
     (++),
+    split,
     concatMap,
     concat,
-    split,
+    chunks,
     -- * Folds
     foldMap,
     foldMap1,
@@ -458,6 +459,25 @@ infixr 5 ++
 VNil       ++ ys = ys
 (x ::: xs) ++ ys = x ::: xs ++ ys
 
+-- | Split vector into two parts. Inverse of '++'.
+--
+-- >>> split ('a' ::: 'b' ::: 'c' ::: VNil) :: (Vec N.Nat1 Char, Vec N.Nat2 Char)
+-- ('a' ::: VNil,'b' ::: 'c' ::: VNil)
+--
+-- >>> uncurry (++) (split ('a' ::: 'b' ::: 'c' ::: VNil) :: (Vec N.Nat1 Char, Vec N.Nat2 Char))
+-- 'a' ::: 'b' ::: 'c' ::: VNil
+--
+split :: N.SNatI n => Vec (N.Plus n m) a -> (Vec n a, Vec m a)
+split = appSplit (N.induction1 start step) where
+    start :: Split m 'Z a
+    start = Split $ \xs -> (VNil, xs)
+
+    step :: Split m n a -> Split m ('S n) a
+    step (Split f) = Split $ \(x ::: xs) -> case f xs of
+        (ys, zs) -> (x ::: ys, zs)
+
+newtype Split m n a = Split { appSplit :: Vec (N.Plus n m) a -> (Vec n a, Vec m a) }
+
 -- | Map over all the elements of a 'Vec' and concatenate the resulting 'Vec's.
 --
 -- >>> concatMap (\x -> x ::: x ::: VNil) ('a' ::: 'b' ::: VNil)
@@ -471,21 +491,26 @@ concatMap f (x ::: xs) = f x ++ concatMap f xs
 concat :: Vec n (Vec m a) -> Vec (N.Mult n m) a
 concat = concatMap id
 
--- | Split vector into two parts
+-- | Inverse of 'concat'.
 --
--- >>> split ('a' ::: 'b' ::: 'c' ::: VNil) :: (Vec N.Nat1 Char, Vec N.Nat2 Char)
--- ('a' ::: VNil,'b' ::: 'c' ::: VNil)
+-- >>> chunks <$> fromListPrefix [1..] :: Maybe (Vec N.Nat2 (Vec N.Nat3 Int))
+-- Just ((1 ::: 2 ::: 3 ::: VNil) ::: (4 ::: 5 ::: 6 ::: VNil) ::: VNil)
 --
-split :: N.SNatI n => Vec (N.Plus n m) a -> (Vec n a, Vec m a)
-split = appSplit (N.induction1 start step) where
-    start :: Split m 'Z a
-    start = Split $ \xs -> (VNil, xs)
+-- >>> let idVec x = x :: Vec N.Nat2 (Vec N.Nat3 Int)
+-- >>> concat . idVec . chunks <$> fromListPrefix [1..]
+-- Just (1 ::: 2 ::: 3 ::: 4 ::: 5 ::: 6 ::: VNil)
+--
+chunks :: (N.SNatI n, N.SNatI m) => Vec (N.Mult n m) a -> Vec n (Vec m a)
+chunks = getChunks $ N.induction1 start step where
+    start :: Chunks m 'Z a
+    start = Chunks $ \_ -> VNil
 
-    step :: Split m n a -> Split m ('S n) a
-    step (Split f) = Split $ \(x ::: xs) -> case f xs of
-        (ys, zs) -> (x ::: ys, zs)
+    step :: forall m n a. N.SNatI m => Chunks m n a -> Chunks m ('S n) a
+    step (Chunks go) = Chunks $ \xs ->
+        let (ys, zs) = split xs :: (Vec m a, Vec (N.Mult n m) a)
+        in ys ::: go zs
 
-newtype Split m n a = Split { appSplit :: Vec (N.Plus n m) a -> (Vec n a, Vec m a) }
+newtype Chunks  m n a = Chunks  { getChunks  :: Vec (N.Mult n m) a -> Vec n (Vec m a) }
 
 -------------------------------------------------------------------------------
 -- Mapping
@@ -683,4 +708,4 @@ instance (a ~ a2, a ~ a3, a ~ a4, b ~ b2, b ~ b3, b ~ b4) => VecEach (a, a2, a3,
 -- >>> :set -XScopedTypeVariables
 -- >>> import Control.Lens ((^.), (&), (.~), (^?), (#))
 -- >>> import Data.Proxy (Proxy (..))
--- >>> import Prelude.Compat (Char, not)
+-- >>> import Prelude.Compat (Char, not, uncurry)
