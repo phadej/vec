@@ -1,15 +1,21 @@
-{-# LANGUAGE DeriveGeneric   #-}
-{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE DeriveGeneric       #-}
+{-# LANGUAGE GADTs               #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TemplateHaskell     #-}
+{-# LANGUAGE TypeOperators       #-}
 {-# OPTIONS_GHC -O -fplugin Test.Inspection.Plugin #-}
 module Main (main) where
 
-import Data.Tagged     (Tagged (..), retag)
-import GHC.Generics    (Generic)
+import Data.Tagged        (Tagged (..), retag)
+import Data.Type.Equality
+import GHC.Generics       (Generic)
 import Test.Inspection
 
 import qualified Data.Fin      as F
 import qualified Data.Fin.Enum as E
 import qualified Data.Type.Nat as N
+
+import Unsafe.Coerce (unsafeCoerce)
 
 -------------------------------------------------------------------------------
 -- InlineInduction
@@ -48,6 +54,19 @@ rhsEnum EQ' = F.S F.Z
 rhsEnum GT' = F.S (F.S F.Z)
 
 inspect $  'lhsEnum ==- 'rhsEnum
+
+-------------------------------------------------------------------------------
+-- Proofs
+-------------------------------------------------------------------------------
+
+lhsProof :: forall n. N.SNatI n => F.Fin (N.Mult n N.Nat1) -> F.Fin n
+lhsProof x = case N.proofMultNOne :: N.Mult n N.Nat1 :~: n of
+    Refl -> x
+
+rhsProof :: forall n. N.SNatI n => F.Fin (N.Mult n N.Nat1) -> F.Fin n
+rhsProof x = unsafeCoerce x
+
+inspect $  'lhsProof ==- 'rhsProof
 
 -------------------------------------------------------------------------------
 -- Main to make GHC happy
