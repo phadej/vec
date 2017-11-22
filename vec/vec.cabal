@@ -1,8 +1,8 @@
 name:                vec
 version:             0
-synopsis:            Vec: length-indexed list
+synopsis:            Vec: length-indexed (sized) list
 description:
-  This package provides length indexed lists, i.e. 'Vec'.
+  This package provides length-indexed (sized) lists, also known as vectors.
   .
   @
   data Vec n a where
@@ -23,15 +23,28 @@ description:
   As best approach depends on the application, @vec@ doesn't do any magic
   transformation. Benchmark your code.
   .
-  Differences to other packages:
+  This package uses [fin](https://hackage.haskell.org/package/fin), i.e. not @GHC.TypeLits@, for indexes.
   .
-  * [linear](http://hackage.haskell.org/package/linear) has 'V' type,
+  See [Hasochism: the pleasure and pain of dependently typed haskell programming](https://doi.org/10.1145/2503778.2503786)
+  by Sam Lindley and Conor McBride for answers to /how/ and /why/.
+  Read [APLicative Programming with Naperian Functors](https://doi.org/10.1007/978-3-662-54434-1_21)
+  by Jeremy Gibbons for (not so) different ones.
+  .
+  === Similar packages
+  .
+  * [linear](https://hackage.haskell.org/package/linear) has 'V' type,
     which uses 'Vector' from @vector@ package as backing store.
-    `Vec` is a real GADT, but tries to provide as many useful instances (upto @lens@).
+    @Vec@ is a real GADT, but tries to provide as many useful instances (upto @lens@).
   .
-  * [sized-vector](http://hackage.haskell.org/package/sized-vector) depends
-    on @singletons@ package. `vec` isn't light on dependencies either,
+  * [vector-sized](https://hackage.haskell.org/package/vector-sized)
+    Great package using @GHC.TypeLits@. Current version (0.6.1.0) uses
+    @finite-typelits@ and @Int@ indexes.
+  .
+  * [sized-vector](https://hackage.haskell.org/package/sized-vector) depends
+    on @singletons@ package. @vec@ isn't light on dependencies either,
     but try to provide wide GHC support.
+  .
+  * [fixed-vector](https://hackage.haskell.org/package/fixed-vector)
   .
   * [sized](https://hackage.haskell.org/package/sized) also depends
     on a @singletons@ package. The @Sized f n a@ type is generalisation of
