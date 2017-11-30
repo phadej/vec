@@ -2,3 +2,4 @@ dist/
 dist-newstyle/
 .ghc.environment.*
 tmp/
+.stack-work/

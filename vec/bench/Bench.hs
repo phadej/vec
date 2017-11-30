@@ -12,6 +12,7 @@ import qualified Data.Vector         as V
 import qualified Data.Vector.Unboxed as U
 
 import DotProduct
+import Universe
 
 xsl, ysl :: [Int]
 xsl = [1,2,3,4,5]
@@ -50,8 +51,25 @@ main = defaultMain
         , bench "vector"  $ whnf (uncurry vectorDotProduct)  (xsv, ysv)
         , bench "unboxed" $ whnf (uncurry unboxedDotProduct) (xsu, ysu)
         , bench "vec"     $ whnf (uncurry vecDotProduct)     (xs,  ys)
+        , bench "vec'"    $ whnf (uncurry vecDotProduct')    (xs,  ys)
         , bench "pull"    $ whnf (uncurry pullDotProduct)    (xs,  ys)
         , bench "pull'"   $ whnf (uncurry pullDotProduct')   (xsp, ysp)
         , bench "inline"  $ whnf (uncurry inlineDotProduct)  (xs,  ys)
+        ]
+    , bgroup "length/universe"
+        [ bench "listInt"   $ whnf listIntLengthUniverse   1000
+        , bench "list"      $ whnf listLengthUniverse      1000
+        , bench "vec"       $ whnf vecLengthUniverse       1000
+        , bench "vecLinear" $ whnf vecLinearLengthUniverse 1000
+        , bench "vecPull"   $ whnf vecPullLengthUniverse   1000
+        , bench "pull"      $ whnf pullLengthUniverse      1000
+        ]
+    , bgroup "sum/universe"
+        [ bench "listInt"   $ whnf listIntSumUniverse   100
+        , bench "list"      $ whnf listSumUniverse      100
+        , bench "vec"       $ whnf vecSumUniverse       100
+        , bench "vecLinear" $ whnf vecLinearSumUniverse 100
+        , bench "vecPull"   $ whnf vecPullSumUniverse   100
+        , bench "pull"      $ whnf pullSumUniverse      100
         ]
     ]

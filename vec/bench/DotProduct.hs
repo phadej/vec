@@ -19,6 +19,9 @@ unboxedDotProduct xs ys = U.sum (U.zipWith (*) xs ys)
 vecDotProduct :: L.Vec n Int -> L.Vec n Int -> Int
 vecDotProduct xs ys = L.sum (L.zipWith (*) xs ys)
 
+vecDotProduct' :: L.Vec n Int -> L.Vec n Int -> Int
+vecDotProduct' xs ys = L.foldl' (+) 0 (L.zipWith (*) xs ys)
+
 pullDotProduct :: N.SNatI n => L.Vec n Int -> L.Vec n Int -> Int
 pullDotProduct xs ys = pullDotProduct' (L.toPull xs) (L.toPull ys)
 
