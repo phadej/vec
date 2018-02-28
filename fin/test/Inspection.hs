@@ -106,6 +106,23 @@ rhsUnfold f = f (f (f (fix f)))
 inspect $  'lhsUnfold === 'rhsUnfold
 
 -------------------------------------------------------------------------------
+-- Power
+-------------------------------------------------------------------------------
+
+power :: forall n. N.InlineInduction n => Proxy n -> Int -> Int
+power _ k = unTagged impl where
+    impl :: Tagged n Int
+    impl = N.inlineInduction1 (Tagged 1) $ \(Tagged rec') -> Tagged (rec' * k)
+
+lhsPower5 :: Int -> Int
+lhsPower5 = power (Proxy :: Proxy N.Nat5)
+
+rhsPower5 :: Int -> Int
+rhsPower5 k = k * k * k * k * k
+
+inspect $ 'lhsPower5 === 'rhsPower5
+
+-------------------------------------------------------------------------------
 -- Main to make GHC happy
 -------------------------------------------------------------------------------
 
