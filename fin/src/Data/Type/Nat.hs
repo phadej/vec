@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP                  #-}
 {-# LANGUAGE DataKinds            #-}
 {-# LANGUAGE GADTs                #-}
 {-# LANGUAGE KindSignatures       #-}
@@ -164,7 +165,9 @@ type family EqNat (n :: Nat) (m :: Nat) where
     EqNat ('S n) ('S m) = EqNat n m
     EqNat n      m      = 'False
 
+#if !MIN_VERSION_base(4,11,0)
 type instance n == m = EqNat n m
+#endif
 
 -------------------------------------------------------------------------------
 -- Induction
