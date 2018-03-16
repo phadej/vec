@@ -63,7 +63,6 @@ import Prelude.Compat
 
 import Control.Applicative (Applicative (..))
 import Control.Lens        ((<&>))
-import Data.Boring         (Boring (..))
 import Data.Distributive   (Distributive (..))
 import Data.Fin            (Fin)
 import Data.Functor.Apply  (Apply (..))
@@ -126,9 +125,6 @@ instance Semigroup a => Semigroup (Vec n a) where
 instance Monoid a => Monoid (Vec n a) where
     mempty = Vec mempty
     Vec a `mappend` Vec b = Vec (mappend a b)
-
-instance n ~ 'N.Z => Boring (Vec n a) where
-    boring = empty
 
 instance Apply (Vec n) where
     (<.>)  = zipWith ($)

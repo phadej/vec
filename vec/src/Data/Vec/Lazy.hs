@@ -84,7 +84,6 @@ import Prelude.Compat
 import Control.Applicative (Applicative (..))
 import Control.DeepSeq     (NFData (..))
 import Control.Lens        ((<&>))
-import Data.Boring         (Boring (..))
 import Data.Distributive   (Distributive (..))
 import Data.Fin            (Fin)
 import Data.Functor.Apply  (Apply (..))
@@ -191,9 +190,6 @@ instance Semigroup a => Semigroup (Vec n a) where
 instance (Monoid a, N.SNatI n) => Monoid (Vec n a) where
     mempty = pure mempty
     mappend = zipWith mappend
-
-instance n ~ 'N.Z => Boring (Vec n a) where
-    boring = VNil
 
 instance Apply (Vec n) where
     (<.>) = zipWith ($)
