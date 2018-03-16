@@ -75,15 +75,15 @@ library
   build-depends:
     base     >=4.7     && <4.12,
     deepseq  >=1.3.0.2 && <1.5,
-    hashable >=1.2.6.1 && <1.3
+    hashable >=1.2.7.0 && <1.3
 
   if !impl(ghc >= 8.0)
     build-depends:
-      semigroups >=0.18.3 && <0.19
+      semigroups >=0.18.4 && <0.19
 
   if !impl(ghc >= 7.10)
     build-depends:
-       nats >=1     && <1.2,
+       nats >=1.1.2 && <1.2,
        void >=0.7.2 && <0.8
 
   ghc-options:         -Wall -fprint-explicit-kinds
@@ -105,7 +105,7 @@ test-suite inspection
     base,
     fin,
     tagged,
-    inspection-testing >= 0.1.2 && <0.3
+    inspection-testing >= 0.2.0.1 && <0.3
 
   if !impl(ghc >= 8.0)
     buildable: False
