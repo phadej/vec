@@ -108,7 +108,7 @@ test-suite inspection
     base,
     fin,
     tagged,
-    inspection-testing >= 0.2.0.1 && <0.4
+    inspection-testing >= 0.2.0.1 && <0.5
 
   if !impl(ghc >= 8.0)
     buildable: False
