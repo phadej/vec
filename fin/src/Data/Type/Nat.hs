@@ -341,7 +341,7 @@ newtype ProofPlusNZero n = ProofPlusNZero { getProofPlusNZero :: Plus n Nat0 :~:
 proofMultZeroN :: Mult Nat0 n :~: Nat0
 proofMultZeroN = Refl
 
--- | @n * 0 = n@
+-- | @n * 0 = 0@
 proofMultNZero :: forall n proxy. SNatI n => proxy n -> Mult n Nat0 :~: Nat0
 proofMultNZero _ =
     getProofMultNZero (induction (ProofMultNZero Refl) step :: ProofMultNZero n)
