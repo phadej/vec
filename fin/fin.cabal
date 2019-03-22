@@ -68,6 +68,9 @@ library
     Data.Fin.Enum
     Data.Nat
     Data.Type.Nat
+    Data.Type.Nat.CMP
+    Data.Type.Nat.LE
+    Data.Type.Nat.LT
 
   build-depends:
       base      >=4.7     && <4.13
