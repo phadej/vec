@@ -3,7 +3,7 @@ name:               vec
 version:            0.1.1
 x-revision:         1
 synopsis:           Vec: length-indexed (sized) list
-category:           Data
+category:           Data, Dependent Types
 description:
   This package provides length-indexed (sized) lists, also known as vectors.
   .
@@ -65,7 +65,7 @@ license:            BSD3
 license-file:       LICENSE
 author:             Oleg Grenrus <oleg.grenrus@iki.fi>
 maintainer:         Oleg.Grenrus <oleg.grenrus@iki.fi>
-copyright:          (c) 2017 Oleg Grenrus
+copyright:          (c) 2017-2019 Oleg Grenrus
 build-type:         Simple
 extra-source-files: ChangeLog.md
 tested-with:

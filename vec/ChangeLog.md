@@ -1,4 +1,4 @@
-# Revision history for boring
+# Revision history for vec
 
 ## 0.1.1
 

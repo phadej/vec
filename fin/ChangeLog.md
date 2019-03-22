@@ -1,4 +1,10 @@
-# Revision history for boring
+# Revision history for fin
+
+## 0.0.3
+
+- Add `Data.Type.Nat.LE`, `Data.Type.Nat.LT` and `Data.Type.Nat.LE.ReflStep`
+  modules
+- Add `withSNat` and `discreteNat`
 
 ## 0.0.2
 
