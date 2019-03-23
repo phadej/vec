@@ -1,7 +1,6 @@
 cabal-version:      >=1.10
 name:               vec
-version:            0.1
-x-revision:         3
+version:            0.1.1
 synopsis:           Vec: length-indexed (sized) list
 category:           Data
 description:
@@ -13,12 +12,14 @@ description:
   \    (:::) :: a -> Vec n a -> Vec ('Nat.S n) a
   @
   .
-  The functions are implemented in three flavours:
+  The functions are implemented in four flavours:
   .
   * __naive__: with explicit recursion. It's simple, constraint-less, yet slow.
   .
   * __pull__: using @Fin n -> a@ representation, which fuses well,
   but makes some programs hard to write. And
+  .
+  * __data-family__: which allows lazy pattern matching
   .
   * __inline__: which exploits how GHC dictionary inlining works, unrolling
   recursion if the size of 'Vec' is known statically.
@@ -76,6 +77,7 @@ source-repository head
 library
   exposed-modules:
     Data.Vec.DataFamily.SpineStrict
+    Data.Vec.DataFamily.SpineStrict.Pigeonhole
     Data.Vec.Lazy
     Data.Vec.Lazy.Inline
     Data.Vec.Pull
@@ -86,10 +88,11 @@ library
     , base-compat    >=0.9.3   && <0.11
     , deepseq        >=1.3.0.2 && <1.5
     , distributive   >=0.5.3   && <0.7
-    , fin            >=0.0.1   && <0.1
+    , fin            >=0.0.2   && <0.1
     , hashable       >=1.2.7.0 && <1.3
     , lens           >=4.16    && <4.18
     , semigroupoids  >=5.2.2   && <5.4
+    , transformers   >=0.3.0.0 && <0.6
 
   if !impl(ghc >=8.0)
     build-depends: semigroups >=0.18.4 && <0.18.6
@@ -110,6 +113,8 @@ test-suite inspection
   other-modules:
     Inspection
     Inspection.DataFamily.SpineStrict
+    Inspection.DataFamily.SpineStrict.Pigeonhole
+
   ghc-options:      -Wall -fprint-explicit-kinds
   hs-source-dirs:   test
   default-language: Haskell2010
@@ -122,16 +127,6 @@ test-suite inspection
 
   if !impl(ghc >=8.0)
     buildable: False
-
-  -- useful for development
-  ghc-options:
-
--- -dsuppress-idinfo
--- -dsuppress-coercions
--- -dsuppress-type-applications
--- -dsuppress-module-prefixes
--- -dsuppress-type-signatures
--- -dsuppress-uniques
 
 benchmark bench
   type:             exitcode-stdio-1.0

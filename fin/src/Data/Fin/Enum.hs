@@ -27,10 +27,11 @@ module Data.Fin.Enum (
 
 import Prelude hiding (Enum (..))
 
-import Data.Fin     (Fin)
-import Data.Nat     (Nat)
-import Data.Proxy   (Proxy (..))
-import GHC.Generics ((:+:) (..), M1 (..), U1 (..), V1)
+import Data.Bifunctor (bimap)
+import Data.Fin       (Fin)
+import Data.Nat       (Nat)
+import Data.Proxy     (Proxy (..))
+import GHC.Generics   ((:+:) (..), M1 (..), U1 (..), V1)
 
 import qualified Data.Fin      as F
 import qualified Data.Type.Nat as N
@@ -86,6 +87,13 @@ instance Enum Bool
 
 -- | 'Ordering' ~ 3
 instance Enum Ordering
+
+-- | 'Either' ~ @+@
+instance (Enum a, Enum b, N.InlineInduction (EnumSize a)) => Enum (Either a b) where
+    type EnumSize (Either a b) = N.Plus (EnumSize a) (EnumSize b)
+
+    to   = bimap to to . F.split
+    from = F.append . bimap from from
 
 -------------------------------------------------------------------------------
 -- EnumSize

@@ -456,16 +456,24 @@ reifyList (x : xs) f = reifyList xs $ \xs' -> f (x ::: xs')
 -- Indexing
 -------------------------------------------------------------------------------
 
-flipIndex :: Fin n -> Vec n a -> a
-flipIndex F.Z     (x ::: _)  = x
-flipIndex (F.S n) (_ ::: xs) = flipIndex n xs
+flipIndex :: N.InlineInduction n => Fin n -> Vec n a -> a
+flipIndex = getIndex (N.inlineInduction1 start step) where
+    start :: Index 'Z a
+    start = Index F.absurd
+
+    step :: Index m a-> Index ('N.S m) a
+    step (Index go) = Index $ \n (x ::: xs) -> case n of
+        F.Z   -> x
+        F.S m -> go m xs
+
+newtype Index n a = Index { getIndex :: Fin n -> Vec n a -> a }
 
 -- | Indexing.
 --
 -- >>> ('a' ::: 'b' ::: 'c' ::: VNil) ! F.S F.Z
 -- 'b'
 --
-(!) :: Vec n a -> Fin n -> a
+(!) :: N.InlineInduction n => Vec n a -> Fin n -> a
 (!) = flip flipIndex
 
 -- | Index lens.
