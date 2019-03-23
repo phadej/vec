@@ -28,11 +28,17 @@ module Data.Fin (
     inlineUniverse1,
     absurd,
     boring,
+    -- * Plus
+    weakenLeft,
+    weakenRight,
+    append,
+    split,
     -- * Aliases
     fin0, fin1, fin2, fin3, fin4, fin5, fin6, fin7, fin8, fin9,
     ) where
 
 import Control.DeepSeq    (NFData (..))
+import Data.Bifunctor     (bimap)
 import Data.Hashable      (Hashable (..))
 import Data.List.NonEmpty (NonEmpty (..))
 import Data.Proxy         (Proxy (..))
@@ -283,6 +289,64 @@ absurd n = case n of {}
 -- 0
 boring :: Fin N.Nat1
 boring = Z
+
+-------------------------------------------------------------------------------
+-- Append & Split
+-------------------------------------------------------------------------------
+
+weakenLeft :: forall n m. N.InlineInduction n => Proxy m -> Fin n -> Fin (N.Plus n m)
+weakenLeft _ = getWeakenLeft (N.inlineInduction start step :: WeakenLeft m n) where
+    start :: WeakenLeft m 'N.Z
+    start = WeakenLeft absurd
+
+    step :: WeakenLeft m p -> WeakenLeft m ('N.S p)
+    step (WeakenLeft go) = WeakenLeft $ \n -> case n of
+        Z    -> Z
+        S n' -> S (go n')
+
+newtype WeakenLeft m n = WeakenLeft { getWeakenLeft :: Fin n -> Fin (N.Plus n m) }
+
+weakenRight :: forall n m. N.InlineInduction n => Proxy n -> Fin m -> Fin (N.Plus n m)
+weakenRight _ = getWeakenRight (N.inlineInduction start step :: WeakenRight m n) where
+    start = WeakenRight id
+    step (WeakenRight go) = WeakenRight $ \x -> S $ go x
+
+newtype WeakenRight m n = WeakenRight { getWeakenRight :: Fin m -> Fin (N.Plus n m) }
+
+-- | Append two 'Fin's together.
+--
+-- >>> append (Left fin2 :: Either (Fin N.Nat5) (Fin N.Nat4))
+-- 2
+--
+-- >>> append (Right fin2 :: Either (Fin N.Nat5) (Fin N.Nat4))
+-- 7
+--
+append :: forall n m. N.InlineInduction n => Either (Fin n) (Fin m) -> Fin (N.Plus n m)
+append (Left n)  = weakenLeft (Proxy :: Proxy m) n
+append (Right m) = weakenRight (Proxy :: Proxy n) m
+
+-- | Inverse of 'append'.
+--
+-- >>> split fin2 :: Either (Fin N.Nat2) (Fin N.Nat3)
+-- Right 0
+--
+-- >>> split fin1 :: Either (Fin N.Nat2) (Fin N.Nat3)
+-- Left 1
+--
+-- >>> map split universe :: [Either (Fin N.Nat2) (Fin N.Nat3)]
+-- [Left 0,Left 1,Right 0,Right 1,Right 2]
+--
+split :: forall n m. N.InlineInduction n => Fin (N.Plus n m) -> Either (Fin n) (Fin m)
+split = getSplit (N.inlineInduction start step) where
+    start :: Split m 'N.Z
+    start = Split Right
+
+    step :: Split m p -> Split m ('N.S p)
+    step (Split go) = Split $ \x -> case x of
+        Z    -> Left Z
+        S x' -> bimap S id $ go x'
+
+newtype Split m n = Split { getSplit :: Fin (N.Plus n m) -> Either (Fin n) (Fin m) }
 
 -------------------------------------------------------------------------------
 -- Aliases

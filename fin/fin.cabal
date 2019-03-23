@@ -1,10 +1,8 @@
-cabal-version:       >=1.10
-name:                fin
-version:             0.0.1
-x-revision:          1
-
-synopsis:            Nat and Fin: peano naturals and finite numbers
-category:            Data
+cabal-version:      >=1.10
+name:               fin
+version:            0.0.2
+synopsis:           Nat and Fin: peano naturals and finite numbers
+category:           Data
 description:
   This package provides two simple types, and some tools to work with them.
   Also on type level as @DataKinds@.
@@ -35,39 +33,34 @@ description:
   . Is a great package, but uses @GHC.TypeLits@.
   .
   * [type-natural](https://hackage.haskell.org/package/type-natural) depends
-    on @singletons@ package. @fin@ will try to stay light on the dependencies,
-    and support as many GHC versions as practical.
+  on @singletons@ package. @fin@ will try to stay light on the dependencies,
+  and support as many GHC versions as practical.
   .
   * [peano](https://hackage.haskell.org/package/peano) is very incomplete
   .
   * [nat](https://hackage.haskell.org/package/nat) as well.
   .
   * [PeanoWitnesses](https://hackage.haskell.org/package/PeanoWitnesses)
-    doesn't use @DataKinds@.
+  doesn't use @DataKinds@.
   .
   * [type-combinators](https://hackage.haskell.org/package/type-combinators)
-    is big package too.
+  is big package too.
 
-homepage:            https://github.com/phadej/vec
-bug-reports:         https://github.com/phadej/vec/issues
-license:             BSD3
-license-file:        LICENSE
-author:              Oleg Grenrus <oleg.grenrus@iki.fi>
-maintainer:          Oleg.Grenrus <oleg.grenrus@iki.fi>
-copyright:           (c) 2017 Oleg Grenrus
-build-type:          Simple
-extra-source-files:  ChangeLog.md
+homepage:           https://github.com/phadej/vec
+bug-reports:        https://github.com/phadej/vec/issues
+license:            BSD3
+license-file:       LICENSE
+author:             Oleg Grenrus <oleg.grenrus@iki.fi>
+maintainer:         Oleg.Grenrus <oleg.grenrus@iki.fi>
+copyright:          (c) 2017 Oleg Grenrus
+build-type:         Simple
+extra-source-files: ChangeLog.md
 tested-with:
-  GHC==7.8.4,
-  GHC==7.10.3,
-  GHC==8.0.2,
-  GHC==8.2.2,
-  GHC==8.4.4,
-  GHC==8.6.4
+  GHC ==8.6.4 || ==8.4.4 || ==8.2.2 || ==8.0.2 || ==7.10.3 || ==7.8.4
 
 source-repository head
-  type:      git
-  location:  https://github.com/phadej/vec.git
+  type:     git
+  location: https://github.com/phadej/vec.git
 
 library
   exposed-modules:
@@ -75,49 +68,46 @@ library
     Data.Fin.Enum
     Data.Nat
     Data.Type.Nat
+
   build-depends:
-    base     >=4.7     && <4.13,
-    deepseq  >=1.3.0.2 && <1.5,
-    hashable >=1.2.7.0 && <1.3
+      base      >=4.7     && <4.13
+    , deepseq   >=1.3.0.2 && <1.5
+    , hashable  >=1.2.7.0 && <1.3
 
-  if !impl(ghc >= 8.0)
+  if !impl(ghc >=8.2)
+    build-depends: bifunctors >=5.5.3 && <5.6
+
+  if !impl(ghc >=8.0)
+    build-depends: semigroups >=0.18.4 && <0.19
+
+  if !impl(ghc >=7.10)
     build-depends:
-      semigroups >=0.18.4 && <0.19
+        nats  >=1.1.2 && <1.2
+      , void  >=0.7.2 && <0.8
 
-  if !impl(ghc >= 7.10)
-    build-depends:
-       nats >=1.1.2 && <1.2,
-       void >=0.7.2 && <0.8
+  ghc-options:      -Wall -fprint-explicit-kinds
+  hs-source-dirs:   src
+  default-language: Haskell2010
 
-  ghc-options:         -Wall -fprint-explicit-kinds
-  hs-source-dirs:      src
-  default-language:    Haskell2010
-
-  -- dump-core
-  -- if impl(ghc >= 8.0)
-  --  build-depends: dump-core
-  --  ghc-options: -fplugin=DumpCore -fplugin-opt DumpCore:core-html
+-- dump-core
+-- if impl(ghc >= 8.0)
+--  build-depends: dump-core
+--  ghc-options: -fplugin=DumpCore -fplugin-opt DumpCore:core-html
 
 test-suite inspection
-  type:                exitcode-stdio-1.0
-  main-is:             Inspection.hs
-  ghc-options:         -Wall -fprint-explicit-kinds
-  hs-source-dirs:      test
-  default-language:    Haskell2010
+  type:             exitcode-stdio-1.0
+  main-is:          Inspection.hs
+  ghc-options:      -Wall -fprint-explicit-kinds
+  hs-source-dirs:   test
+  default-language: Haskell2010
   build-depends:
-    base,
-    fin,
-    tagged,
-    inspection-testing >= 0.2.0.1 && <0.5
+      base
+    , fin
+    , inspection-testing  >=0.2.0.1 && <0.5
+    , tagged
 
-  if !impl(ghc >= 8.0)
+  if !impl(ghc >=8.0)
     buildable: False
 
   -- useful for development
   ghc-options:
-  -- -dsuppress-idinfo
-  -- -dsuppress-coercions
-  -- -dsuppress-type-applications
-  -- -dsuppress-module-prefixes
-  -- -dsuppress-type-signatures
-  -- -dsuppress-uniques
