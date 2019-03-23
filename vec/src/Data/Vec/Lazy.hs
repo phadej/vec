@@ -12,7 +12,7 @@
 {-# LANGUAGE StandaloneDeriving     #-}
 {-# LANGUAGE TypeFamilies           #-}
 {-# LANGUAGE UndecidableInstances   #-}
--- | Lazy length-indexed list: 'Vec'.
+-- | Lazy (in elements and spine) length-indexed list: 'Vec'.
 module Data.Vec.Lazy (
     Vec (..),
     -- * Construction
@@ -389,7 +389,7 @@ reifyList (x : xs) f = reifyList xs $ \xs' -> f (x ::: xs')
 -- 'b'
 --
 (!) :: Vec n a -> Fin n -> a
-(!) (x ::: _)  (F.Z)   = x
+(!) (x ::: _)  F.Z     = x
 (!) (_ ::: xs) (F.S n) = xs ! n
 (!) VNil n = case n of {}
 
