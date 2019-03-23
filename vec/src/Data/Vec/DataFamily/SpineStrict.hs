@@ -394,8 +394,8 @@ newtype ToList n a = ToList { getToList :: Vec n a -> [a] }
 -- >>> fromList "xy" :: Maybe (Vec N.Nat3 Char)
 -- Nothing
 --
-fromList :: N.SNatI n => [a] -> Maybe (Vec n a)
-fromList = getFromList (N.induction1 start step) where
+fromList :: N.InlineInductionI n => [a] -> Maybe (Vec n a)
+fromList = getFromList (N.inlineInduction1 start step) where
     start :: FromList 'Z a
     start = FromList $ \xs -> case xs of
         []      -> Just VNil
