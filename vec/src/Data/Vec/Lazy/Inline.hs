@@ -76,8 +76,8 @@ module Data.Vec.Lazy.Inline (
 
 import Prelude ()
 import Prelude.Compat
-       (Applicative (..), Int, Maybe (..), Monoid (..), Num (..), const, id,
-       ($), (.), (<$>))
+       (Applicative (..), Int, Maybe (..), Monoid (..), Num (..), const, flip,
+       id, ($), (.), (<$>))
 
 import Control.Applicative (liftA2)
 import Data.Fin            (Fin)
@@ -207,23 +207,25 @@ fromListPrefix = getFromList (N.inlineInduction1 start step) where
 -- Indexing
 -------------------------------------------------------------------------------
 
+flipIndex :: N.InlineInduction n => Fin n -> Vec n a -> a
+flipIndex = getIndex (N.inlineInduction1 start step) where
+    start :: Index 'Z a
+    start = Index F.absurd
+
+    step :: Index m a-> Index ('N.S m) a
+    step (Index go) = Index $ \n (x ::: xs) -> case n of
+        F.Z   -> x
+        F.S m -> go m xs
+
+newtype Index n a = Index { getIndex :: Fin n -> Vec n a -> a }
+
 -- | Indexing.
 --
 -- >>> ('a' ::: 'b' ::: 'c' ::: VNil) ! F.S F.Z
 -- 'b'
 --
 (!) :: N.InlineInduction n => Vec n a -> Fin n -> a
-(!) = appIndex (N.inlineInduction1 start step) where
-    start :: Index 'Z a
-    start = Index $ \_ -> F.absurd
-
-    step :: Index n a -> Index ('S n) a
-    step (Index f) = Index $ \xs i -> case xs of
-        x ::: xs' -> case i of
-            F.Z    -> x
-            F.S i' -> f xs' i'
-
-newtype Index n a = Index { appIndex :: Vec n a -> Fin n -> a }
+(!) = flip flipIndex
 
 -- | Index lens.
 --
