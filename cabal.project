@@ -5,6 +5,3 @@ package fin
 
 package vec
   ghc-options: -Wall
-
--- TODO:
-constraints: base-compat-batteries <0

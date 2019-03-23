@@ -4,7 +4,7 @@ build :
 	cabal new-build --enable-tests --enable-benchmarks all
 
 doctest : build
-	mkdir -p tmp
+	for ghcenv in .ghc.environment.*; do grep -Ev 'base-compat-[0-9]' $$ghcenv > .ghc.env; mv .ghc.env $$ghcenv; done
 	doctest --fast -fdiagnostics-color=never fin/src
 	doctest --fast -fdiagnostics-color=never vec/src
 
