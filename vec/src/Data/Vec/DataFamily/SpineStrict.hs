@@ -643,6 +643,7 @@ traverse f =  getTraverse $ N.inlineInduction1 start step where
 
     step :: Traverse f a m b -> Traverse f a ('S m) b
     step (Traverse go) = Traverse $ \(x ::: xs) -> liftA2 (:::) (f x) (go xs)
+{-# INLINE traverse #-}
 
 newtype Traverse f a n b = Traverse { getTraverse :: Vec n a -> f (Vec n b) }
 
@@ -665,6 +666,7 @@ itraverse = getITraverse $ N.inlineInduction1 start step where
 
     step :: ITraverse f a m b -> ITraverse f a ('S m) b
     step (ITraverse go) = ITraverse $ \f (x ::: xs) -> liftA2 (:::) (f F.Z x) (go (f . F.S) xs)
+{-# INLINE itraverse #-}
 
 newtype ITraverse f a n b = ITraverse { getITraverse :: (Fin n -> a -> f b) -> Vec n a -> f (Vec n b) }
 

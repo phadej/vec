@@ -14,13 +14,20 @@ module Data.Vec.DataFamily.SpineStrict.Pigeonhole (
     -- * Representable
     gindex,
     gtabulate,
+    -- ** Traversable with index
+    gtraverse,
+    gitraverse,
     -- * Generic implementation
     gfrom, GFrom,
     gto, GTo,
     GPigeonholeSize,
     ) where
 
+import Prelude ()
+import Prelude.Compat
+
 import Control.Arrow                   (first)
+import Data.Functor.Confusing          (confusing, iconfusing)
 import Data.Functor.Identity           (Identity (..))
 import Data.Functor.Product            (Product (..))
 import Data.Functor.Rep                (tabulate)
@@ -122,6 +129,40 @@ gtabulate
        )
      => (i -> a) -> f a
 gtabulate idx = gto $ tabulate (idx . F.gto)
+
+-------------------------------------------------------------------------------
+-- Generic traversable with index
+-------------------------------------------------------------------------------
+
+-- | Generic traverse.
+--
+-- __Don't use__, rather use @DeriveTraversable@
+gtraverse
+    :: ( G.Generic1 t, GFrom t, GTo t
+       , N.InlineInduction (GPigeonholeSize t)
+       , Applicative f
+       )
+    => (a -> f b) -> t a -> f (t b)
+gtraverse = confusing $ \afb ta -> gto <$> V.traverse afb (gfrom ta)
+{-# INLINE gtraverse #-}
+
+-- | Traverse with index.
+--
+-- >>> data Key = Key1 | Key2 | Key3 deriving (Show, Generic)
+-- >>> data Values a = Values a a a deriving (Generic1)
+--
+-- >>> gitraverse (\i a -> Const [(i :: Key, a)]) (Values 'a' 'b' 'c')
+-- Const [(Key1,'a'),(Key2,'b'),(Key3,'c')]
+--
+gitraverse
+    :: ( G.Generic i, F.GTo i
+       , G.Generic1 t, GFrom t, GTo t
+       , F.GEnumSize i ~ GPigeonholeSize t, N.InlineInduction (GPigeonholeSize t)
+       , Applicative f
+       )
+    => (i -> a -> f b) -> t a -> f (t b)
+gitraverse = iconfusing $ \iafb ta -> gto <$> V.itraverse (\i a -> iafb (F.gto i) a) (gfrom ta)
+{-# INLINE gitraverse #-}
 
 -------------------------------------------------------------------------------
 -- PigeonholeSize
