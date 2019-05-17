@@ -9,6 +9,12 @@
 {-# LANGUAGE TypeOperators         #-}
 
 {-# LANGUAGE UndecidableInstances #-}
+
+{-# LANGUAGE RankNTypes            #-}
+{-# LANGUAGE PolyKinds #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE ConstraintKinds #-}
+{-# LANGUAGE TypeApplications #-}
 module Data.Type.Nat.LT (
     LT (..),
     LTProof (..),
@@ -19,6 +25,8 @@ module Data.Type.Nat.LT (
     ) where
 
 import qualified Data.Type.Nat as N
+
+import GHC.Exts (Constraint)
 
 -------------------------------------------------------------------------------
 -- Proof
@@ -87,3 +95,48 @@ ltTrans (LTS p) (LTS q) = LTS (ltTrans p q)
 -------------------------------------------------------------------------------
 -- More lemmas
 -------------------------------------------------------------------------------
+
+ltZeroAbsurd :: LTProof x 'N.Z -> a
+ltZeroAbsurd p = case p of {}
+
+ltSucc :: LTProof n m -> LTProof n ('N.S n)
+ltSucc = undefined
+
+-------------------------------------------------------------------------------
+-- WT
+-------------------------------------------------------------------------------
+
+newtype Acc (rel :: k -> k -> *) (x :: k) =
+    MkAcc { unAcc :: forall y. rel y x -> Acc rel y }
+
+data P :: N.Nat -> N.Nat -> * where
+    LTRefl :: P n ('N.S n)
+    LTSucc :: P n m -> P n ('N.S m)
+
+ltWellFounded :: Acc P n
+ltWellFounded = MkAcc ltWellFounded'
+
+ltWellFounded' :: P y n -> Acc  P y
+ltWellFounded' LTRefl     = ltWellFounded
+ltWellFounded' (LTSucc p) = ltWellFounded' p
+
+bar :: N.SNat n -> Acc P n -> Int
+bar N.SZ _   = 0
+bar N.SS acc = bar' acc
+
+bar' :: forall n. N.SNatI n => Acc P ('N.S n) -> Int
+bar' acc = bar (N.snat :: N.SNat n) (unAcc acc LTRefl)
+
+{-
+ltWellFounded' :: forall n. N.SNatI n => Acc N.SNatI LTProof n
+ltWellFounded' = case N.snat :: N.SNat n of
+    N.SZ -> MkAcc ltZeroAbsurd 
+    N.SS -> MkAcc foo
+
+foo :: forall y x. (N.SNatI y, N.SNatI x) => LTProof y ('N.S x) -> Acc N.SNatI LTProof y
+foo LTZ     = ltWellFounded'
+foo (LTS p) = unAcc (ltWellFounded' @x) (bar p)
+
+bar :: LTProof n m -> LTProof ('N.S n) m
+bar = undefined
+-}

@@ -7,6 +7,7 @@
 {-# LANGUAGE PolyKinds             #-}
 {-# LANGUAGE TypeFamilies          #-}
 {-# LANGUAGE TypeOperators         #-}
+
 module Data.Type.Nat.CMP (
     CMP,
     WithOrdering,
@@ -17,6 +18,8 @@ module Data.Type.Nat.CMP (
 
 import Data.Type.Equality
 import Data.Type.Nat.LT
+
+import Data.Kind (Type)
 
 import qualified Data.Type.Nat as N
 
@@ -44,3 +47,4 @@ ltCmpLT (LTS lt) = case ltCmpLT lt of Refl -> Refl
 ltCmpGT :: LTProof n m -> CMP m n :~: 'GT
 ltCmpGT LTZ      = Refl
 ltCmpGT (LTS lt) = case ltCmpGT lt of Refl -> Refl
+
