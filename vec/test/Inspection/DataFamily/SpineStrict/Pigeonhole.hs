@@ -48,6 +48,7 @@ rhsIndex (Values _ _ x _ _) Key3 = x
 rhsIndex (Values _ _ _ x _) Key4 = x
 rhsIndex (Values _ _ _ _ x) Key5 = x
 
+inspect $ hasNoGenerics 'lhsIndex
 inspect $ 'lhsIndex === 'rhsIndex
 
 -------------------------------------------------------------------------------
@@ -60,6 +61,7 @@ lhsTabulate = gtabulate
 rhsTabulate :: (Key -> a) -> Values a
 rhsTabulate f = Values (f Key1) (f Key2) (f Key3) (f Key4) (f Key5)
 
+inspect $ hasNoGenerics 'lhsTabulate
 inspect $ 'lhsTabulate === 'rhsTabulate
 
 -------------------------------------------------------------------------------
@@ -77,6 +79,7 @@ rhsTraverse f (Values x y z u v) = pure Values
     <*> f u
     <*> f v
 
+inspect $ hasNoGenerics 'lhsTraverse
 inspect $ 'lhsTraverse === 'rhsTraverse
 
 lhsITraverse :: Applicative f => (Key -> a -> f b) -> Values a -> f (Values b)
@@ -90,4 +93,5 @@ rhsITraverse f (Values x y z u v) = pure Values
     <*> f Key4 u
     <*> f Key5 v
 
+inspect $ hasNoGenerics 'lhsITraverse
 inspect $ 'lhsITraverse === 'rhsITraverse
