@@ -1,4 +1,5 @@
 packages: fin vec
+tests: true
 
 package fin
   ghc-options: -Wall
