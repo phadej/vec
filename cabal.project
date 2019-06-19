@@ -1,5 +1,8 @@
-packages: fin vec
+packages: fin vec dec
 tests: true
+
+package dec
+  ghc-options: -Wall
 
 package fin
   ghc-options: -Wall

@@ -1,5 +1,6 @@
 {-# LANGUAGE CPP                  #-}
 {-# LANGUAGE DataKinds            #-}
+{-# LANGUAGE EmptyCase            #-}
 {-# LANGUAGE GADTs                #-}
 {-# LANGUAGE KindSignatures       #-}
 {-# LANGUAGE RankNTypes           #-}
@@ -26,12 +27,14 @@ module Data.Type.Nat (
     snatToNatural,
     -- * Implicit
     SNatI(..),
+    withSNat,
     reify,
     reflect,
     reflectToNum,
     -- * Equality
     eqNat,
     EqNat,
+    discreteNat,
     -- * Induction
     induction,
     induction1,
@@ -63,6 +66,7 @@ import Data.Function      (fix)
 import Data.Nat
 import Data.Proxy         (Proxy (..))
 import Data.Type.Equality
+import Data.Type.Dec
 import Numeric.Natural    (Natural)
 
 import qualified GHC.TypeLits as GHC
@@ -84,6 +88,13 @@ deriving instance Show (SNat p)
 class               SNatI (n :: Nat) where snat :: SNat n
 instance            SNatI 'Z         where snat = SZ
 instance SNatI n => SNatI ('S n)     where snat = SS
+
+-- | Constructor 'SNatI' dictionary from 'SNat'.
+--
+-- @since 0.0.3
+withSNat :: SNat n -> (SNatI n => r) -> r
+withSNat SZ k = k
+withSNat SS k = k
 
 -- | Reflect type-level 'Nat' to the term level.
 reflect :: forall n proxy. SNatI n => proxy n -> Nat
@@ -152,6 +163,32 @@ eqNat = getNatEq $ induction (NatEq start) (\p -> NatEq (step p)) where
         return Refl
 
 newtype NatEq n = NatEq { getNatEq :: forall m. SNatI m => Maybe (n :~: m) }
+
+-- | Decide equality of type-level numbers.
+--
+-- >>> decShow (discreteNat :: Dec (Nat3 :~: Plus Nat1 Nat2))
+-- "Yes Refl"
+--
+-- @since 0.0.3
+discreteNat :: forall n m. (SNatI n, SNatI m) => Dec (n :~: m)
+discreteNat = getDiscreteNat $ induction (DiscreteNat start) (\p -> DiscreteNat (step p))
+  where
+    start :: forall p. SNatI p => Dec ('Z :~: p)
+    start = case snat :: SNat p of
+        SZ -> Yes Refl
+        SS -> No $ \p -> case p of {}
+
+    step :: forall p q. SNatI q => DiscreteNat p -> Dec ('S p :~: q)
+    step rec = case snat :: SNat q of
+        SZ -> No $ \p -> case p of {}
+        SS -> step' rec
+
+    step' :: forall p q. SNatI q => DiscreteNat p -> Dec ('S p :~: 'S q)
+    step' (DiscreteNat rec) = case rec :: Dec (p :~: q) of
+        Yes Refl -> Yes Refl
+        No np    -> No $ \Refl -> np Refl
+
+newtype DiscreteNat n = DiscreteNat { getDiscreteNat :: forall m. SNatI m => Dec (n :~: m) }
 
 instance TestEquality SNat where
     testEquality SZ SZ = Just Refl

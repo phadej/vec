@@ -4,7 +4,7 @@
 #
 # For more information, see https://github.com/haskell-CI/haskell-ci
 #
-# version: 0.3.20190425
+# version: 0.3.20190429
 #
 language: c
 dist: xenial
@@ -120,13 +120,15 @@ install:
   - |
     echo 'packages: "fin"' >> cabal.project
     echo 'packages: "vec"' >> cabal.project
+    echo 'packages: "dec"' >> cabal.project
   - |
     echo "write-ghc-environment-files: always" >> cabal.project
-  - "for pkg in $($HCPKG list --simple-output); do echo $pkg | sed 's/-[^-]*$//' | grep -vE -- '^(fin|vec)$' | sed 's/^/constraints: /' | sed 's/$/ installed/' >> cabal.project.local; done"
+  - "for pkg in $($HCPKG list --simple-output); do echo $pkg | sed 's/-[^-]*$//' | (grep -vE -- '^(dec|fin|vec)$' || true) | sed 's/^/constraints: /' | sed 's/$/ installed/' >> cabal.project.local; done"
   - cat cabal.project || true
   - cat cabal.project.local || true
   - if [ -f "fin/configure.ac" ]; then (cd "fin" && autoreconf -i); fi
   - if [ -f "vec/configure.ac" ]; then (cd "vec" && autoreconf -i); fi
+  - if [ -f "dec/configure.ac" ]; then (cd "dec" && autoreconf -i); fi
   - ${CABAL} v2-freeze -w ${HC} ${TEST} ${BENCH} | color_cabal_output
   - "cat cabal.project.freeze | sed -E 's/^(constraints: *| *)//' | sed 's/any.//'"
   - rm  cabal.project.freeze
@@ -146,9 +148,10 @@ script:
   - |
     echo 'packages: "fin-*/*.cabal"' >> cabal.project
     echo 'packages: "vec-*/*.cabal"' >> cabal.project
+    echo 'packages: "dec-*/*.cabal"' >> cabal.project
   - |
     echo "write-ghc-environment-files: always" >> cabal.project
-  - "for pkg in $($HCPKG list --simple-output); do echo $pkg | sed 's/-[^-]*$//' | grep -vE -- '^(fin|vec)$' | sed 's/^/constraints: /' | sed 's/$/ installed/' >> cabal.project.local; done"
+  - "for pkg in $($HCPKG list --simple-output); do echo $pkg | sed 's/-[^-]*$//' | (grep -vE -- '^(dec|fin|vec)$' || true) | sed 's/^/constraints: /' | sed 's/$/ installed/' >> cabal.project.local; done"
   - cat cabal.project || true
   - cat cabal.project.local || true
   # Building...
@@ -162,6 +165,7 @@ script:
   # cabal check...
   - (cd fin-* && ${CABAL} -vnormal check)
   - (cd vec-* && ${CABAL} -vnormal check)
+  - (cd dec-* && ${CABAL} -vnormal check)
   # haddock...
   - ${CABAL} v2-haddock -w ${HC} ${TEST} ${BENCH} all | color_cabal_output
   # Building without installed constraints for packages in global-db...
