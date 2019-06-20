@@ -7,11 +7,11 @@ description:
   This package provides a @Dec@ type.
   .
   @
-  type Not a = a -> Void
+  type Neg a = a -> Void
   .
   data Dec a
   \    = Yes a
-  \    | No (Not a)
+  \    | No (Neg a)
   @
 
 homepage:           https://github.com/phadej/vec

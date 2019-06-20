@@ -124,9 +124,8 @@ leAsym (LEStep p) (LEStep q) = case leAsym (leStepL p) (leStepL q) of
 
 -- | \(\forall n\, m\, p : \mathbb{N}, n \le m \to m \le p \to n \le p \)
 leTrans :: LEProof n m -> LEProof m p -> LEProof n p
-leTrans LERefl     q          = q
-leTrans p          LERefl     = p
-leTrans (LEStep p) (LEStep q) = LEStep $ leTrans p $ leStepL q
+leTrans p LERefl     = p
+leTrans p (LEStep q) = LEStep $ leTrans p q
 
 -- | \(\forall n\, m : \mathbb{N}, \neg (n \le m) \to 1 + m \le n \)
 leSwap :: forall n m. (SNatI n, SNatI m) => Neg (LEProof n m) -> LEProof ('S m) n
