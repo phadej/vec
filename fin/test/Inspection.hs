@@ -6,6 +6,7 @@
 {-# OPTIONS_GHC -O -fplugin Test.Inspection.Plugin #-}
 module Main (main) where
 
+import Data.Fin           (Fin (..))
 import Data.Function      (fix)
 import Data.Proxy         (Proxy (..))
 import Data.Tagged        (Tagged (..), retag)
@@ -51,9 +52,9 @@ lhsEnum :: Ordering' -> F.Fin N.Nat3
 lhsEnum = E.gfrom
 
 rhsEnum :: Ordering' -> F.Fin N.Nat3
-rhsEnum LT' = F.Z
-rhsEnum EQ' = F.S F.Z
-rhsEnum GT' = F.S (F.S F.Z)
+rhsEnum LT' = FZ
+rhsEnum EQ' = FS FZ
+rhsEnum GT' = FS (FS FZ)
 
 inspect $ 'lhsEnum ==- 'rhsEnum
 

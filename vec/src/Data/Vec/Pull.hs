@@ -64,7 +64,7 @@ import Prelude.Compat
 import Control.Applicative (Applicative (..))
 import Control.Lens        ((<&>))
 import Data.Distributive   (Distributive (..))
-import Data.Fin            (Fin)
+import Data.Fin            (Fin (..))
 import Data.Functor.Apply  (Apply (..))
 import Data.Functor.Rep    (Representable (..))
 import Data.Nat
@@ -236,10 +236,10 @@ reifyList (x : xs) f = reifyList xs $ \xs' -> f (cons x xs')
 
 -- | Index lens.
 --
--- >>> ('a' L.::: 'b' L.::: 'c' L.::: L.VNil) ^. L._Pull . ix (F.S F.Z)
+-- >>> ('a' L.::: 'b' L.::: 'c' L.::: L.VNil) ^. L._Pull . ix (FS FZ)
 -- 'b'
 --
--- >>> ('a' L.::: 'b' L.::: 'c' L.::: L.VNil) & L._Pull . ix (F.S F.Z) .~ 'x'
+-- >>> ('a' L.::: 'b' L.::: 'c' L.::: L.VNil) & L._Pull . ix (FS FZ) .~ 'x'
 -- 'a' ::: 'x' ::: 'c' ::: VNil
 --
 ix :: Fin n -> I.Lens' (Vec n a) a
@@ -254,7 +254,7 @@ ix i f (Vec v) = f (v i) <&> \a -> Vec $ \j ->
 -- In fact, @'Vec' n a@ cannot have an instance of 'I.Cons' as types don't match.
 --
 _Cons :: I.Iso (Vec ('S n) a) (Vec ('S n) b) (a, Vec n a) (b, Vec n b)
-_Cons = I.iso (\(Vec v) -> (v F.Z, Vec (v . F.S))) (\(x, xs) -> cons x xs)
+_Cons = I.iso (\(Vec v) -> (v FZ, Vec (v . FS))) (\(x, xs) -> cons x xs)
 
 -- | Head lens. /Note:/ @lens@ 'I._head' is a 'I.Traversal''.
 --
@@ -265,28 +265,28 @@ _Cons = I.iso (\(Vec v) -> (v F.Z, Vec (v . F.S))) (\(x, xs) -> cons x xs)
 -- 'x' ::: 'b' ::: 'c' ::: VNil
 --
 _head :: I.Lens' (Vec ('S n) a) a
-_head f (Vec v) = f (v F.Z) <&> \a -> Vec $ \j -> case j of
-    F.Z -> a
+_head f (Vec v) = f (v FZ) <&> \a -> Vec $ \j -> case j of
+    FZ -> a
     _   -> v j
 {-# INLINE head #-}
 
 -- | Head lens. /Note:/ @lens@ 'I._head' is a 'I.Traversal''.
 _tail :: I.Lens' (Vec ('S n) a) (Vec n a)
-_tail f (Vec v) = f (Vec (v . F.S)) <&> \xs -> cons (v F.Z) xs
+_tail f (Vec v) = f (Vec (v . FS)) <&> \xs -> cons (v FZ) xs
 {-# INLINE _tail #-}
 
 cons :: a -> Vec n a -> Vec ('S n) a
 cons x (Vec v) = Vec $ \i -> case i of
-    F.Z   -> x
-    F.S j -> v j
+    FZ   -> x
+    FS j -> v j
 
 -- | The first element of a 'Vec'.
 head :: Vec ('S n) a -> a
-head (Vec v) = v F.Z
+head (Vec v) = v FZ
 
 -- | The elements after the 'head' of a 'Vec'.
 tail :: Vec ('S n) a -> Vec n a
-tail (Vec v) = Vec (v . F.S)
+tail (Vec v) = Vec (v . FS)
 
 -------------------------------------------------------------------------------
 -- Mapping

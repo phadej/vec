@@ -1,5 +1,10 @@
 # Revision history for fin
 
+## 0.1
+
+- Rename `Fin` constructors to `FZ` and `FS`.
+  Now you can have both `Nat` and `Fin` imported unqualified in a single module.
+
 ## 0.0.3
 
 - Add `Data.Type.Nat.LE`, `Data.Type.Nat.LT` and `Data.Type.Nat.LE.ReflStep`

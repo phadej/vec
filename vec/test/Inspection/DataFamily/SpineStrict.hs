@@ -6,7 +6,8 @@ module Inspection.DataFamily.SpineStrict where
 
 import Prelude hiding (zipWith)
 
-import Data.Vec.DataFamily.SpineStrict   (Vec (..))
+import Data.Fin                        (Fin (..))
+import Data.Vec.DataFamily.SpineStrict (Vec (..))
 import Test.Inspection
 
 import qualified Data.Fin                        as F
@@ -40,7 +41,7 @@ lhsIMap :: Vec N.Nat2 (F.Fin N.Nat2, Char)
 lhsIMap = I.imap (,) $ 'a' ::: 'b' ::: VNil
 
 rhsIMap :: Vec N.Nat2 (F.Fin N.Nat2, Char)
-rhsIMap = (F.Z,'a') ::: (F.S F.Z,'b') ::: VNil
+rhsIMap = (FZ,'a') ::: (FS FZ,'b') ::: VNil
 
 inspect $ 'lhsIMap  === 'rhsIMap
 

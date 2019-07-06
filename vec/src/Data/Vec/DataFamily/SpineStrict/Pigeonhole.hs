@@ -43,6 +43,7 @@ import qualified GHC.Generics                    as G
 
 -- $setup
 -- >>> :set -XDeriveGeneric
+-- >>> import Control.Applicative (Const (..))
 -- >>> import Data.Void (absurd)
 -- >>> import GHC.Generics (Generic, Generic1)
 

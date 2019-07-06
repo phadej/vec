@@ -1,6 +1,6 @@
 cabal-version:      >=1.10
 name:               fin
-version:            0.0.3
+version:            0.1
 synopsis:           Nat and Fin: peano naturals and finite numbers
 category:           Data, Dependent Types, Singletons
 description:

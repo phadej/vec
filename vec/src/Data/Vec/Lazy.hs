@@ -85,7 +85,7 @@ import Control.Applicative (Applicative (..))
 import Control.DeepSeq     (NFData (..))
 import Control.Lens        ((<&>))
 import Data.Distributive   (Distributive (..))
-import Data.Fin            (Fin)
+import Data.Fin            (Fin (..))
 import Data.Functor.Apply  (Apply (..))
 import Data.Functor.Rep    (Representable (..), distributeRep)
 import Data.Hashable       (Hashable (..))
@@ -288,14 +288,14 @@ withDict (_ ::: xs) r = withDict xs r
 toPull :: Vec n a -> P.Vec n a
 toPull VNil       = P.Vec F.absurd
 toPull (x ::: xs) = P.Vec $ \n -> case n of
-    F.Z   -> x
-    F.S m -> P.unVec (toPull xs) m
+    FZ   -> x
+    FS m -> P.unVec (toPull xs) m
 
 -- | Convert from pull 'P.Vec'.
 fromPull :: forall n a. N.SNatI n => P.Vec n a -> Vec n a
 fromPull (P.Vec f) = case N.snat :: N.SNat n of
     N.SZ -> VNil
-    N.SS -> f F.Z ::: fromPull (P.Vec (f . F.S))
+    N.SS -> f FZ ::: fromPull (P.Vec (f . FS))
 
 -- | An 'I.Iso' from 'toPull' and 'fromPull'.
 _Pull :: N.SNatI n => I.Iso (Vec n a) (Vec n b) (P.Vec n a) (P.Vec n b)
@@ -385,25 +385,25 @@ reifyList (x : xs) f = reifyList xs $ \xs' -> f (x ::: xs')
 
 -- | Indexing.
 --
--- >>> ('a' ::: 'b' ::: 'c' ::: VNil) ! F.S F.Z
+-- >>> ('a' ::: 'b' ::: 'c' ::: VNil) ! FS FZ
 -- 'b'
 --
 (!) :: Vec n a -> Fin n -> a
-(!) (x ::: _)  F.Z     = x
-(!) (_ ::: xs) (F.S n) = xs ! n
+(!) (x ::: _)  FZ     = x
+(!) (_ ::: xs) (FS n) = xs ! n
 (!) VNil n = case n of {}
 
 -- | Index lens.
 --
--- >>> ('a' ::: 'b' ::: 'c' ::: VNil) ^. ix (F.S F.Z)
+-- >>> ('a' ::: 'b' ::: 'c' ::: VNil) ^. ix (FS FZ)
 -- 'b'
 --
--- >>> ('a' ::: 'b' ::: 'c' ::: VNil) & ix (F.S F.Z) .~ 'x'
+-- >>> ('a' ::: 'b' ::: 'c' ::: VNil) & ix (FS FZ) .~ 'x'
 -- 'a' ::: 'x' ::: 'c' ::: VNil
 --
 ix :: Fin n -> I.Lens' (Vec n a) a
-ix F.Z     f (x ::: xs) = (::: xs) <$> f x
-ix (F.S n) f (x ::: xs) = (x :::)  <$> ix n f xs
+ix FZ     f (x ::: xs) = (::: xs) <$> f x
+ix (FS n) f (x ::: xs) = (x :::)  <$> ix n f xs
 
 -- | Match on non-empty 'Vec'.
 --
@@ -526,7 +526,7 @@ map f (x ::: xs) = f x ::: fmap f xs
 --
 imap :: (Fin n -> a -> b) -> Vec n a -> Vec n b
 imap _ VNil       = VNil
-imap f (x ::: xs) = f F.Z x ::: imap (f . F.S) xs
+imap f (x ::: xs) = f FZ x ::: imap (f . FS) xs
 
 -- | Apply an action to every element of a 'Vec', yielding a 'Vec' of results.
 traverse :: forall n f a b. Applicative f => (a -> f b) -> Vec n a -> f (Vec n b)
@@ -545,12 +545,12 @@ traverse1 f = go where
 -- | Apply an action to every element of a 'Vec' and its index, yielding a 'Vec' of results.
 itraverse :: Applicative f => (Fin n -> a -> f b) -> Vec n a -> f (Vec n b)
 itraverse _ VNil       = pure VNil
-itraverse f (x ::: xs) = (:::) <$> f F.Z x <*> I.itraverse (f . F.S) xs
+itraverse f (x ::: xs) = (:::) <$> f FZ x <*> I.itraverse (f . FS) xs
 
 -- | Apply an action to every element of a 'Vec' and its index, ignoring the results.
 itraverse_ :: Applicative f => (Fin n -> a -> f b) -> Vec n a -> f ()
 itraverse_ _ VNil       = pure ()
-itraverse_ f (x ::: xs) = f F.Z x *> itraverse_ (f . F.S) xs
+itraverse_ f (x ::: xs) = f FZ x *> itraverse_ (f . FS) xs
 
 -------------------------------------------------------------------------------
 -- Folding
@@ -569,12 +569,12 @@ foldMap1 f (x ::: xs@(_ ::: _)) = f x <> foldMap1 f xs
 -- | See 'I.FoldableWithIndex'.
 ifoldMap :: Monoid m => (Fin n -> a -> m) -> Vec n a -> m
 ifoldMap _ VNil       = mempty
-ifoldMap f (x ::: xs) = mappend (f F.Z x) (ifoldMap (f . F.S) xs)
+ifoldMap f (x ::: xs) = mappend (f FZ x) (ifoldMap (f . FS) xs)
 
 -- | There is no type-class for this :(
 ifoldMap1 :: Semigroup s => (Fin ('S n) -> a -> s) -> Vec ('S n) a -> s
-ifoldMap1 f (x ::: VNil)         = f F.Z x
-ifoldMap1 f (x ::: xs@(_ ::: _)) = f F.Z x <> ifoldMap1 (f . F.S) xs
+ifoldMap1 f (x ::: VNil)         = f FZ x
+ifoldMap1 f (x ::: xs@(_ ::: _)) = f FZ x <> ifoldMap1 (f . FS) xs
 
 -- | Right fold.
 foldr :: forall a b n. (a -> b -> b) -> b -> Vec n a -> b
@@ -586,7 +586,7 @@ foldr f z = go where
 -- | Right fold with an index.
 ifoldr :: forall a b n. (Fin n -> a -> b -> b) -> b -> Vec n a -> b
 ifoldr _ z VNil       = z
-ifoldr f z (x ::: xs) = f F.Z x (ifoldr (f . F.S) z xs)
+ifoldr f z (x ::: xs) = f FZ x (ifoldr (f . FS) z xs)
 
 -- | Strict left fold.
 foldl' :: forall a b n. (b -> a -> b) -> b -> Vec n a -> b
@@ -631,7 +631,7 @@ zipWith f (x ::: xs) (y ::: ys) = f x y ::: zipWith f xs ys
 -- | Zip two 'Vec's. with a function that also takes the elements' indices.
 izipWith :: (Fin n -> a -> b -> c) -> Vec n a -> Vec n b -> Vec n c
 izipWith _ VNil       VNil       = VNil
-izipWith f (x ::: xs) (y ::: ys) = f F.Z x y ::: izipWith (f . F.S) xs ys
+izipWith f (x ::: xs) (y ::: ys) = f FZ x y ::: izipWith (f . FS) xs ys
 
 -------------------------------------------------------------------------------
 -- Monadic
@@ -664,7 +664,7 @@ universe = getUniverse (N.induction first step) where
     first = Universe VNil
 
     step :: Universe m -> Universe ('S m)
-    step (Universe go) = Universe (F.Z ::: map F.S go)
+    step (Universe go) = Universe (FZ ::: map FS go)
 
 newtype Universe n = Universe { getUniverse :: Vec n (Fin n) }
 
