@@ -121,7 +121,7 @@ import Prelude.Compat
 import Control.Applicative (Applicative (..), liftA2)
 import Control.DeepSeq     (NFData (..))
 import Data.Distributive   (Distributive (..))
-import Data.Fin            (Fin)
+import Data.Fin            (Fin (..))
 import Data.Functor.Apply  (Apply (..))
 import Data.Functor.Rep    (Representable (..), distributeRep)
 import Data.Hashable       (Hashable (..))
@@ -348,8 +348,8 @@ toPull = getToPull (N.inlineInduction1 start step) where
 
     step :: ToPull m a -> ToPull ('S m) a
     step (ToPull f) = ToPull $ \(x ::: xs) -> P.Vec $ \i -> case i of
-        F.Z    -> x
-        F.S i' -> P.unVec (f xs) i'
+        FZ    -> x
+        FS i' -> P.unVec (f xs) i'
 
 newtype ToPull n a = ToPull { getToPull :: Vec n a -> P.Vec n a }
 
@@ -360,7 +360,7 @@ fromPull = getFromPull (N.inlineInduction1 start step) where
     start = FromPull $ const VNil
 
     step :: FromPull m a -> FromPull ('S m) a
-    step (FromPull f) = FromPull $ \(P.Vec v) -> v F.Z ::: f (P.Vec (v . F.S))
+    step (FromPull f) = FromPull $ \(P.Vec v) -> v FZ ::: f (P.Vec (v . FS))
 
 newtype FromPull n a = FromPull { getFromPull :: P.Vec n a -> Vec n a }
 
@@ -463,14 +463,14 @@ flipIndex = getIndex (N.inlineInduction1 start step) where
 
     step :: Index m a-> Index ('N.S m) a
     step (Index go) = Index $ \n (x ::: xs) -> case n of
-        F.Z   -> x
-        F.S m -> go m xs
+        FZ   -> x
+        FS m -> go m xs
 
 newtype Index n a = Index { getIndex :: Fin n -> Vec n a -> a }
 
 -- | Indexing.
 --
--- >>> ('a' ::: 'b' ::: 'c' ::: VNil) ! F.S F.Z
+-- >>> ('a' ::: 'b' ::: 'c' ::: VNil) ! FS FZ
 -- 'b'
 --
 (!) :: N.InlineInduction n => Vec n a -> Fin n -> a
@@ -478,15 +478,15 @@ newtype Index n a = Index { getIndex :: Fin n -> Vec n a -> a }
 
 -- | Index lens.
 --
--- >>> ('a' ::: 'b' ::: 'c' ::: VNil) ^. ix (F.S F.Z)
+-- >>> ('a' ::: 'b' ::: 'c' ::: VNil) ^. ix (FS FZ)
 -- 'b'
 --
--- >>> ('a' ::: 'b' ::: 'c' ::: VNil) & ix (F.S F.Z) .~ 'x'
+-- >>> ('a' ::: 'b' ::: 'c' ::: VNil) & ix (FS FZ) .~ 'x'
 -- 'a' ::: 'x' ::: 'c' ::: VNil
 --
 ix :: Fin n -> I.Lens' (Vec n a) a
-ix F.Z     f (x ::: xs) = (::: xs) <$> f x
-ix (F.S n) f (x ::: xs) = (x :::)  <$> ix n f xs
+ix FZ     f (x ::: xs) = (::: xs) <$> f x
+ix (FS n) f (x ::: xs) = (x :::)  <$> ix n f xs
 
 -- | Match on non-empty 'Vec'.
 --
@@ -631,7 +631,7 @@ imap = getIMap $ N.inlineInduction1 start step where
     start = IMap $ \_ _ -> VNil
 
     step :: IMap a m b -> IMap a ('S m) b
-    step (IMap go) = IMap $ \f (x ::: xs) -> f F.Z x ::: go (f . F.S) xs
+    step (IMap go) = IMap $ \f (x ::: xs) -> f FZ x ::: go (f . FS) xs
 
 newtype IMap a n b = IMap { getIMap :: (Fin n -> a -> b) -> Vec n a -> Vec n b }
 
@@ -665,7 +665,7 @@ itraverse = getITraverse $ N.inlineInduction1 start step where
     start = ITraverse $ \_ _ -> pure VNil
 
     step :: ITraverse f a m b -> ITraverse f a ('S m) b
-    step (ITraverse go) = ITraverse $ \f (x ::: xs) -> liftA2 (:::) (f F.Z x) (go (f . F.S) xs)
+    step (ITraverse go) = ITraverse $ \f (x ::: xs) -> liftA2 (:::) (f FZ x) (go (f . FS) xs)
 {-# INLINE itraverse #-}
 
 newtype ITraverse f a n b = ITraverse { getITraverse :: (Fin n -> a -> f b) -> Vec n a -> f (Vec n b) }
@@ -677,7 +677,7 @@ itraverse_ = getITraverse_ $ N.inlineInduction1 start step where
     start = ITraverse_ $ \_ _ -> pure ()
 
     step :: ITraverse_ f a m b -> ITraverse_ f a ('S m) b
-    step (ITraverse_ go) = ITraverse_ $ \f (x ::: xs) -> f F.Z x *> go (f . F.S) xs
+    step (ITraverse_ go) = ITraverse_ $ \f (x ::: xs) -> f FZ x *> go (f . FS) xs
 
 newtype ITraverse_ f a n b = ITraverse_ { getITraverse_ :: (Fin n -> a -> f b) -> Vec n a -> f () }
 
@@ -710,7 +710,7 @@ ifoldMap = getIFoldMap $ N.inlineInduction1 start step where
     start = IFoldMap $ \_ _ -> mempty
 
     step :: IFoldMap a p m -> IFoldMap a ('S p) m
-    step (IFoldMap go) = IFoldMap $ \f (x ::: xs) -> f F.Z x `mappend` go (f . F.S) xs
+    step (IFoldMap go) = IFoldMap $ \f (x ::: xs) -> f FZ x `mappend` go (f . FS) xs
 
 newtype IFoldMap a n m = IFoldMap { getIFoldMap :: (Fin n -> a -> m) -> Vec n a -> m }
 
@@ -718,10 +718,10 @@ newtype IFoldMap a n m = IFoldMap { getIFoldMap :: (Fin n -> a -> m) -> Vec n a 
 ifoldMap1 :: forall a n s. (Semigroup s, N.InlineInduction n) => (Fin ('S n) -> a -> s) -> Vec ('S n) a -> s
 ifoldMap1 = getIFoldMap1 $ N.inlineInduction1 start step where
     start :: IFoldMap1 a 'Z s
-    start = IFoldMap1 $ \f (x ::: _) -> f F.Z x
+    start = IFoldMap1 $ \f (x ::: _) -> f FZ x
 
     step :: IFoldMap1 a p s -> IFoldMap1 a ('S p) s
-    step (IFoldMap1 go) = IFoldMap1 $ \f (x ::: xs) -> f F.Z x <> go (f . F.S) xs
+    step (IFoldMap1 go) = IFoldMap1 $ \f (x ::: xs) -> f FZ x <> go (f . FS) xs
 
 newtype IFoldMap1 a n m = IFoldMap1 { getIFoldMap1 :: (Fin ('S n) -> a -> m) -> Vec ('S n) a -> m }
 
@@ -741,7 +741,7 @@ ifoldr = getIFoldr $ N.inlineInduction1 start step where
     start = IFoldr $ \_ z _ -> z
 
     step :: IFoldr a m b -> IFoldr a ('S m) b
-    step (IFoldr go) = IFoldr $ \f z (x ::: xs) -> f F.Z x (go (f . F.S) z xs)
+    step (IFoldr go) = IFoldr $ \f z (x ::: xs) -> f FZ x (go (f . FS) z xs)
 
 newtype IFoldr a n b = IFoldr { getIFoldr :: (Fin n -> a -> b -> b) -> b -> Vec n a -> b }
 
@@ -804,7 +804,7 @@ izipWith = getIZipWith $ N.inlineInduction start step where
     start = IZipWith $ \_ _ _ -> VNil
 
     step :: IZipWith a b c m -> IZipWith a b c ('S m)
-    step (IZipWith go) = IZipWith $ \f (x ::: xs) (y ::: ys) -> f F.Z x y ::: go (f . F.S) xs ys
+    step (IZipWith go) = IZipWith $ \f (x ::: xs) (y ::: ys) -> f FZ x y ::: go (f . FS) xs ys
 
 newtype IZipWith a b c n = IZipWith { getIZipWith :: (Fin n -> a -> b -> c) -> Vec n a -> Vec n b -> Vec n c }
 
@@ -851,7 +851,7 @@ universe = getUniverse (N.inlineInduction first step) where
     first = Universe VNil
 
     step :: N.InlineInduction m => Universe m -> Universe ('S m)
-    step (Universe go) = Universe (F.Z ::: map F.S go)
+    step (Universe go) = Universe (FZ ::: map FS go)
 
 newtype Universe n = Universe { getUniverse :: Vec n (Fin n) }
 

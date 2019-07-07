@@ -1,5 +1,9 @@
 # Revision history for vec
 
+## 0.1.1.1
+
+- Use `fin-0.1`
+
 ## 0.1.1
 
 - Add `Data.Vec.DataFamily.SpineStrict` module

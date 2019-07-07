@@ -28,8 +28,8 @@ module Data.Fin.Enum (
 import Prelude hiding (Enum (..))
 
 import Data.Bifunctor (bimap)
-import Data.Fin       (Fin)
-import Data.Nat       (Nat)
+import Data.Fin       (Fin (..))
+import Data.Nat       (Nat (..))
 import Data.Proxy     (Proxy (..))
 import GHC.Generics   ((:+:) (..), M1 (..), U1 (..), V1)
 
@@ -106,7 +106,7 @@ type family EnumSizeRep (a :: * -> *) (n :: Nat) :: Nat where
     EnumSizeRep (a :+: b )   n = EnumSizeRep a (EnumSizeRep b n)
     EnumSizeRep V1           n = n
     EnumSizeRep (M1 _d _c a) n = EnumSizeRep a n
-    EnumSizeRep U1           n = 'N.S n
+    EnumSizeRep U1           n = 'S n
     -- No instance for K1 or :*:
 
 -------------------------------------------------------------------------------
@@ -139,8 +139,8 @@ instance GFromRep V1 where
     gfromSkip _ n = n
 
 instance GFromRep U1 where
-    gfromRep U1 _ = F.Z
-    gfromSkip _ n = F.S n
+    gfromRep U1 _ = FZ
+    gfromSkip _ n = FS n
 
 -------------------------------------------------------------------------------
 -- To
@@ -166,5 +166,5 @@ instance GToRep V1 where
     gtoRep n _ k = k n
 
 instance GToRep U1 where
-    gtoRep F.Z     s _ = s U1
-    gtoRep (F.S n) _ k = k n
+    gtoRep FZ     s _ = s U1
+    gtoRep (FS n) _ k = k n
