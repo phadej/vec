@@ -1,8 +1,12 @@
+{-# LANGUAGE GADTs         #-}
+{-# LANGUAGE PolyKinds     #-}
+{-# LANGUAGE TypeOperators #-}
 module Data.Type.Dec (
     -- * Types
     Neg,
     Dec (..),
     Decidable (..),
+    DecideEq (..),
     -- * Neg combinators
     toNegNeg,
     tripleNeg,
@@ -15,6 +19,7 @@ module Data.Type.Dec (
     decToBool,
     ) where
 
+import Data.Type.Equality ((:~:) (..))
 import Data.Void          (Void)
 
 -- | Intuitionistic negation.
@@ -35,6 +40,15 @@ data Dec a
 -- but that seems to be a deep dive into singletons.
 class Decidable a where
     decide :: Dec a
+
+-- | Decidable equality.
+--
+-- @since 0.0.4
+class DecideEq s where
+    decideEq :: s a -> s b -> Dec (a :~: b)
+
+instance DecideEq ((:~:) c) where
+    decideEq Refl Refl = Yes Refl
 
 -------------------------------------------------------------------------------
 -- Neg combinators

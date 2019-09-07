@@ -190,6 +190,15 @@ discreteNat = getDiscreteNat $ induction (DiscreteNat start) (\p -> DiscreteNat 
 
 newtype DiscreteNat n = DiscreteNat { getDiscreteNat :: forall m. SNatI m => Dec (n :~: m) }
 
+-- |
+--
+-- @since 0.1.1
+instance DecideEq SNat where
+    decideEq SZ SZ = Yes Refl
+    decideEq SS SS = discreteNat
+    decideEq SS SZ = No $ \p -> case p of {}
+    decideEq SZ SS = No $ \p -> case p of {}
+
 instance TestEquality SNat where
     testEquality SZ SZ = Just Refl
     testEquality SZ SS = Nothing
