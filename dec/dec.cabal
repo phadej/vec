@@ -32,7 +32,7 @@ source-repository head
 
 library
   exposed-modules:  Data.Type.Dec
-  build-depends:    base >=4.7 && <4.13
+  build-depends:    base >=4.7 && <4.14
 
   if !impl(ghc >=7.10)
     build-depends: void >=0.7.2 && <0.8
