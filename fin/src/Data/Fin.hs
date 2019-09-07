@@ -1,11 +1,11 @@
 {-# LANGUAGE DataKinds            #-}
 {-# LANGUAGE DeriveDataTypeable   #-}
-{-# LANGUAGE EmptyCase            #-}
 {-# LANGUAGE GADTs                #-}
 {-# LANGUAGE KindSignatures       #-}
 {-# LANGUAGE ScopedTypeVariables  #-}
 {-# LANGUAGE StandaloneDeriving   #-}
 {-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE EmptyCase            #-}
 -- | Finite numbers.
 --
 -- This module is designed to be imported as
