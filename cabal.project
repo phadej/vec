@@ -1,4 +1,6 @@
-packages: fin vec dec
+packages: dec
+packages: fin
+packages: vec
 tests: true
 
 package dec
