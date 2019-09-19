@@ -48,10 +48,10 @@ import Data.Bifunctor     (bimap)
 import Data.Hashable      (Hashable (..))
 import Data.List.NonEmpty (NonEmpty (..))
 import Data.Proxy         (Proxy (..))
+import Data.Type.Nat      (Nat (..))
 import Data.Typeable      (Typeable)
 import GHC.Exception      (ArithException (..), throw)
 import Numeric.Natural    (Natural)
-import Data.Type.Nat (Nat (..))
 
 import qualified Data.List.NonEmpty as NE
 import qualified Data.Type.Nat      as N
@@ -103,7 +103,7 @@ instance N.SNatI n => Num (Fin n) where
     signum (FS FZ)     = FS FZ
     signum (FS (FS _)) = FS FZ
 
-    fromInteger = unsafeFromNum . (`mod` (N.reflectToNum (Proxy :: Proxy n)))
+    fromInteger = unsafeFromNum . (`mod` N.reflectToNum (Proxy :: Proxy n))
 
     n + m = fromInteger (toInteger n + toInteger m)
     n * m = fromInteger (toInteger n * toInteger m)

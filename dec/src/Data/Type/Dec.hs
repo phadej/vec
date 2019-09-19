@@ -15,7 +15,7 @@ module Data.Type.Dec (
     decToBool,
     ) where
 
-import Data.Void          (Void)
+import Data.Void (Void)
 
 -- | Intuitionistic negation.
 type Neg a = a -> Void

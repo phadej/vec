@@ -69,7 +69,13 @@ copyright:          (c) 2017-2019 Oleg Grenrus
 build-type:         Simple
 extra-source-files: ChangeLog.md
 tested-with:
-  GHC ==8.8.1 ||  ==8.6.5 || ==8.4.4 || ==8.2.2 || ==8.0.2 || ==7.10.3 || ==7.8.4
+  GHC ==7.8.4
+   || ==7.10.3
+   || ==8.0.2
+   || ==8.2.2
+   || ==8.4.4
+   || ==8.6.5
+   || ==8.8.1
 
 source-repository head
   type:     git
@@ -83,9 +89,7 @@ library
     Data.Vec.Lazy.Inline
     Data.Vec.Pull
 
-  other-modules:
-    Data.Functor.Confusing
-
+  other-modules:    Data.Functor.Confusing
   build-depends:
       adjunctions    >=4.4     && <4.5
     , base           >=4.6     && <4.14

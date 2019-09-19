@@ -6,7 +6,6 @@
 {-# LANGUAGE FlexibleInstances      #-}
 {-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE GADTs                  #-}
-{-# LANGUAGE KindSignatures         #-}
 {-# LANGUAGE RankNTypes             #-}
 {-# LANGUAGE ScopedTypeVariables    #-}
 {-# LANGUAGE StandaloneDeriving     #-}
@@ -77,9 +76,9 @@ module Data.Vec.Lazy (
 
 import Prelude ()
 import Prelude.Compat
-       (Bool (..), Eq (..), Functor (..), Int, Maybe (..),
-       Monad (..), Monoid (..), Num (..), Ord (..), Show (..), id, seq,
-       showParen, showString, ($), (.), (<$>))
+       (Bool (..), Eq (..), Functor (..), Int, Maybe (..), Monad (..),
+       Monoid (..), Num (..), Ord (..), Show (..), id, seq, showParen,
+       showString, ($), (.), (<$>))
 
 import Control.Applicative (Applicative (..))
 import Control.DeepSeq     (NFData (..))
