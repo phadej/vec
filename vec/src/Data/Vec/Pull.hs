@@ -58,8 +58,8 @@ module Data.Vec.Pull (
 
 import Prelude ()
 import Prelude.Compat
-       (Bool (..), Eq (..), Functor (..), Int, Maybe (..),
-       Monad (..), Monoid (..), Num (..), all, const, id, ($), (.), (<$>))
+       (Bool (..), Eq (..), Functor (..), Int, Maybe (..), Monad (..),
+       Monoid (..), Num (..), all, const, id, ($), (.), (<$>))
 
 import Control.Applicative (Applicative (..))
 import Control.Lens        ((<&>))

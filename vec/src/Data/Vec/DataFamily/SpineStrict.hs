@@ -1,57 +1,57 @@
-{-# LANGUAGE CPP                    #-}
-{-# LANGUAGE DataKinds              #-}
-{-# LANGUAGE FlexibleInstances      #-}
-{-# LANGUAGE MultiParamTypeClasses  #-}
-{-# LANGUAGE RankNTypes             #-}
-{-# LANGUAGE ScopedTypeVariables    #-}
-{-# LANGUAGE TypeFamilies           #-}
-{-# LANGUAGE UndecidableInstances   #-}
+{-# LANGUAGE CPP                   #-}
+{-# LANGUAGE DataKinds             #-}
+{-# LANGUAGE FlexibleInstances     #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE RankNTypes            #-}
+{-# LANGUAGE ScopedTypeVariables   #-}
+{-# LANGUAGE TypeFamilies          #-}
+{-# LANGUAGE UndecidableInstances  #-}
 -- | Spine-strict length-indexed list defined as data-family: 'Vec'.
 --
 -- Data family variant allows  lazy pattern matching.
 -- On the other hand, the 'Vec' value doesn't "know" its length (i.e. there isn't 'Data.Vec.Lazy.withDict').
 --
--- == Agda 
+-- == Agda
 --
 -- If you happen to familiar with Agda, then the difference
 -- between GADT and data-family version is maybe clearer:
 --
 -- @
 -- module Vec where
--- 
+--
 -- open import Data.Nat
 -- open import Relation.Binary.PropositionalEquality using (_≡_; refl)
--- 
+--
 -- -- \"GADT"
 -- data Vec (A : Set) : ℕ → Set where
 --   []  : Vec A 0
 --   _∷_ : ∀ {n} → A → Vec A n → Vec A (suc n)
--- 
+--
 -- infixr 50 _∷_
--- 
+--
 -- exVec : Vec ℕ 2
 -- exVec = 13 ∷ 37 ∷ []
--- 
+--
 -- -- "data family"
 -- data Unit : Set where
 --   [] : Unit
--- 
+--
 -- data _×_ (A B : Set) : Set where
 --   _∷_ : A → B → A × B
--- 
+--
 -- infixr 50 _×_
--- 
+--
 -- VecF : Set → ℕ → Set
 -- VecF A zero    = Unit
 -- VecF A (suc n) = A × VecF A n
--- 
+--
 -- exVecF : VecF ℕ 2
 -- exVecF = 13 ∷ 37 ∷ []
--- 
+--
 -- reduction : VecF ℕ 2 ≡ ℕ × ℕ × Unit
 -- reduction = refl
 -- @
--- 
+--
 module Data.Vec.DataFamily.SpineStrict (
     Vec (..),
     -- * Construction
@@ -872,7 +872,7 @@ ensureSpine :: N.InlineInduction n => Vec n a -> Vec n a
 ensureSpine = getEnsureSpine (N.inlineInduction1 first step) where
     first :: EnsureSpine 'Z a
     first = EnsureSpine $ \_ -> VNil
-    
+
     step :: EnsureSpine m a -> EnsureSpine ('S m) a
     step (EnsureSpine go) = EnsureSpine $ \ ~(x ::: xs) -> x ::: go xs
 
