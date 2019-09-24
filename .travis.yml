@@ -81,7 +81,6 @@ install:
   - TEST=--enable-tests
   - if [ $HCNUMVER -lt 80000 ] ; then TEST=--disable-tests ; fi
   - BENCH=--enable-benchmarks
-  - if [ $HCNUMVER -ge 80800 ] ; then BENCH=--disable-benchmarks ; fi
   - HEADHACKAGE=false
   - rm -f $CABALHOME/config
   - |
