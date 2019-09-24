@@ -1,3 +1,2 @@
 branches: master
 tests: >=8.0
-benchmarks: <8.8
