@@ -290,7 +290,7 @@ type instance I.IxValue (Vec n a) = a
 
 -- | 'Vec' doesn't have 'I.At' instance, as we __cannot__ remove value from 'Vec'.
 -- See 'ix' in "Data.Vec.DataFamily.SpineStrict" module for an 'I.Lens' (not 'I.Traversal').
-instance I.Ixed (Vec n a) where
+instance N.InlineInduction n => I.Ixed (Vec n a) where
     ix = ix
 
 instance I.Field1 (Vec ('S n) a) (Vec ('S n) a) a a where
@@ -484,9 +484,17 @@ newtype Index n a = Index { getIndex :: Fin n -> Vec n a -> a }
 -- >>> ('a' ::: 'b' ::: 'c' ::: VNil) & ix (FS FZ) .~ 'x'
 -- 'a' ::: 'x' ::: 'c' ::: VNil
 --
-ix :: Fin n -> I.Lens' (Vec n a) a
-ix FZ     f (x ::: xs) = (::: xs) <$> f x
-ix (FS n) f (x ::: xs) = (x :::)  <$> ix n f xs
+ix :: forall n a. N.InlineInduction n => Fin n -> I.Lens' (Vec n a) a
+ix = getIxLens $ N.inlineInduction1 start step where
+    start :: IxLens 'Z a
+    start = IxLens F.absurd
+
+    step :: IxLens m a -> IxLens ('S m) a
+    step (IxLens l) = IxLens $ \i -> case i of
+        FZ   -> _head
+        FS j -> _tail . l j
+
+newtype IxLens n a = IxLens { getIxLens :: Fin n -> I.Lens' (Vec n a) a }
 
 -- | Match on non-empty 'Vec'.
 --

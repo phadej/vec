@@ -1,4 +1,5 @@
 {-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE Safe       #-}
 -- |
 -- Csongor Kiss, Matthew Pickering, and Nicolas Wu. 2018. Generic deriving of generic traversals.
 -- Proc. ACM Program. Lang. 2, ICFP, Article 85 (July 2018), 30 pages. DOI: https://doi.org/10.1145/3236780
@@ -38,10 +39,16 @@
 -- (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 -- OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 --
-module Data.Functor.Confusing where
+module Data.Functor.Confusing (
+    fusing, confusing, LensLike,
+    ifusing, iconfusing, IxLensLike,
+    ffusing, fconfusing, FLensLike,
+    liftCurriedYoneda, yap,
+    Curried (..), liftCurried, lowerCurried,
+    Yoneda (..), liftYoneda, lowerYoneda,
+  ) where
 
-import Prelude ()
-import Prelude.Compat
+import Control.Applicative
 
 -------------------------------------------------------------------------------
 -- Confusing
@@ -49,15 +56,15 @@ import Prelude.Compat
 
 type LensLike f s t a b = (a -> f b) -> s -> f t
 
-confusing :: Applicative f => LensLike (Curried (Yoneda f)) s t a b -> (a -> f b) -> s -> f t
+-- note: qualified name to justify import even with newer GHCs
+
+fusing :: Functor f => LensLike (Yoneda f) s t a b -> LensLike f s t a b
+fusing t = \f -> lowerYoneda .  t (liftYoneda . f)
+{-# INLINE fusing #-}
+
+confusing :: Control.Applicative.Applicative f => LensLike (Curried (Yoneda f)) s t a b -> LensLike f s t a b
 confusing t = \f -> lowerYoneda . lowerCurried . t (liftCurriedYoneda . f)
 {-# INLINE confusing #-}
-
-type IxLensLike f i s t a b = (i -> a -> f b) -> s -> f t
-
-iconfusing :: Applicative f => IxLensLike (Curried (Yoneda f)) i s t a b -> (i -> a -> f b) -> s -> f t
-iconfusing t = \f -> lowerYoneda . lowerCurried . t (\i a -> liftCurriedYoneda (f i a))
-{-# INLINE iconfusing #-}
 
 liftCurriedYoneda :: Applicative f => f a -> Curried (Yoneda f) a
 liftCurriedYoneda fa = Curried (`yap` fa)
@@ -66,6 +73,26 @@ liftCurriedYoneda fa = Curried (`yap` fa)
 yap :: Applicative f => Yoneda f (a -> b) -> f a -> Yoneda f b
 yap (Yoneda k) fa = Yoneda (\ab_r -> k (ab_r .) <*> fa)
 {-# INLINE yap #-}
+
+type IxLensLike f i s t a b = (i -> a -> f b) -> s -> f t
+
+ifusing :: Functor f => IxLensLike (Yoneda f) i s t a b -> IxLensLike f i s t a b
+ifusing t = \f -> lowerYoneda . t (\i a -> liftYoneda (f i a))
+{-# INLINE ifusing #-}
+
+iconfusing :: Applicative f => IxLensLike (Curried (Yoneda f)) i s t a b -> IxLensLike f i s t a b
+iconfusing t = \f -> lowerYoneda . lowerCurried . t (\i a -> liftCurriedYoneda (f i a))
+{-# INLINE iconfusing #-}
+
+type FLensLike f s t a b = (forall x. a x -> f (b x)) -> s -> f t
+
+ffusing :: Functor f => FLensLike (Yoneda f) s t a b -> FLensLike f s t a b
+ffusing t = \f -> lowerYoneda . t (liftYoneda . f)
+{-# INLINE ffusing #-}
+
+fconfusing :: Applicative f => FLensLike (Curried (Yoneda f)) s t a b -> FLensLike f s t a b
+fconfusing t = \f -> lowerYoneda . lowerCurried . t (liftCurriedYoneda . f)
+{-# INLINE fconfusing #-}
 
 -------------------------------------------------------------------------------
 -- Curried
