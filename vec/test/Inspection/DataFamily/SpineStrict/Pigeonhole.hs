@@ -8,10 +8,13 @@
 {-# OPTIONS_GHC -dsuppress-module-prefixes #-}
 {-# OPTIONS_GHC -dsuppress-type-signatures #-}
 -- {-# OPTIONS_GHC -dsuppress-uniques #-}
+-- This makes gix tests pass, default is 60
+{-# OPTIONS_GHC -funfolding-use-threshold=200 #-}
 module Inspection.DataFamily.SpineStrict.Pigeonhole where
 
+import Data.Functor.Compat                        ((<&>))
 import Data.Vec.DataFamily.SpineStrict.Pigeonhole
-       (gindex, gitraverse, gtabulate, gtraverse)
+       (gindex, gitraverse, gix, gtabulate, gtraverse)
 import GHC.Generics                               (Generic, Generic1)
 import Test.Inspection
 
@@ -63,6 +66,25 @@ rhsTabulate f = Values (f Key1) (f Key2) (f Key3) (f Key4) (f Key5)
 
 inspect $ hasNoGenerics 'lhsTabulate
 inspect $ 'lhsTabulate === 'rhsTabulate
+
+-------------------------------------------------------------------------------
+-- Ix
+-------------------------------------------------------------------------------
+
+type LensLike' f s a = (a -> f a) -> s -> f s
+
+lhsIx :: Functor f => Key -> LensLike' f (Values a) a
+lhsIx = gix
+
+rhsIx :: Functor f => Key -> LensLike' f (Values a) a
+rhsIx Key1 f (Values x1 x2 x3 x4 x5) = f x1 <&> \x1' -> Values x1' x2 x3 x4 x5
+rhsIx Key2 f (Values x1 x2 x3 x4 x5) = f x2 <&> \x2' -> Values x1 x2' x3 x4 x5
+rhsIx Key3 f (Values x1 x2 x3 x4 x5) = f x3 <&> \x3' -> Values x1 x2 x3' x4 x5
+rhsIx Key4 f (Values x1 x2 x3 x4 x5) = f x4 <&> \x4' -> Values x1 x2 x3 x4' x5
+rhsIx Key5 f (Values x1 x2 x3 x4 x5) = f x5 <&> \x5' -> Values x1 x2 x3 x4 x5'
+
+inspect $ hasNoGenerics 'lhsIx
+inspect $ 'lhsIx === 'rhsIx
 
 -------------------------------------------------------------------------------
 -- Indexed traverse

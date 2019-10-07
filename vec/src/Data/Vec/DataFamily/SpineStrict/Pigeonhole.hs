@@ -14,6 +14,7 @@ module Data.Vec.DataFamily.SpineStrict.Pigeonhole (
     -- * Representable
     gindex,
     gtabulate,
+    gix,
     -- ** Traversable with index
     gtraverse,
     gitraverse,
@@ -27,7 +28,7 @@ import Prelude ()
 import Prelude.Compat
 
 import Control.Arrow                   (first)
-import Data.Functor.Confusing          (confusing, iconfusing)
+import Data.Functor.Confusing          (confusing, fusing, iconfusing)
 import Data.Functor.Identity           (Identity (..))
 import Data.Functor.Product            (Product (..))
 import Data.Functor.Rep                (tabulate)
@@ -44,6 +45,8 @@ import qualified GHC.Generics                    as G
 -- $setup
 -- >>> :set -XDeriveGeneric
 -- >>> import Control.Applicative (Const (..))
+-- >>> import Control.Lens (view, over)
+-- >>> import Data.Char (toUpper)
 -- >>> import Data.Void (absurd)
 -- >>> import GHC.Generics (Generic, Generic1)
 
@@ -130,6 +133,22 @@ gtabulate
        )
      => (i -> a) -> f a
 gtabulate idx = gto $ tabulate (idx . F.gto)
+
+-- | A lens. @i -> Lens' (t a) a@
+--
+-- >>> view (gix ()) (Identity 'x')
+-- 'x'
+--
+-- >>> over (gix ()) toUpper (Identity 'x')
+-- Identity 'X'
+--
+gix :: ( G.Generic i, F.GFrom i, G.Generic1 t, GTo t, GFrom t
+       , F.GEnumSize i ~ GPigeonholeSize t, N.InlineInduction (GPigeonholeSize t)
+       , Functor f
+       )
+    => i -> (a -> f a) -> t a -> f (t a)
+gix i = fusing $ \ab ta -> gto <$> V.ix (F.gfrom i) ab (gfrom ta)
+
 
 -------------------------------------------------------------------------------
 -- Generic traversable with index
