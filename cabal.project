@@ -11,3 +11,5 @@ package fin
 
 package vec
   ghc-options: -Wall
+
+packages: singleton-bool

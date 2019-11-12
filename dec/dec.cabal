@@ -37,8 +37,8 @@ source-repository head
   location: https://github.com/phadej/vec.git
 
 library
-  exposed-modules:  Data.Type.Dec
-  build-depends:    base >=4.7 && <4.14
+  exposed-modules:  Data.Type.Dec Data.Type.NewDec
+  build-depends:    base >=4.7 && <4.14, singleton-bool >=0.2 && <0.3
 
   if !impl(ghc >=7.10)
     build-depends: void >=0.7.2 && <0.8

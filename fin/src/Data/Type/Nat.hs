@@ -9,6 +9,8 @@
 {-# LANGUAGE TypeFamilies         #-}
 {-# LANGUAGE TypeOperators        #-}
 {-# LANGUAGE UndecidableInstances #-}
+
+{-# LANGUAGE PolyKinds #-}
 -- | 'Nat' numbers. @DataKinds@ stuff.
 --
 -- This module re-exports "Data.Nat", and adds type-level things.
@@ -35,6 +37,7 @@ module Data.Type.Nat (
     eqNat,
     EqNat,
     discreteNat,
+    discreteNat',
     -- * Induction
     induction,
     induction1,
@@ -68,8 +71,10 @@ import Data.Proxy         (Proxy (..))
 import Data.Type.Equality
 import Data.Type.Dec
 import Numeric.Natural    (Natural)
+import Data.Singletons.Bool
 
 import qualified GHC.TypeLits as GHC
+import qualified Data.Type.NewDec as D
 
 import Unsafe.Coerce (unsafeCoerce)
 
@@ -189,6 +194,25 @@ discreteNat = getDiscreteNat $ induction (DiscreteNat start) (\p -> DiscreteNat 
         No np    -> No $ \Refl -> np Refl
 
 newtype DiscreteNat n = DiscreteNat { getDiscreteNat :: forall m. SNatI m => Dec (n :~: m) }
+
+discreteNat' :: forall n m. (SNatI n, SNatI m) => D.Dec (n :~: m)
+discreteNat' = getDiscreteNat' $ induction (DiscreteNat' start) (\p -> DiscreteNat' (step p))
+  where
+    start :: forall p. SNatI p => D.Dec ('Z :~: p)
+    start = case snat :: SNat p of
+        SZ -> D.Because STrue (D.OfYes Refl)
+        SS -> D.Because SFalse $ D.OfNo $ \p -> case p of {}
+
+    step :: forall p q. SNatI q => DiscreteNat' p -> D.Dec ('S p :~: q)
+    step rec = case snat :: SNat q of
+        SZ -> D.Because SFalse $ D.OfNo $ \p -> case p of {}
+        SS -> step' rec
+
+    step' :: forall p q. SNatI q => DiscreteNat' p -> D.Dec ('S p :~: 'S q)
+    step' (DiscreteNat' rec) =
+        D.decMap congruence injectiveS (rec :: D.Dec (p :~: q))
+
+newtype DiscreteNat' n = DiscreteNat' { getDiscreteNat' :: forall m. SNatI m => D.Dec (n :~: m) }
 
 instance TestEquality SNat where
     testEquality SZ SZ = Just Refl
@@ -410,6 +434,16 @@ proofMultNOne = getProofMultNOne $ induction (ProofMultNOne Refl) step where
 newtype ProofMultNOne n = ProofMultNOne { getProofMultNOne :: Mult n Nat1 :~: n }
 
 -- TODO: multAssoc
+
+-------------------------------------------------------------------------------
+-- Succ properties
+-------------------------------------------------------------------------------
+
+injectiveS :: 'S n :~: 'S m -> n :~: m
+injectiveS Refl = Refl
+
+congruence :: x :~: y -> f x :~: f y
+congruence Refl = Refl
 
 -------------------------------------------------------------------------------
 -- Tagged
