@@ -39,6 +39,9 @@ module Data.Fin (
     weakenRight,
     append,
     split,
+    -- * Min and max
+    isMin,
+    isMax,
     -- * Aliases
     fin0, fin1, fin2, fin3, fin4, fin5, fin6, fin7, fin8, fin9,
     ) where
@@ -296,6 +299,42 @@ absurd n = case n of {}
 -- 0
 boring :: Fin N.Nat1
 boring = FZ
+
+-------------------------------------------------------------------------------
+-- min and max
+-------------------------------------------------------------------------------
+
+-- | Return a one less.
+--
+-- >>> isMin (FZ :: Fin N.Nat1)
+-- Nothing
+--
+-- >>> map isMin universe :: [Maybe (Fin N.Nat3)]
+-- [Nothing,Just 0,Just 1,Just 2]
+--
+isMin :: Fin ('S n) -> Maybe (Fin n)
+isMin FZ     = Nothing
+isMin (FS n) = Just n
+
+-- | Return a one less.
+--
+-- >>> isMax (FZ :: Fin N.Nat1)
+-- Nothing
+--
+-- >>> map isMax universe :: [Maybe (Fin N.Nat3)]
+-- [Just 0,Just 1,Just 2,Nothing]
+--
+isMax :: forall n. N.InlineInduction n => Fin ('S n) -> Maybe (Fin n)
+isMax = getIsMax (N.inlineInduction start step) where
+    start :: IsMax 'Z
+    start = IsMax $ \_ -> Nothing
+
+    step :: IsMax m -> IsMax ('S m)
+    step (IsMax rec) = IsMax $ \n -> case n of
+        FZ   -> Just FZ
+        FS n -> fmap FS (rec n)
+
+newtype IsMax n = IsMax { getIsMax :: Fin ('S n) -> Maybe (Fin n) }
 
 -------------------------------------------------------------------------------
 -- Append & Split

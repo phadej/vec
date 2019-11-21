@@ -1,5 +1,9 @@
 # Revision history for fin
 
+## 0.1.1
+
+- Add `isMin` and `isMax`
+
 ## 0.1
 
 - Rename `Fin` constructors to `FZ` and `FS`.
