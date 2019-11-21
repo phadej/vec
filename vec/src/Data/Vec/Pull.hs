@@ -28,6 +28,8 @@ module Data.Vec.Pull (
     _Cons,
     _head,
     _tail,
+    cons,
+    snoc,
     head,
     tail,
     -- * Folds
@@ -64,7 +66,9 @@ import Prelude.Compat
 import Control.Applicative (Applicative (..))
 import Control.Lens        ((<&>))
 import Data.Distributive   (Distributive (..))
+import Data.Either         (Either(Left, Right))
 import Data.Fin            (Fin (..))
+import qualified Data.Fin as Fin (split)
 import Data.Functor.Apply  (Apply (..))
 import Data.Functor.Rep    (Representable (..))
 import Data.Nat
@@ -279,6 +283,15 @@ cons :: a -> Vec n a -> Vec ('S n) a
 cons x (Vec v) = Vec $ \i -> case i of
     FZ   -> x
     FS j -> v j
+
+snoc :: forall a n. (N.InlineInduction n, N.Plus n ('S 'Z) ~ 'S n) => a -> Vec n a -> Vec ('S n) a
+snoc x (Vec v) = Vec $ \i ->
+  case Fin.split i :: Either (Fin n) (Fin ('S 'Z)) of
+    Left finN ->
+      v finN
+
+    Right _ ->
+      x
 
 -- | The first element of a 'Vec'.
 head :: Vec ('S n) a -> a

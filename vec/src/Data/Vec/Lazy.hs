@@ -34,6 +34,7 @@ module Data.Vec.Lazy (
     _head,
     _tail,
     cons,
+    snoc,
     head,
     tail,
     -- * Concatenation and splitting
@@ -432,6 +433,11 @@ _tail f (x ::: xs) = (x :::) <$> f xs
 -- | Cons an element in front of a 'Vec'.
 cons :: a -> Vec n a -> Vec ('S n) a
 cons = (:::)
+
+-- | Add a single element at the end of a 'Vec'.
+snoc :: a -> Vec n a -> Vec ('S n) a
+snoc a VNil = a ::: VNil
+snoc a (x ::: xs) = x ::: snoc a xs
 
 -- | The first element of a 'Vec'.
 head :: Vec ('S n) a -> a
