@@ -435,9 +435,9 @@ cons :: a -> Vec n a -> Vec ('S n) a
 cons = (:::)
 
 -- | Add a single element at the end of a 'Vec'.
-snoc :: a -> Vec n a -> Vec ('S n) a
-snoc a VNil = a ::: VNil
-snoc a (x ::: xs) = x ::: snoc a xs
+snoc ::Vec n a -> a -> Vec ('S n) a
+snoc VNil       x = x ::: VNil
+snoc (y ::: ys) x = y ::: snoc ys x
 
 -- | The first element of a 'Vec'.
 head :: Vec ('S n) a -> a

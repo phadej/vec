@@ -87,3 +87,19 @@ rhsJoin = 'a' ::: 'd' ::: VNil
 
 inspect $ 'lhsJoin  === 'rhsJoin
 inspect $ 'lhsJoin' =/= 'rhsJoin
+
+-------------------------------------------------------------------------------
+-- snoc
+-------------------------------------------------------------------------------
+
+lhsSnoc :: Vec N.Nat3 Char
+lhsSnoc = I.snoc ('a' ::: 'b' ::: VNil) 'c'
+
+lhsSnoc' :: Vec N.Nat3 Char
+lhsSnoc' = L.snoc ('a' ::: 'b' ::: VNil) 'c'
+
+rhsSnoc :: Vec N.Nat3 Char
+rhsSnoc = 'a' ::: 'b' ::: 'c' ::: VNil
+
+inspect $ 'lhsSnoc  === 'rhsSnoc
+inspect $ 'lhsSnoc' =/= 'rhsSnoc

@@ -284,8 +284,8 @@ cons x (Vec v) = Vec $ \i -> case i of
     FS j -> v j
 
 -- | Add a single element at the end of a 'Vec'.
-snoc :: forall a n. N.InlineInduction n => a -> Vec n a -> Vec ('S n) a
-snoc x (Vec xs) = Vec $ \i -> case F.isMax i of
+snoc :: forall a n. N.InlineInduction n => Vec n a -> a -> Vec ('S n) a
+snoc (Vec xs) x = Vec $ \i -> case F.isMax i of
     Nothing -> x
     Just i' -> xs i'
 

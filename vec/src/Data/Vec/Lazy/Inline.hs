@@ -33,6 +33,7 @@ module Data.Vec.Lazy.Inline (
     _head,
     _tail,
     cons,
+    snoc,
     head,
     tail,
     -- * Concatenation and splitting
@@ -244,6 +245,17 @@ ix = getIxLens $ N.inlineInduction1 start step where
         FS j -> _tail . l j
 
 newtype IxLens n a = IxLens { getIxLens :: Fin n -> I.Lens' (Vec n a) a }
+
+-- | Add a single element at the end of a 'Vec'.
+snoc :: forall n a. N.InlineInduction n => Vec n a -> a -> Vec ('S n) a
+snoc xs x = getSnoc (N.inlineInduction1 start step) xs where
+    start :: Snoc 'Z a
+    start = Snoc $ \ys -> x ::: ys
+
+    step :: Snoc m a -> Snoc ('S m) a
+    step (Snoc rec) = Snoc $ \(y ::: ys) -> y ::: rec ys
+
+newtype Snoc n a = Snoc { getSnoc :: Vec n a -> Vec ('S n) a }
 
 -------------------------------------------------------------------------------
 -- Concatenation

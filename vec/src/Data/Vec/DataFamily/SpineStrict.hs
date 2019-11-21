@@ -73,6 +73,7 @@ module Data.Vec.DataFamily.SpineStrict (
     _head,
     _tail,
     cons,
+    snoc,
     head,
     tail,
     -- * Concatenation and splitting
@@ -524,6 +525,18 @@ _tail f (x ::: xs) = (x :::) <$> f xs
 -- | Cons an element in front of a 'Vec'.
 cons :: a -> Vec n a -> Vec ('S n) a
 cons = (:::)
+
+
+-- | Add a single element at the end of a 'Vec'.
+snoc :: forall n a. N.InlineInduction n => Vec n a -> a -> Vec ('S n) a
+snoc xs x = getSnoc (N.inlineInduction1 start step) xs where
+    start :: Snoc 'Z a
+    start = Snoc $ \ys -> x ::: ys
+
+    step :: Snoc m a -> Snoc ('S m) a
+    step (Snoc rec) = Snoc $ \(y ::: ys) -> y ::: rec ys
+
+newtype Snoc n a = Snoc { getSnoc :: Vec n a -> Vec ('S n) a }
 
 -- | The first element of a 'Vec'.
 head :: Vec ('S n) a -> a
