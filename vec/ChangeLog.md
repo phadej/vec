@@ -1,6 +1,10 @@
 # Revision history for vec
 
-## 0.1.2
+## 0.2.1
+
+- Add `snoc` operations
+
+## 0.2
 
 - Add `Data.Vec.DataFamily.SpineStrict.gix`
 - Add `Data.Vec.DataFamily.SpineStrict.ix` requires `InlineInduction`

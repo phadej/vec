@@ -28,6 +28,8 @@ module Data.Vec.Pull (
     _Cons,
     _head,
     _tail,
+    cons,
+    snoc,
     head,
     tail,
     -- * Folds
@@ -275,10 +277,17 @@ _tail :: I.Lens' (Vec ('S n) a) (Vec n a)
 _tail f (Vec v) = f (Vec (v . FS)) <&> \xs -> cons (v FZ) xs
 {-# INLINE _tail #-}
 
+-- | Cons an element in front of a 'Vec'.
 cons :: a -> Vec n a -> Vec ('S n) a
 cons x (Vec v) = Vec $ \i -> case i of
     FZ   -> x
     FS j -> v j
+
+-- | Add a single element at the end of a 'Vec'.
+snoc :: forall a n. N.InlineInduction n => a -> Vec n a -> Vec ('S n) a
+snoc x (Vec xs) = Vec $ \i -> case F.isMax i of
+    Nothing -> x
+    Just i' -> xs i'
 
 -- | The first element of a 'Vec'.
 head :: Vec ('S n) a -> a
