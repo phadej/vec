@@ -34,8 +34,11 @@ module Data.Vec.Lazy (
     _head,
     _tail,
     cons,
+    snoc,
     head,
     tail,
+    -- * Reverse
+    reverse,
     -- * Concatenation and splitting
     (++),
     split,
@@ -433,6 +436,13 @@ _tail f (x ::: xs) = (x :::) <$> f xs
 cons :: a -> Vec n a -> Vec ('S n) a
 cons = (:::)
 
+-- | Add a single element at the end of a 'Vec'.
+--
+-- @since 0.2.1
+snoc :: Vec n a -> a -> Vec ('S n) a
+snoc VNil       x = x ::: VNil
+snoc (y ::: ys) x = y ::: snoc ys x
+
 -- | The first element of a 'Vec'.
 head :: Vec ('S n) a -> a
 head (x ::: _) = x
@@ -440,6 +450,21 @@ head (x ::: _) = x
 -- | The elements after the 'head' of a 'Vec'.
 tail :: Vec ('S n) a -> Vec n a
 tail (_ ::: xs) = xs
+
+-------------------------------------------------------------------------------
+-- Reverse
+-------------------------------------------------------------------------------
+
+-- | Reverse 'Vec'.
+--
+-- >>> reverse ('a' ::: 'b' ::: 'c' ::: VNil)
+-- 'c' ::: 'b' ::: 'a' ::: VNil
+--
+-- @since 0.2.1
+--
+reverse :: Vec n a -> Vec n a
+reverse VNil       = VNil
+reverse (x ::: xs) = snoc (reverse xs) x
 
 -------------------------------------------------------------------------------
 -- Concatenation

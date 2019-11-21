@@ -87,3 +87,35 @@ rhsJoin = 'a' ::: 'd' ::: VNil
 
 inspect $ 'lhsJoin  === 'rhsJoin
 inspect $ 'lhsJoin' =/= 'rhsJoin
+
+-------------------------------------------------------------------------------
+-- snoc
+-------------------------------------------------------------------------------
+
+lhsSnoc :: Vec N.Nat3 Char
+lhsSnoc = I.snoc ('a' ::: 'b' ::: VNil) 'c'
+
+lhsSnoc' :: Vec N.Nat3 Char
+lhsSnoc' = L.snoc ('a' ::: 'b' ::: VNil) 'c'
+
+rhsSnoc :: Vec N.Nat3 Char
+rhsSnoc = 'a' ::: 'b' ::: 'c' ::: VNil
+
+inspect $ 'lhsSnoc  === 'rhsSnoc
+inspect $ 'lhsSnoc' =/= 'rhsSnoc
+
+-------------------------------------------------------------------------------
+-- reverse
+-------------------------------------------------------------------------------
+
+lhsReverse :: Vec N.Nat3 Char
+lhsReverse = I.reverse $ 'c' ::: 'b' ::: 'a' ::: VNil
+
+lhsReverse' :: Vec N.Nat3 Char
+lhsReverse' = L.reverse $ 'c' ::: 'b' ::: 'a' ::: VNil
+
+rhsReverse :: Vec N.Nat3 Char
+rhsReverse = 'a' ::: 'b' ::: 'c' ::: VNil
+
+inspect $ 'lhsReverse  === 'rhsReverse
+inspect $ 'lhsReverse' =/= 'rhsReverse

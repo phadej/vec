@@ -73,8 +73,11 @@ module Data.Vec.DataFamily.SpineStrict (
     _head,
     _tail,
     cons,
+    snoc,
     head,
     tail,
+    -- * Reverse
+    reverse,
     -- * Concatenation and splitting
     (++),
     split,
@@ -525,6 +528,18 @@ _tail f (x ::: xs) = (x :::) <$> f xs
 cons :: a -> Vec n a -> Vec ('S n) a
 cons = (:::)
 
+
+-- | Add a single element at the end of a 'Vec'.
+snoc :: forall n a. N.InlineInduction n => Vec n a -> a -> Vec ('S n) a
+snoc xs x = getSnoc (N.inlineInduction1 start step) xs where
+    start :: Snoc 'Z a
+    start = Snoc $ \ys -> x ::: ys
+
+    step :: Snoc m a -> Snoc ('S m) a
+    step (Snoc rec) = Snoc $ \(y ::: ys) -> y ::: rec ys
+
+newtype Snoc n a = Snoc { getSnoc :: Vec n a -> Vec ('S n) a }
+
 -- | The first element of a 'Vec'.
 head :: Vec ('S n) a -> a
 head (x ::: _) = x
@@ -532,6 +547,27 @@ head (x ::: _) = x
 -- | The elements after the 'head' of a 'Vec'.
 tail :: Vec ('S n) a -> Vec n a
 tail (_ ::: xs) = xs
+
+-------------------------------------------------------------------------------
+-- Reverse
+-------------------------------------------------------------------------------
+
+-- | Reverse 'Vec'.
+--
+-- >>> reverse ('a' ::: 'b' ::: 'c' ::: VNil)
+-- 'c' ::: 'b' ::: 'a' ::: VNil
+--
+-- @since 0.2.1
+--
+reverse :: forall n a. N.InlineInduction n => Vec n a -> Vec n a
+reverse = getReverse (N.inlineInduction1 start step) where
+    start :: Reverse 'Z a
+    start = Reverse $ \_ -> VNil
+
+    step :: N.InlineInduction m => Reverse m a -> Reverse ('S m) a
+    step (Reverse rec) = Reverse $ \(x ::: xs) -> snoc (rec xs) x
+
+newtype Reverse n a = Reverse { getReverse :: Vec n a -> Vec n a }
 
 -------------------------------------------------------------------------------
 -- Concatenation
