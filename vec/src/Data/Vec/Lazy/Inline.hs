@@ -42,6 +42,8 @@ module Data.Vec.Lazy.Inline (
     concatMap,
     concat,
     chunks,
+    -- * Reverse
+    reverse,
     -- * Folds
     foldMap,
     foldMap1,
@@ -247,6 +249,9 @@ ix = getIxLens $ N.inlineInduction1 start step where
 newtype IxLens n a = IxLens { getIxLens :: Fin n -> I.Lens' (Vec n a) a }
 
 -- | Add a single element at the end of a 'Vec'.
+--
+-- @since 0.2.1
+--
 snoc :: forall n a. N.InlineInduction n => Vec n a -> a -> Vec ('S n) a
 snoc xs x = getSnoc (N.inlineInduction1 start step) xs where
     start :: Snoc 'Z a
@@ -256,6 +261,27 @@ snoc xs x = getSnoc (N.inlineInduction1 start step) xs where
     step (Snoc rec) = Snoc $ \(y ::: ys) -> y ::: rec ys
 
 newtype Snoc n a = Snoc { getSnoc :: Vec n a -> Vec ('S n) a }
+
+-------------------------------------------------------------------------------
+-- Reverse
+-------------------------------------------------------------------------------
+
+-- | Reverse 'Vec'.
+--
+-- >>> reverse ('a' ::: 'b' ::: 'c' ::: VNil)
+-- 'c' ::: 'b' ::: 'a' ::: VNil
+--
+-- @since 0.2.1
+--
+reverse :: forall n a. N.InlineInduction n => Vec n a -> Vec n a
+reverse = getReverse (N.inlineInduction1 start step) where
+    start :: Reverse 'Z a
+    start = Reverse $ \_ -> VNil
+
+    step :: N.InlineInduction m => Reverse m a -> Reverse ('S m) a
+    step (Reverse rec) = Reverse $ \(x ::: xs) -> snoc (rec xs) x
+
+newtype Reverse n a = Reverse { getReverse :: Vec n a -> Vec n a }
 
 -------------------------------------------------------------------------------
 -- Concatenation

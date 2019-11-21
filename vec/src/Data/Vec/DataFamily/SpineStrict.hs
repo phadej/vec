@@ -76,6 +76,8 @@ module Data.Vec.DataFamily.SpineStrict (
     snoc,
     head,
     tail,
+    -- * Reverse
+    reverse,
     -- * Concatenation and splitting
     (++),
     split,
@@ -545,6 +547,27 @@ head (x ::: _) = x
 -- | The elements after the 'head' of a 'Vec'.
 tail :: Vec ('S n) a -> Vec n a
 tail (_ ::: xs) = xs
+
+-------------------------------------------------------------------------------
+-- Reverse
+-------------------------------------------------------------------------------
+
+-- | Reverse 'Vec'.
+--
+-- >>> reverse ('a' ::: 'b' ::: 'c' ::: VNil)
+-- 'c' ::: 'b' ::: 'a' ::: VNil
+--
+-- @since 0.2.1
+--
+reverse :: forall n a. N.InlineInduction n => Vec n a -> Vec n a
+reverse = getReverse (N.inlineInduction1 start step) where
+    start :: Reverse 'Z a
+    start = Reverse $ \_ -> VNil
+
+    step :: N.InlineInduction m => Reverse m a -> Reverse ('S m) a
+    step (Reverse rec) = Reverse $ \(x ::: xs) -> snoc (rec xs) x
+
+newtype Reverse n a = Reverse { getReverse :: Vec n a -> Vec n a }
 
 -------------------------------------------------------------------------------
 -- Concatenation

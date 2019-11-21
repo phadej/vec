@@ -27,6 +27,7 @@ module Data.Fin (
     toNatural,
     toInteger,
     -- * Interesting
+    mirror,
     inverse,
     universe,
     inlineUniverse,
@@ -36,7 +37,9 @@ module Data.Fin (
     boring,
     -- * Plus
     weakenLeft,
+    weakenLeft1,
     weakenRight,
+    weakenRight1,
     append,
     split,
     -- * Min and max
@@ -123,6 +126,28 @@ instance N.SNatI n => Integral (Fin n) where
 
     quotRem a b = (quot a b, 0)
     quot a b = a * inverse b
+
+-- | Mirror the values, 'minBound' becomes 'maxBound', etc.
+--
+-- >>> map mirror universe :: [Fin N.Nat4]
+-- [3,2,1,0]
+--
+-- >>> reverse universe :: [Fin N.Nat4]
+-- [3,2,1,0]
+--
+-- @since 0.1.1
+--
+mirror :: forall n. N.InlineInduction n => Fin n -> Fin n
+mirror = getMirror (N.inlineInduction start step) where
+    start :: Mirror 'Z
+    start = Mirror id
+
+    step :: forall m. N.InlineInduction m => Mirror m -> Mirror ('S m)
+    step (Mirror rec) = Mirror $ \n -> case n of
+        FZ   -> getMaxBound (N.inlineInduction (MaxBound FZ) (MaxBound . FS . getMaxBound))
+        FS n -> weakenLeft1 (rec n)
+
+newtype Mirror n = Mirror { getMirror :: Fin n -> Fin n }
 
 -- | Multiplicative inverse.
 --
@@ -312,6 +337,8 @@ boring = FZ
 -- >>> map isMin universe :: [Maybe (Fin N.Nat3)]
 -- [Nothing,Just 0,Just 1,Just 2]
 --
+-- @since 0.1.1
+--
 isMin :: Fin ('S n) -> Maybe (Fin n)
 isMin FZ     = Nothing
 isMin (FS n) = Just n
@@ -323,6 +350,8 @@ isMin (FS n) = Just n
 --
 -- >>> map isMax universe :: [Maybe (Fin N.Nat3)]
 -- [Just 0,Just 1,Just 2,Nothing]
+--
+-- @since 0.1.1
 --
 isMax :: forall n. N.InlineInduction n => Fin ('S n) -> Maybe (Fin n)
 isMax = getIsMax (N.inlineInduction start step) where
@@ -340,6 +369,31 @@ newtype IsMax n = IsMax { getIsMax :: Fin ('S n) -> Maybe (Fin n) }
 -- Append & Split
 -------------------------------------------------------------------------------
 
+-- | >>> map weakenRight1 universe :: [Fin N.Nat5]
+-- [1,2,3,4]
+--
+-- @since 0.1.1
+weakenRight1 :: Fin n -> Fin ('S n)
+weakenRight1 = FS
+
+-- | >>> map weakenLeft1 universe :: [Fin N.Nat5]
+-- [0,1,2,3]
+--
+-- @since 0.1.1
+weakenLeft1 :: N.InlineInduction n => Fin n -> Fin ('S n)
+weakenLeft1 = getWeaken1 (N.inlineInduction start step) where
+    start :: Weaken1 'Z
+    start = Weaken1 absurd
+
+    step :: Weaken1 n -> Weaken1 ('S n)
+    step (Weaken1 go) = Weaken1 $ \n -> case n of
+        FZ    -> FZ
+        FS n' -> FS (go n')
+
+newtype Weaken1 n = Weaken1 { getWeaken1 :: Fin n -> Fin ('S n) }
+
+-- | >>> map (weakenLeft (Proxy :: Proxy N.Nat2)) (universe :: [Fin N.Nat3])
+-- [0,1,2]
 weakenLeft :: forall n m. N.InlineInduction n => Proxy m -> Fin n -> Fin (N.Plus n m)
 weakenLeft _ = getWeakenLeft (N.inlineInduction start step :: WeakenLeft m n) where
     start :: WeakenLeft m 'Z
@@ -352,6 +406,8 @@ weakenLeft _ = getWeakenLeft (N.inlineInduction start step :: WeakenLeft m n) wh
 
 newtype WeakenLeft m n = WeakenLeft { getWeakenLeft :: Fin n -> Fin (N.Plus n m) }
 
+-- | >>> map (weakenRight (Proxy :: Proxy N.Nat2)) (universe :: [Fin N.Nat3])
+-- [2,3,4]
 weakenRight :: forall n m. N.InlineInduction n => Proxy n -> Fin m -> Fin (N.Plus n m)
 weakenRight _ = getWeakenRight (N.inlineInduction start step :: WeakenRight m n) where
     start = WeakenRight id

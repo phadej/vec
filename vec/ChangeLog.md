@@ -2,7 +2,7 @@
 
 ## 0.2.1
 
-- Add `snoc` operations
+- Add `snoc` and `reverse` operations
 
 ## 0.2
 

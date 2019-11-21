@@ -3,6 +3,7 @@
 ## 0.1.1
 
 - Add `isMin` and `isMax`
+- Add `mirror`, `weakenRight1` and `weakenLeft1`.
 
 ## 0.1
 
