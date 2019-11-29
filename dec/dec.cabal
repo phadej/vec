@@ -35,6 +35,7 @@ tested-with:
 source-repository head
   type:     git
   location: https://github.com/phadej/vec.git
+  subdir:   dec
 
 library
   exposed-modules:  Data.Type.Dec
