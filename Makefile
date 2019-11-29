@@ -3,8 +3,9 @@
 build :
 	cabal new-build --enable-tests --enable-benchmarks all
 
-doctest : build
-	for ghcenv in .ghc.environment.*; do grep -Ev 'base-compat-[0-9]' $$ghcenv > .ghc.env; mv .ghc.env $$ghcenv; done
+doctest :
+	doctest --fast -fdiagnostics-color=never ral/src
+	doctest --fast -fdiagnostics-color=never bin/src
 	doctest --fast -fdiagnostics-color=never fin/src
 	doctest --fast -fdiagnostics-color=never vec/src
 

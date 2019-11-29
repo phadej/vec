@@ -1,2 +1,4 @@
 branches: master
-tests: >=8.0
+tests:    >=8.0
+doctest:  >=8.6
+haddock:  >=8.6
