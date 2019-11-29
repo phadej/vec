@@ -145,7 +145,7 @@ mirror = getMirror (N.inlineInduction start step) where
     step :: forall m. N.InlineInduction m => Mirror m -> Mirror ('S m)
     step (Mirror rec) = Mirror $ \n -> case n of
         FZ   -> getMaxBound (N.inlineInduction (MaxBound FZ) (MaxBound . FS . getMaxBound))
-        FS n -> weakenLeft1 (rec n)
+        FS m -> weakenLeft1 (rec m)
 
 newtype Mirror n = Mirror { getMirror :: Fin n -> Fin n }
 
@@ -314,7 +314,7 @@ inlineUniverse1 = getUniverse1 $ N.inlineInduction (Universe1 (FZ :| [])) step w
 newtype Universe  n = Universe  { getUniverse  :: [Fin n] }
 newtype Universe1 n = Universe1 { getUniverse1 :: NonEmpty (Fin ('S n)) }
 
--- | @'Fin' 'N.Nat0'@ is inhabited.
+-- | @'Fin' 'N.Nat0'@ is not inhabited.
 absurd :: Fin N.Nat0 -> b
 absurd n = case n of {}
 
@@ -361,7 +361,7 @@ isMax = getIsMax (N.inlineInduction start step) where
     step :: IsMax m -> IsMax ('S m)
     step (IsMax rec) = IsMax $ \n -> case n of
         FZ   -> Just FZ
-        FS n -> fmap FS (rec n)
+        FS m -> fmap FS (rec m)
 
 newtype IsMax n = IsMax { getIsMax :: Fin ('S n) -> Maybe (Fin n) }
 

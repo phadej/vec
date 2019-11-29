@@ -1,5 +1,6 @@
 {-# LANGUAGE CPP                  #-}
 {-# LANGUAGE DataKinds            #-}
+{-# LANGUAGE DeriveDataTypeable   #-}
 {-# LANGUAGE EmptyCase            #-}
 {-# LANGUAGE GADTs                #-}
 {-# LANGUAGE KindSignatures       #-}
@@ -45,6 +46,8 @@ module Data.Type.Nat (
     -- * Arithmetic
     Plus,
     Mult,
+    Mult2,
+    DivMod2,
     -- * Conversion to GHC Nat
     ToGHC,
     FromGHC,
@@ -63,15 +66,25 @@ module Data.Type.Nat (
     )  where
 
 import Data.Function      (fix)
-import Data.Nat
 import Data.Proxy         (Proxy (..))
-import Data.Type.Equality
-import Data.Type.Dec
+import Data.Type.Dec      (Dec (..))
+import Data.Type.Equality ((:~:) (..), TestEquality (..))
+import Data.Typeable      (Typeable)
 import Numeric.Natural    (Natural)
 
 import qualified GHC.TypeLits as GHC
 
 import Unsafe.Coerce (unsafeCoerce)
+
+#if !MIN_VERSION_base(4,11,0)
+import Data.Type.Equality (type (==))
+#endif
+
+import Data.Nat
+
+-- $setup
+-- >>> :set -XTypeOperators -XDataKinds
+-- >>> import Data.Type.Dec (decShow)
 
 -------------------------------------------------------------------------------
 -- SNat
@@ -81,6 +94,7 @@ import Unsafe.Coerce (unsafeCoerce)
 data SNat (n :: Nat) where
     SZ :: SNat 'Z
     SS :: SNatI n => SNat ('S n)
+  deriving (Typeable)
 
 deriving instance Show (SNat p)
 
@@ -338,6 +352,33 @@ type family Mult (n :: Nat) (m :: Nat) :: Nat where
     Mult 'Z     m = 'Z
     Mult ('S n) m = Plus m (Mult n m)
 
+-- | Multiplication by two. Doubling.
+--
+-- >>> reflect (snat :: SNat (Mult2 Nat4))
+-- 8
+--
+type family Mult2 (n :: Nat) :: Nat where
+    Mult2 'Z     = 'Z
+    Mult2 ('S n) = 'S ('S (Mult2 n))
+
+-- | Division by two. 'False' is 0 and 'True' is 1 as a remainder.
+--
+-- >>> :kind! DivMod2 Nat7
+-- DivMod2 Nat7 :: (Nat, Bool)
+-- = '( 'S ('S ('S 'Z)), 'True)
+--
+-- >>> :kind! DivMod2 Nat4
+-- DivMod2 Nat4 :: (Nat, Bool)
+-- = '( 'S ('S 'Z), 'False)
+--
+type family DivMod2 (n :: Nat) :: (Nat, Bool) where
+    DivMod2 'Z          = '( 'Z, 'False)
+    DivMod2 ('S 'Z)     = '( 'Z, 'True)
+    DivMod2 ('S ('S n)) = DivMod2' (DivMod2 n)
+
+type family DivMod2' (p :: (Nat, Bool)) :: (Nat, Bool) where
+    DivMod2' '(n, b) = '( 'S n, b)
+
 -------------------------------------------------------------------------------
 -- Aliases
 -------------------------------------------------------------------------------
@@ -425,6 +466,3 @@ unTagged (Tagged a) = a
 
 retagMap :: (a -> b) -> Tagged n a -> Tagged m b
 retagMap f = Tagged . f . unTagged
-
--- $setup
--- >>> :set -XTypeOperators -XDataKinds
