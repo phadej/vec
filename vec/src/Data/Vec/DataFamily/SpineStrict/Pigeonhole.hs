@@ -24,9 +24,9 @@ module Data.Vec.DataFamily.SpineStrict.Pigeonhole (
     GPigeonholeSize,
     ) where
 
-import Prelude ()
-import Prelude.Compat
+import Prelude (Functor (..), fst, uncurry, ($), (.))
 
+import Control.Applicative             (Applicative (..), (<$>))
 import Control.Arrow                   (first)
 import Data.Functor.Confusing          (confusing, fusing, iconfusing)
 import Data.Functor.Identity           (Identity (..))
@@ -49,6 +49,7 @@ import qualified GHC.Generics                    as G
 -- >>> import Data.Char (toUpper)
 -- >>> import Data.Void (absurd)
 -- >>> import GHC.Generics (Generic, Generic1)
+-- >>> import Prelude (Int, Show, Char, Integer)
 
 -------------------------------------------------------------------------------
 -- Class

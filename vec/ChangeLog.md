@@ -3,6 +3,8 @@
 ## 0.2.1
 
 - Add `snoc` and `reverse` operations
+- Add `repeat`
+- Drop dependency on `base-compat`
 
 ## 0.2
 
