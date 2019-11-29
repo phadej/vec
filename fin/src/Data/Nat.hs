@@ -63,7 +63,7 @@ instance Integral Nat where
     toInteger = cata 0 succ
 
     quotRem _ Z = throw DivideByZero
-    quotRem _ _ = error "un-implemented"
+    quotRem _ _ = error "quotRam @Nat un-implemented"
 
 {- TODO: make <= with witness
 instance Ix Nat where

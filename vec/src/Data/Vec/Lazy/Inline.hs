@@ -66,6 +66,7 @@ module Data.Vec.Lazy.Inline (
     -- * Zipping
     zipWith,
     izipWith,
+    repeat,
     -- * Monadic
     bind,
     join,
@@ -75,22 +76,20 @@ module Data.Vec.Lazy.Inline (
     VecEach (..)
     )  where
 
-import Prelude ()
-import Prelude.Compat
-       (Applicative (..), Int, Maybe (..), Monoid (..), Num (..), const, flip,
-       id, ($), (.), (<$>))
+import Prelude (Int, Maybe (..), Num (..), const, flip, id, ($), (.))
 
-import Control.Applicative (liftA2)
+import Control.Applicative (Applicative (pure, (*>)), liftA2, (<$>))
 import Data.Fin            (Fin (..))
 import Data.Functor.Apply  (Apply, liftF2)
-import Data.Nat
+import Data.Monoid         (Monoid (..))
+import Data.Nat            (Nat (..))
 import Data.Semigroup      (Semigroup (..))
 import Data.Vec.Lazy
        (Vec (..), VecEach (..), cons, empty, head, null, reifyList, singleton,
        tail, _Cons, _head, _tail)
 
 --- Instances
-import qualified Control.Lens as I
+import qualified Control.Lens as L
 
 import qualified Data.Fin      as F
 import qualified Data.Type.Nat as N
@@ -124,9 +123,9 @@ fromPull = getFromPull (N.inlineInduction1 start step) where
 
 newtype FromPull n a = FromPull { getFromPull :: P.Vec n a -> Vec n a }
 
--- | An 'I.Iso' from 'toPull' and 'fromPull'.
-_Pull :: N.InlineInduction n => I.Iso (Vec n a) (Vec n b) (P.Vec n a) (P.Vec n b)
-_Pull = I.iso toPull fromPull
+-- | An 'L.Iso' from 'toPull' and 'fromPull'.
+_Pull :: N.InlineInduction n => L.Iso (Vec n a) (Vec n b) (P.Vec n a) (P.Vec n b)
+_Pull = L.iso toPull fromPull
 
 -- | Convert 'Vec' to list.
 --
@@ -179,8 +178,8 @@ newtype FromList n a = FromList { getFromList :: [a] -> Maybe (Vec n a) }
 -- >>> _Vec # (True ::: False ::: VNil)
 -- [True,False]
 --
-_Vec :: N.InlineInduction n => I.Prism' [a] (Vec n a)
-_Vec = I.prism' toList fromList
+_Vec :: N.InlineInduction n => L.Prism' [a] (Vec n a)
+_Vec = L.prism' toList fromList
 
 -- | Convert list @[a]@ to @'Vec' n a@.
 -- Returns 'Nothing' if input list is too short.
@@ -236,7 +235,7 @@ newtype Index n a = Index { getIndex :: Fin n -> Vec n a -> a }
 -- >>> ('a' ::: 'b' ::: 'c' ::: VNil) & ix (FS FZ) .~ 'x'
 -- 'a' ::: 'x' ::: 'c' ::: VNil
 --
-ix :: N.InlineInduction n => Fin n -> I.Lens' (Vec n a) a
+ix :: N.InlineInduction n => Fin n -> L.Lens' (Vec n a) a
 ix = getIxLens $ N.inlineInduction1 start step where
     start :: IxLens 'Z a
     start = IxLens F.absurd
@@ -246,7 +245,7 @@ ix = getIxLens $ N.inlineInduction1 start step where
         FZ   -> _head
         FS j -> _tail . l j
 
-newtype IxLens n a = IxLens { getIxLens :: Fin n -> I.Lens' (Vec n a) a }
+newtype IxLens n a = IxLens { getIxLens :: Fin n -> L.Lens' (Vec n a) a }
 
 -- | Add a single element at the end of a 'Vec'.
 --
@@ -556,6 +555,15 @@ izipWith = getIZipWith $ N.inlineInduction start step where
 
 newtype IZipWith a b c n = IZipWith { getIZipWith :: (Fin n -> a -> b -> c) -> Vec n a -> Vec n b -> Vec n c }
 
+-- | Repeat value
+--
+-- >>> repeat 'x' :: Vec N.Nat3 Char
+-- 'x' ::: 'x' ::: 'x' ::: VNil
+--
+-- @since 0.2.1
+repeat :: N.InlineInduction n => x -> Vec n x
+repeat x = N.inlineInduction1 VNil (x :::)
+
 -------------------------------------------------------------------------------
 -- Monadic
 -------------------------------------------------------------------------------
@@ -611,4 +619,4 @@ newtype Universe n = Universe { getUniverse :: Vec n (Fin n) }
 -- >>> :set -XScopedTypeVariables
 -- >>> import Control.Lens ((^.), (&), (.~), (^?), (#))
 -- >>> import Data.Proxy (Proxy (..))
--- >>> import Prelude.Compat (Char, Bool (..), not, uncurry)
+-- >>> import Prelude (Char, Bool (..), not, uncurry)

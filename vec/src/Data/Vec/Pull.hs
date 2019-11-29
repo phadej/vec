@@ -53,6 +53,7 @@ module Data.Vec.Pull (
     -- * Zipping
     zipWith,
     izipWith,
+    repeat,
     -- * Monadic
     bind,
     join,
@@ -60,24 +61,24 @@ module Data.Vec.Pull (
     universe,
     ) where
 
-import Prelude ()
-import Prelude.Compat
+import Prelude
        (Bool (..), Eq (..), Functor (..), Int, Maybe (..), Monad (..),
-       Monoid (..), Num (..), all, const, id, ($), (.), (<$>))
+       Num (..), all, const, id, ($), (.))
 
-import Control.Applicative (Applicative (..))
+import Control.Applicative (Applicative (..), (<$>))
 import Control.Lens        ((<&>))
 import Data.Distributive   (Distributive (..))
 import Data.Fin            (Fin (..))
 import Data.Functor.Apply  (Apply (..))
 import Data.Functor.Rep    (Representable (..))
-import Data.Nat
+import Data.Monoid         (Monoid (..))
+import Data.Nat            (Nat (..))
 import Data.Proxy          (Proxy (..))
 import Data.Semigroup      (Semigroup (..))
 import Data.Typeable       (Typeable)
 
 --- Instances
-import qualified Control.Lens            as I
+import qualified Control.Lens            as L
 import qualified Data.Foldable           as I (Foldable (..))
 import qualified Data.Functor.Bind       as I (Bind (..))
 import qualified Data.Semigroup.Foldable as I (Foldable1 (..))
@@ -102,7 +103,7 @@ instance N.SNatI n => I.Foldable (Vec n) where
     foldMap = foldMap
 
 instance Applicative (Vec n) where
-    pure   = Vec . pure
+    pure   = repeat
     (<*>)  = zipWith ($)
     _ *> x = x
     x <* _ = x
@@ -134,15 +135,16 @@ instance Apply (Vec n) where
     (<.>)  = zipWith ($)
     _ .> x = x
     x <. _ = x
+    liftF2 = zipWith
 
 instance I.Bind (Vec n) where
     (>>-) = bind
     join  = join
 
-instance I.FunctorWithIndex (Fin n) (Vec n) where
+instance L.FunctorWithIndex (Fin n) (Vec n) where
     imap = imap
 
-instance N.SNatI n => I.FoldableWithIndex (Fin n) (Vec n) where
+instance N.SNatI n => L.FoldableWithIndex (Fin n) (Vec n) where
     ifoldMap = ifoldMap
     ifoldr   = ifoldr
 
@@ -197,8 +199,8 @@ fromList = getFromList (N.induction1 start step) where
 newtype FromList n a = FromList { getFromList :: [a] -> Maybe (Vec n a) }
 
 -- | Prism from list.
-_Vec :: N.SNatI n => I.Prism' [a] (Vec n a)
-_Vec = I.prism' toList fromList
+_Vec :: N.SNatI n => L.Prism' [a] (Vec n a)
+_Vec = L.prism' toList fromList
 
 -- | Convert list @[a]@ to @'Vec' n a@.
 -- Returns 'Nothing' if input list is too short.
@@ -246,7 +248,7 @@ reifyList (x : xs) f = reifyList xs $ \xs' -> f (cons x xs')
 -- >>> ('a' L.::: 'b' L.::: 'c' L.::: L.VNil) & L._Pull . ix (FS FZ) .~ 'x'
 -- 'a' ::: 'x' ::: 'c' ::: VNil
 --
-ix :: Fin n -> I.Lens' (Vec n a) a
+ix :: Fin n -> L.Lens' (Vec n a) a
 ix i f (Vec v) = f (v i) <&> \a -> Vec $ \j ->
     if i == j
     then a
@@ -254,13 +256,13 @@ ix i f (Vec v) = f (v i) <&> \a -> Vec $ \j ->
 
 -- | Match on non-empty 'Vec'.
 --
--- /Note:/ @lens@ 'I._Cons' is a 'I.Prism'.
--- In fact, @'Vec' n a@ cannot have an instance of 'I.Cons' as types don't match.
+-- /Note:/ @lens@ 'L._Cons' is a 'L.Prism'.
+-- In fact, @'Vec' n a@ cannot have an instance of 'L.Cons' as types don't match.
 --
-_Cons :: I.Iso (Vec ('S n) a) (Vec ('S n) b) (a, Vec n a) (b, Vec n b)
-_Cons = I.iso (\(Vec v) -> (v FZ, Vec (v . FS))) (\(x, xs) -> cons x xs)
+_Cons :: L.Iso (Vec ('S n) a) (Vec ('S n) b) (a, Vec n a) (b, Vec n b)
+_Cons = L.iso (\(Vec v) -> (v FZ, Vec (v . FS))) (\(x, xs) -> cons x xs)
 
--- | Head lens. /Note:/ @lens@ 'I._head' is a 'I.Traversal''.
+-- | Head lens. /Note:/ @lens@ 'L._head' is a 'L.Traversal''.
 --
 -- >>> ('a' L.::: 'b' L.::: 'c' L.::: L.VNil) ^. L._Pull . _head
 -- 'a'
@@ -268,14 +270,14 @@ _Cons = I.iso (\(Vec v) -> (v FZ, Vec (v . FS))) (\(x, xs) -> cons x xs)
 -- >>> ('a' L.::: 'b' L.::: 'c' L.::: L.VNil) & L._Pull . _head .~ 'x'
 -- 'x' ::: 'b' ::: 'c' ::: VNil
 --
-_head :: I.Lens' (Vec ('S n) a) a
+_head :: L.Lens' (Vec ('S n) a) a
 _head f (Vec v) = f (v FZ) <&> \a -> Vec $ \j -> case j of
     FZ -> a
     _   -> v j
 {-# INLINE head #-}
 
--- | Head lens. /Note:/ @lens@ 'I._head' is a 'I.Traversal''.
-_tail :: I.Lens' (Vec ('S n) a) (Vec n a)
+-- | Head lens. /Note:/ @lens@ 'L._head' is a 'L.Traversal''.
+_tail :: L.Lens' (Vec ('S n) a) (Vec n a)
 _tail f (Vec v) = f (Vec (v . FS)) <&> \xs -> cons (v FZ) xs
 {-# INLINE _tail #-}
 
@@ -306,9 +308,6 @@ tail (Vec v) = Vec (v . FS)
 -------------------------------------------------------------------------------
 
 -- | Reverse 'Vec'.
---
--- >>> reverse ('a' ::: 'b' ::: 'c' ::: VNil)
--- 'c' ::: 'b' ::: 'a' ::: VNil
 --
 -- @since 0.2.1
 --
@@ -397,6 +396,12 @@ zipWith f (Vec xs) (Vec ys) = Vec $ \i -> f (xs i) (ys i)
 izipWith :: (Fin n -> a -> b -> c) -> Vec n a -> Vec n b -> Vec n c
 izipWith f (Vec xs) (Vec ys) = Vec $ \i -> f i (xs i) (ys i)
 
+-- | Repeat value
+--
+-- @since 0.2.1
+repeat :: x -> Vec n x
+repeat = Vec . pure
+
 -------------------------------------------------------------------------------
 -- Monadic
 -------------------------------------------------------------------------------
@@ -428,5 +433,5 @@ universe = Vec id
 -- >>> :set -XScopedTypeVariables
 -- >>> import Control.Lens ((^.), (&), (.~), over)
 -- >>> import Data.Proxy (Proxy (..))
--- >>> import Prelude.Compat (Char, Bool (..), not)
+-- >>> import Prelude (Char, Bool (..), not)
 -- >>> import qualified Data.Vec.Lazy as L

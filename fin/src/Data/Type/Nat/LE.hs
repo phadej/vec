@@ -1,4 +1,5 @@
 {-# LANGUAGE DataKinds             #-}
+{-# LANGUAGE DeriveDataTypeable    #-}
 {-# LANGUAGE EmptyCase             #-}
 {-# LANGUAGE FlexibleContexts      #-}
 {-# LANGUAGE FlexibleInstances     #-}
@@ -48,9 +49,11 @@ module Data.Type.Nat.LE (
     ) where
 
 import Data.Type.Dec      (Dec (..), Decidable (..), Neg)
-import Data.Type.Equality
-import Data.Type.Nat
+import Data.Type.Equality ((:~:) (..))
+import Data.Typeable      (Typeable)
 import Data.Void          (absurd)
+
+import Data.Type.Nat
 
 -------------------------------------------------------------------------------
 -- Proof
@@ -60,6 +63,7 @@ import Data.Void          (absurd)
 data LEProof n m where
     LEZero :: LEProof 'Z m
     LESucc :: LEProof n m -> LEProof ('S n) ('S m)
+  deriving (Typeable)
 
 deriving instance Show (LEProof n m)
 

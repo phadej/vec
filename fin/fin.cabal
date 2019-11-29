@@ -2,7 +2,7 @@ cabal-version:      >=1.10
 name:               fin
 version:            0.1.1
 synopsis:           Nat and Fin: peano naturals and finite numbers
-category:           Data, Dependent Types, Singletons
+category:           Data, Dependent Types, Singletons, Math
 description:
   This package provides two simple types, and some tools to work with them.
   Also on type level as @DataKinds@.

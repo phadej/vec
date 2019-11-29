@@ -68,6 +68,7 @@ module Data.Vec.Lazy (
     -- * Zipping
     zipWith,
     izipWith,
+    repeat,
     -- * Monadic
     bind,
     join,
@@ -77,13 +78,11 @@ module Data.Vec.Lazy (
     VecEach (..),
     )  where
 
-import Prelude ()
-import Prelude.Compat
+import Prelude
        (Bool (..), Eq (..), Functor (..), Int, Maybe (..), Monad (..),
-       Monoid (..), Num (..), Ord (..), Show (..), id, seq, showParen,
-       showString, ($), (.), (<$>))
+       Num (..), Ord (..), Show (..), id, seq, showParen, showString, ($), (.))
 
-import Control.Applicative (Applicative (..))
+import Control.Applicative (Applicative (..), (<$>))
 import Control.DeepSeq     (NFData (..))
 import Control.Lens        ((<&>))
 import Data.Distributive   (Distributive (..))
@@ -91,12 +90,13 @@ import Data.Fin            (Fin (..))
 import Data.Functor.Apply  (Apply (..))
 import Data.Functor.Rep    (Representable (..), distributeRep)
 import Data.Hashable       (Hashable (..))
-import Data.Nat
+import Data.Monoid         (Monoid (..))
+import Data.Nat            (Nat (..))
 import Data.Semigroup      (Semigroup (..))
 import Data.Typeable       (Typeable)
 
 --- Instances
-import qualified Control.Lens               as I
+import qualified Control.Lens               as L
 import qualified Data.Foldable              as I (Foldable (..))
 import qualified Data.Functor.Bind          as I (Bind (..))
 import qualified Data.Semigroup.Foldable    as I (Foldable1 (..))
@@ -165,7 +165,7 @@ instance Hashable a => Hashable (Vec n a) where
         `hashWithSalt` xs
 
 instance N.SNatI n => Applicative (Vec n) where
-    pure x = N.induction1 VNil (x :::)
+    pure   = repeat
     (<*>)  = zipWith ($)
     _ *> x = x
     x <* _ = x
@@ -194,60 +194,61 @@ instance (Monoid a, N.SNatI n) => Monoid (Vec n a) where
     mappend = zipWith mappend
 
 instance Apply (Vec n) where
-    (<.>) = zipWith ($)
+    (<.>)  = zipWith ($)
     _ .> x = x
     x <. _ = x
+    liftF2 = zipWith
 
 instance I.Bind (Vec n) where
     (>>-) = bind
     join  = join
 
-instance I.FunctorWithIndex (Fin n) (Vec n) where
+instance L.FunctorWithIndex (Fin n) (Vec n) where
     imap = imap
 
-instance I.FoldableWithIndex (Fin n) (Vec n) where
+instance L.FoldableWithIndex (Fin n) (Vec n) where
     ifoldMap = ifoldMap
     ifoldr   = ifoldr
 
-instance I.TraversableWithIndex (Fin n) (Vec n) where
+instance L.TraversableWithIndex (Fin n) (Vec n) where
     itraverse = itraverse
 
-instance I.Each (Vec n a) (Vec n b) a b where
+instance L.Each (Vec n a) (Vec n b) a b where
     each = traverse
 
-type instance I.Index (Vec n a)   = Fin n
-type instance I.IxValue (Vec n a) = a
+type instance L.Index (Vec n a)   = Fin n
+type instance L.IxValue (Vec n a) = a
 
--- | 'Vec' doesn't have 'I.At' instance, as we __cannot__ remove value from 'Vec'.
--- See 'ix' in "Data.Vec.Lazy" module for an 'I.Lens' (not 'I.Traversal').
-instance I.Ixed (Vec n a) where
+-- | 'Vec' doesn't have 'L.At' instance, as we __cannot__ remove value from 'Vec'.
+-- See 'ix' in "Data.Vec.Lazy" module for an 'L.Lens' (not 'L.Traversal').
+instance L.Ixed (Vec n a) where
     ix = ix
 
-instance I.Field1 (Vec ('S n) a) (Vec ('S n) a) a a where
+instance L.Field1 (Vec ('S n) a) (Vec ('S n) a) a a where
     _1 = _head
 
-instance I.Field2 (Vec ('S ('S n)) a) (Vec ('S ('S n)) a) a a where
+instance L.Field2 (Vec ('S ('S n)) a) (Vec ('S ('S n)) a) a a where
     _2 = _tail . _head
 
-instance I.Field3 (Vec ('S ('S ('S n))) a) (Vec ('S ('S ('S n))) a) a a where
+instance L.Field3 (Vec ('S ('S ('S n))) a) (Vec ('S ('S ('S n))) a) a a where
     _3 = _tail . _tail . _head
 
-instance I.Field4 (Vec ('S ('S ('S ('S n)))) a) (Vec ('S ('S ('S ('S n)))) a) a a where
+instance L.Field4 (Vec ('S ('S ('S ('S n)))) a) (Vec ('S ('S ('S ('S n)))) a) a a where
     _4 = _tail . _tail . _tail . _head
 
-instance I.Field5 (Vec ('S ('S ('S ('S ('S n))))) a) (Vec ('S ('S ('S ('S ('S n))))) a) a a where
+instance L.Field5 (Vec ('S ('S ('S ('S ('S n))))) a) (Vec ('S ('S ('S ('S ('S n))))) a) a a where
     _5 = _tail . _tail . _tail . _tail . _head
 
-instance I.Field6 (Vec ('S ('S ('S ('S ('S ('S n)))))) a) (Vec ('S ('S ('S ('S ('S ('S n)))))) a) a a where
+instance L.Field6 (Vec ('S ('S ('S ('S ('S ('S n)))))) a) (Vec ('S ('S ('S ('S ('S ('S n)))))) a) a a where
     _6 = _tail . _tail . _tail . _tail . _tail . _head
 
-instance I.Field7 (Vec ('S ('S ('S ('S ('S ('S ('S n))))))) a) (Vec ('S ('S ('S ('S ('S ('S ('S n))))))) a) a a where
+instance L.Field7 (Vec ('S ('S ('S ('S ('S ('S ('S n))))))) a) (Vec ('S ('S ('S ('S ('S ('S ('S n))))))) a) a a where
     _7 = _tail . _tail . _tail . _tail . _tail . _tail . _head
 
-instance I.Field8 (Vec ('S ('S ('S ('S ('S ('S ('S ('S n)))))))) a) (Vec ('S ('S ('S ('S ('S ('S ('S ('S n)))))))) a) a a where
+instance L.Field8 (Vec ('S ('S ('S ('S ('S ('S ('S ('S n)))))))) a) (Vec ('S ('S ('S ('S ('S ('S ('S ('S n)))))))) a) a a where
     _8 = _tail . _tail . _tail . _tail . _tail . _tail . _tail . _head
 
-instance I.Field9 (Vec ('S ('S ('S ('S ('S ('S ('S ('S ('S n))))))))) a) (Vec ('S ('S ('S ('S ('S ('S ('S ('S ('S n))))))))) a) a a where
+instance L.Field9 (Vec ('S ('S ('S ('S ('S ('S ('S ('S ('S n))))))))) a) (Vec ('S ('S ('S ('S ('S ('S ('S ('S ('S n))))))))) a) a a where
     _9 = _tail . _tail . _tail . _tail . _tail . _tail . _tail . _tail . _head
 
 -------------------------------------------------------------------------------
@@ -300,8 +301,8 @@ fromPull (P.Vec f) = case N.snat :: N.SNat n of
     N.SS -> f FZ ::: fromPull (P.Vec (f . FS))
 
 -- | An 'I.Iso' from 'toPull' and 'fromPull'.
-_Pull :: N.SNatI n => I.Iso (Vec n a) (Vec n b) (P.Vec n a) (P.Vec n b)
-_Pull = I.iso toPull fromPull
+_Pull :: N.SNatI n => L.Iso (Vec n a) (Vec n b) (P.Vec n a) (P.Vec n b)
+_Pull = L.iso toPull fromPull
 
 -- | Convert 'Vec' to list.
 --
@@ -348,8 +349,8 @@ newtype FromList n a = FromList { getFromList :: [a] -> Maybe (Vec n a) }
 -- >>> _Vec # (True ::: False ::: VNil)
 -- [True,False]
 --
-_Vec :: N.SNatI n => I.Prism' [a] (Vec n a)
-_Vec = I.prism' toList fromList
+_Vec :: N.SNatI n => L.Prism' [a] (Vec n a)
+_Vec = L.prism' toList fromList
 
 -- | Convert list @[a]@ to @'Vec' n a@.
 -- Returns 'Nothing' if input list is too short.
@@ -403,19 +404,19 @@ reifyList (x : xs) f = reifyList xs $ \xs' -> f (x ::: xs')
 -- >>> ('a' ::: 'b' ::: 'c' ::: VNil) & ix (FS FZ) .~ 'x'
 -- 'a' ::: 'x' ::: 'c' ::: VNil
 --
-ix :: Fin n -> I.Lens' (Vec n a) a
+ix :: Fin n -> L.Lens' (Vec n a) a
 ix FZ     f (x ::: xs) = (::: xs) <$> f x
 ix (FS n) f (x ::: xs) = (x :::)  <$> ix n f xs
 
 -- | Match on non-empty 'Vec'.
 --
--- /Note:/ @lens@ 'I._Cons' is a 'I.Prism'.
--- In fact, @'Vec' n a@ cannot have an instance of 'I.Cons' as types don't match.
+-- /Note:/ @lens@ 'L._Cons' is a 'L.Prism'.
+-- In fact, @'Vec' n a@ cannot have an instance of 'L.Cons' as types don't match.
 --
-_Cons :: I.Iso (Vec ('S n) a) (Vec ('S n) b) (a, Vec n a) (b, Vec n b)
-_Cons = I.iso (\(x ::: xs) -> (x, xs)) (\(x, xs) -> x ::: xs)
+_Cons :: L.Iso (Vec ('S n) a) (Vec ('S n) b) (a, Vec n a) (b, Vec n b)
+_Cons = L.iso (\(x ::: xs) -> (x, xs)) (\(x, xs) -> x ::: xs)
 
--- | Head lens. /Note:/ @lens@ 'I._head' is a 'I.Traversal''.
+-- | Head lens. /Note:/ @lens@ 'L._head' is a 'L.Traversal''.
 --
 -- >>> ('a' ::: 'b' ::: 'c' ::: VNil) ^. _head
 -- 'a'
@@ -423,12 +424,12 @@ _Cons = I.iso (\(x ::: xs) -> (x, xs)) (\(x, xs) -> x ::: xs)
 -- >>> ('a' ::: 'b' ::: 'c' ::: VNil) & _head .~ 'x'
 -- 'x' ::: 'b' ::: 'c' ::: VNil
 --
-_head :: I.Lens' (Vec ('S n) a) a
+_head :: L.Lens' (Vec ('S n) a) a
 _head f (x ::: xs) = (::: xs) <$> f x
 {-# INLINE head #-}
 
--- | Head lens. /Note:/ @lens@ 'I._head' is a 'I.Traversal''.
-_tail :: I.Lens' (Vec ('S n) a) (Vec n a)
+-- | Tail lens.
+_tail :: L.Lens' (Vec ('S n) a) (Vec n a)
 _tail f (x ::: xs) = (x :::) <$> f xs
 {-# INLINE _tail #-}
 
@@ -569,7 +570,7 @@ traverse1 f = go where
 -- | Apply an action to every element of a 'Vec' and its index, yielding a 'Vec' of results.
 itraverse :: Applicative f => (Fin n -> a -> f b) -> Vec n a -> f (Vec n b)
 itraverse _ VNil       = pure VNil
-itraverse f (x ::: xs) = (:::) <$> f FZ x <*> I.itraverse (f . FS) xs
+itraverse f (x ::: xs) = (:::) <$> f FZ x <*> itraverse (f . FS) xs
 
 -- | Apply an action to every element of a 'Vec' and its index, ignoring the results.
 itraverse_ :: Applicative f => (Fin n -> a -> f b) -> Vec n a -> f ()
@@ -621,8 +622,10 @@ foldl' f z = go z where
 
 -- | Yield the length of a 'Vec'. /O(n)/
 length :: Vec n a -> Int
-length VNil = 0
-length (_ ::: xs) = 1 + length xs
+length = go 0 where
+    go :: Int -> Vec n a -> Int
+    go !acc VNil       = acc
+    go  acc (_ ::: xs) = go (1 + acc) xs
 
 -- | Test whether a 'Vec' is empty. /O(1)/
 null :: Vec n a -> Bool
@@ -656,6 +659,15 @@ zipWith f (x ::: xs) (y ::: ys) = f x y ::: zipWith f xs ys
 izipWith :: (Fin n -> a -> b -> c) -> Vec n a -> Vec n b -> Vec n c
 izipWith _ VNil       VNil       = VNil
 izipWith f (x ::: xs) (y ::: ys) = f FZ x y ::: izipWith (f . FS) xs ys
+
+-- | Repeat a value.
+--
+-- >>> repeat 'x' :: Vec N.Nat3 Char
+-- 'x' ::: 'x' ::: 'x' ::: VNil
+--
+-- @since 0.2.1
+repeat :: N.SNatI n => x -> Vec n x
+repeat x = N.induction1 VNil (x :::)
 
 -------------------------------------------------------------------------------
 -- Monadic
@@ -715,7 +727,7 @@ newtype Universe n = Universe { getUniverse :: Vec n (Fin n) }
 --
 -- where @betterDslMagic@ can be defined using 'traverseWithVec'.
 --
-class I.Each s t a b => VecEach s t a b | s -> a, t -> b, s b -> t, t a -> s where
+class L.Each s t a b => VecEach s t a b | s -> a, t -> b, s b -> t, t a -> s where
     mapWithVec :: (forall n. N.InlineInduction n => Vec n a -> Vec n b) -> s -> t
     traverseWithVec :: Applicative f => (forall n. N.InlineInduction n => Vec n a -> f (Vec n b)) -> s -> f t
 
@@ -748,4 +760,4 @@ instance (a ~ a2, a ~ a3, a ~ a4, b ~ b2, b ~ b3, b ~ b4) => VecEach (a, a2, a3,
 -- >>> :set -XScopedTypeVariables
 -- >>> import Control.Lens ((^.), (&), (.~), (^?), (#))
 -- >>> import Data.Proxy (Proxy (..))
--- >>> import Prelude.Compat (Char, not, uncurry)
+-- >>> import Prelude (Char, not, uncurry)

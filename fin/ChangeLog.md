@@ -4,6 +4,8 @@
 
 - Add `isMin` and `isMax`
 - Add `mirror`, `weakenRight1` and `weakenLeft1`.
+- Add `Mult2` and `DivMod2`
+- Explicitly derive `Typeable SNat` and `Typeable LEProof`.
 
 ## 0.1
 

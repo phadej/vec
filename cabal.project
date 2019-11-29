@@ -1,6 +1,8 @@
 packages: dec
 packages: fin
 packages: vec
+packages: bin
+packages: ral
 tests: true
 
 package dec

@@ -1,4 +1,5 @@
 {-# LANGUAGE DataKinds             #-}
+{-# LANGUAGE DeriveDataTypeable    #-}
 {-# LANGUAGE EmptyCase             #-}
 {-# LANGUAGE FlexibleContexts      #-}
 {-# LANGUAGE FlexibleInstances     #-}
@@ -35,10 +36,11 @@ module Data.Type.Nat.LE.ReflStep (
     ) where
 
 import Data.Type.Dec      (Dec (..), Decidable (..), Neg)
-import Data.Type.Equality
-import Data.Type.Nat
+import Data.Type.Equality ((:~:) (..))
+import Data.Typeable      (Typeable)
 import Data.Void          (absurd)
 
+import Data.Type.Nat
 import qualified Data.Type.Nat.LE as ZeroSucc
 
 -------------------------------------------------------------------------------
@@ -49,6 +51,7 @@ import qualified Data.Type.Nat.LE as ZeroSucc
 data LEProof n m where
     LERefl :: LEProof n n
     LEStep :: LEProof n m -> LEProof n ('S m)
+  deriving (Typeable)
 
 deriving instance Show (LEProof n m)
 
