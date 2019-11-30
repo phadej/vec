@@ -2,9 +2,9 @@
 {-# LANGUAGE DataKinds              #-}
 {-# LANGUAGE DeriveDataTypeable     #-}
 {-# LANGUAGE EmptyCase              #-}
+{-# LANGUAGE MultiParamTypeClasses  #-}
 {-# LANGUAGE FlexibleContexts       #-}
 {-# LANGUAGE FlexibleInstances      #-}
-{-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE GADTs                  #-}
 {-# LANGUAGE RankNTypes             #-}
 {-# LANGUAGE ScopedTypeVariables    #-}
@@ -88,6 +88,7 @@ import Prelude
 import Control.Applicative (Applicative (..), (<$>))
 import Control.DeepSeq     (NFData (..))
 import Data.Bin            (Bin (..), BinN (..))
+import Data.Bin.Pos        (Pos (..), PosN (..), PosN' (..))
 import Data.Distributive   (Distributive (..))
 import Data.Functor.Apply  (Apply (..))
 import Data.Functor.Rep    (Representable (..), distributeRep)
@@ -96,10 +97,12 @@ import Data.List.NonEmpty  (NonEmpty (..))
 import Data.Monoid         (Monoid (..))
 import Data.Nat            (Nat (..))
 import Data.Semigroup      (Semigroup (..))
+import Data.Type.Bin       (SBin (..), SBinI (..), SBinN (..), SBinNI (..))
 import Data.Type.Equality  ((:~:) (..))
 import Data.Typeable       (Typeable)
 
 import qualified Data.RAL.Tree as Tree
+import qualified Data.Type.Bin as B
 import qualified Data.Type.Nat as N
 
 import qualified Control.Lens               as L
@@ -108,16 +111,16 @@ import qualified Data.Semigroup.Foldable    as I (Foldable1 (..))
 import qualified Data.Semigroup.Traversable as I (Traversable1 (..))
 import qualified Data.Traversable           as I (Traversable (..))
 
-import Data.RAL.Pos
 import Data.RAL.Tree (Tree (..))
-import Data.Type.Bin
 
 -- $setup
 -- >>> :set -XScopedTypeVariables -XDataKinds
 -- >>> import Prelude (print, Char, Bounded (..))
 -- >>> import Control.Lens ((^.), (&), (.~), (^?), (#))
--- >>> import Data.Vec.Lazy (Vec (..))
 -- >>> import Data.List (sort)
+-- >>> import Data.Wid (Wid (..))
+-- >>> import Data.Bin.Pos (top, pop)
+-- >>> import qualified Data.Bin.Pos as P
 
 -------------------------------------------------------------------------------
 -- Random access list
@@ -131,7 +134,7 @@ data RAL (b :: Bin) a where
 
 -- | Non-empty random access list.
 data NERAL (n :: Nat) (b :: BinN) a where
-    Last   :: Tree n a -> NERAL n 'BE a
+    Last  :: Tree n a -> NERAL n 'BE a
     Cons0 ::             NERAL ('S n) b a -> NERAL n ('B0 b) a
     Cons1 :: Tree n a -> NERAL ('S n) b a -> NERAL n ('B1 b) a
   deriving (Typeable)
@@ -238,10 +241,10 @@ instance SBinI b => Representable (RAL b) where
     index = (!)
     tabulate f = case sbin :: SBin b of
         SBZ -> Empty
-        SBN -> NonEmpty (tabulate (f . Pos))
+        SBN -> NonEmpty (tabulate (f . Pos . PosN))
 
 instance (SBinNI b, N.SNatI n) => Representable (NERAL n b) where
-    type Rep (NERAL n b) = PosN n b
+    type Rep (NERAL n b) = PosN' n b
     index = indexNE
 
     tabulate f = case sbinN :: SBinN b of
@@ -280,21 +283,21 @@ instance Apply (NERAL n b) where
 instance L.FunctorWithIndex (Pos b) (RAL b) where
     imap = imap
 
-instance L.FunctorWithIndex (PosN n b) (NERAL n b) where
+instance L.FunctorWithIndex (PosN' n b) (NERAL n b) where
     imap = imapNE
 
 instance L.FoldableWithIndex (Pos b) (RAL b) where
     ifoldMap = ifoldMap
     ifoldr   = ifoldr
 
-instance L.FoldableWithIndex (PosN n b) (NERAL n b) where
+instance L.FoldableWithIndex (PosN' n b) (NERAL n b) where
     ifoldMap = ifoldMapNE
     ifoldr   = ifoldrNE
 
 instance L.TraversableWithIndex (Pos b) (RAL b) where
     itraverse = itraverse
 
-instance L.TraversableWithIndex (PosN n b) (NERAL n b) where
+instance L.TraversableWithIndex (PosN' n b) (NERAL n b) where
     itraverse = itraverseNE
 
 instance L.Each (RAL n a) (RAL n b) a b where
@@ -306,7 +309,7 @@ instance L.Each (NERAL n m a) (NERAL n m b) a b where
 type instance L.Index   (RAL n a) = Pos n
 type instance L.IxValue (RAL n a) = a
 
-type instance L.Index   (NERAL n b a) = PosN n b
+type instance L.Index   (NERAL n b a) = PosN' n b
 type instance L.IxValue (NERAL n b a) = a
 
 instance L.Ixed (RAL b a) where
@@ -319,13 +322,13 @@ instance L.Ixed (NERAL n b a) where
 -- Construction
 -------------------------------------------------------------------------------
 
-empty :: RAL Bin0 a
+empty :: RAL B.Bin0 a
 empty = Empty
 
-singleton :: a -> RAL Bin1 a
+singleton :: a -> RAL B.Bin1 a
 singleton = NonEmpty . singletonNE
 
-singletonNE :: a -> NERAL 'Z BinN1 a
+singletonNE :: a -> NERAL 'Z B.BinN1 a
 singletonNE = Last . Tree.singleton
 
 -- | Cons an element in front of 'RAL'.
@@ -333,31 +336,31 @@ singletonNE = Last . Tree.singleton
 -- >>> reifyList "xyz" (print . toList . cons 'a')
 -- "axyz"
 --
-cons :: a -> RAL b a -> RAL (Succ b) a
+cons :: a -> RAL b a -> RAL (B.Succ b) a
 cons x Empty         = singleton x
 cons x (NonEmpty xs) = NonEmpty (consNE x xs)
 
 -- | 'cons' for non-empty rals.
-consNE :: a -> NERAL 'Z b a -> NERAL 'Z (SuccN' b) a
+consNE :: a -> NERAL 'Z b a -> NERAL 'Z (B.SuccN' b) a
 consNE x = consTree (Leaf x)
 
-consTree :: Tree n a -> NERAL n b a -> NERAL n (SuccN' b) a
+consTree :: Tree n a -> NERAL n b a -> NERAL n (B.SuccN' b) a
 consTree x (Last t)     = Cons0 (Last (Node x t))
 consTree x (Cons0 r)   = Cons1 x r
 consTree x (Cons1 t r) = Cons0 (consTree (Node x t) r)
 
 -- | Variant of 'cons' which computes the 'SBinI' dictionary at the same time.
-withCons :: SBinI b => a -> RAL b a -> (SBinNI (Succ' b) => RAL (Succ b) a -> r) -> r
+withCons :: SBinI b => a -> RAL b a -> (SBinNI (B.Succ' b) => RAL (B.Succ b) a -> r) -> r
 withCons = go sbin where
-    go :: SBin b -> a -> RAL b a -> (SBinNI (Succ' b) => RAL (Succ b) a -> r) -> r
+    go :: SBin b -> a -> RAL b a -> (SBinNI (B.Succ' b) => RAL (B.Succ b) a -> r) -> r
     go SBZ x Empty k         = k (singleton x)
     go SBN x (NonEmpty xs) k = withConsNE x xs $ k . NonEmpty
 
 -- | 'withCons' for non-empty rals.
-withConsNE :: SBinNI b => a -> NERAL 'Z b a -> (SBinNI (SuccN' b) => NERAL 'Z (SuccN' b) a -> r) -> r
+withConsNE :: SBinNI b => a -> NERAL 'Z b a -> (SBinNI (B.SuccN' b) => NERAL 'Z (B.SuccN' b) a -> r) -> r
 withConsNE x = withConsTree sbinN (Leaf x)
 
-withConsTree :: SBinN b -> Tree n a -> NERAL n b a -> (SBinNI (SuccN' b) => NERAL n (SuccN' b) a -> r) -> r
+withConsTree :: SBinN b -> Tree n a -> NERAL n b a -> (SBinNI (B.SuccN' b) => NERAL n (B.SuccN' b) a -> r) -> r
 withConsTree SBE x (Last t)     k = k (Cons0 (Last (Node x t)))
 withConsTree SB0 x (Cons0 r)   k = k (Cons1 x r)
 withConsTree SB1 x (Cons1 t r) k = withConsTree sbinN (Node x t) r $ k . Cons0
@@ -402,20 +405,20 @@ toListNE = foldrNE (:) []
 -- | Convert a list @[a]@ to @'RAL' b a@.
 -- Returns 'Nothing' if lengths don't match.
 --
--- >>> fromList "foo" :: Maybe (RAL Bin3 Char)
+-- >>> fromList "foo" :: Maybe (RAL B.Bin3 Char)
 -- Just (NonEmpty (Cons1 (Leaf 'f') (Last (Node (Leaf 'o') (Leaf 'o')))))
 --
--- >>> fromList "quux" :: Maybe (RAL Bin3 Char)
+-- >>> fromList "quux" :: Maybe (RAL B.Bin3 Char)
 -- Nothing
 --
--- >>> fromList "xy" :: Maybe (RAL Bin3 Char)
+-- >>> fromList "xy" :: Maybe (RAL B.Bin3 Char)
 -- Nothing
 --
 fromList :: forall b a. SBinI b => [a] -> Maybe (RAL b a)
 fromList xs = reifyList xs mk where
     mk :: forall c. SBinI c => RAL c a -> Maybe (RAL b a)
     mk ral = do
-        Refl <- eqBin :: Maybe (b :~: c)
+        Refl <- B.eqBin :: Maybe (b :~: c)
         Just ral
 
 -- |
@@ -438,7 +441,7 @@ reifyNonEmpty (x :| xs) k = reifyList xs $ \ral -> withCons x ral k
 
 -- | Indexing.
 --
--- >>> let ral :: RAL Bin4 Char; Just ral = fromList "abcd"
+-- >>> let ral :: RAL B.Bin4 Char; Just ral = fromList "abcd"
 --
 -- >>> ral ! minBound
 -- 'a'
@@ -450,10 +453,10 @@ reifyNonEmpty (x :| xs) k = reifyList xs $ \ral -> withCons x ral k
 -- 'b'
 --
 (!) :: RAL b a -> Pos b -> a
-(!) Empty        p       = case p of {}
-(!) (NonEmpty b) (Pos i) = indexNE b i
+(!) Empty        p              = case p of {}
+(!) (NonEmpty b) (Pos (PosN i)) = indexNE b i
 
-indexNE :: NERAL n b a -> PosN n b -> a
+indexNE :: NERAL n b a -> PosN' n b -> a
 indexNE (Last t)      (AtEnd i)  = t Tree.! i
 indexNE (Cons0 ral)   (There0 i) = indexNE ral i
 indexNE (Cons1 t _)   (Here i)   = t Tree.! i
@@ -461,13 +464,13 @@ indexNE (Cons1 _ ral) (There1 i) = indexNE ral i
 
 -- | Index lens.
 --
--- >>> let Just ral = fromList "xyz" :: Maybe (RAL Bin3 Char)
+-- >>> let Just ral = fromList "xyz" :: Maybe (RAL B.Bin3 Char)
 -- >>> ral & ix maxBound .~ 'Z'
 -- NonEmpty (Cons1 (Leaf 'x') (Last (Node (Leaf 'y') (Leaf 'Z'))))
 ix :: Pos b -> L.Lens' (RAL b a) a
-ix (Pos n) f (NonEmpty x) = NonEmpty <$> ixNE n f x
+ix (Pos (PosN n)) f (NonEmpty x) = NonEmpty <$> ixNE n f x
 
-ixNE :: PosN n b -> L.Lens' (NERAL n b a) a
+ixNE :: PosN' n b -> L.Lens' (NERAL n b a) a
 ixNE (AtEnd i)  f (Last  t)   = Last <$> Tree.ix i f t
 ixNE (There0 i) f (Cons0   r) = Cons0 <$> ixNE i f r
 ixNE (There1 i) f (Cons1 t r) = (t `Cons1`) <$> ixNE i f r
@@ -488,9 +491,9 @@ foldMapNE f (Cons1 t r) = mappend (Tree.foldMap f t) (foldMapNE f r)
 
 ifoldMap :: Monoid m => (Pos b -> a -> m) -> RAL b a -> m
 ifoldMap _ Empty        = mempty
-ifoldMap f (NonEmpty r) = ifoldMapNE (f . Pos) r
+ifoldMap f (NonEmpty r) = ifoldMapNE (f . Pos . PosN) r
 
-ifoldMapNE :: Monoid m => (PosN n b -> a -> m) -> NERAL n b a -> m
+ifoldMapNE :: Monoid m => (PosN' n b -> a -> m) -> NERAL n b a -> m
 ifoldMapNE f (Last  t)   = Tree.ifoldMap (f . AtEnd) t
 ifoldMapNE f (Cons0   r) = ifoldMapNE (f . There0) r
 ifoldMapNE f (Cons1 t r) = Tree.ifoldMap (f . Here) t `mappend` ifoldMapNE (f . There1) r
@@ -504,9 +507,9 @@ foldMap1NE f (Cons0   r) = foldMap1NE f r
 foldMap1NE f (Cons1 t r) = Tree.foldMap1 f t <> foldMap1NE f r
 
 ifoldMap1 :: Semigroup m => (Pos ('BN b) -> a -> m) -> RAL ('BN b) a -> m
-ifoldMap1 f (NonEmpty r) = ifoldMap1NE (f . Pos) r
+ifoldMap1 f (NonEmpty r) = ifoldMap1NE (f . Pos . PosN) r
 
-ifoldMap1NE :: Semigroup m => (PosN n b -> a -> m) -> NERAL n b a -> m
+ifoldMap1NE :: Semigroup m => (PosN' n b -> a -> m) -> NERAL n b a -> m
 ifoldMap1NE f (Last  t)   = Tree.ifoldMap1 (f . AtEnd) t
 ifoldMap1NE f (Cons0   r) = ifoldMap1NE (f . There0) r
 ifoldMap1NE f (Cons1 t r) = Tree.ifoldMap1 (f . Here) t <> ifoldMap1NE (f . There1) r
@@ -522,9 +525,9 @@ foldrNE f z (Cons1 t r) = Tree.foldr f (foldrNE f z r) t
 
 ifoldr :: (Pos n -> a -> b -> b) -> b -> RAL n a -> b
 ifoldr _ z Empty          = z
-ifoldr f z (NonEmpty ral) = ifoldrNE (f . Pos) z ral
+ifoldr f z (NonEmpty ral) = ifoldrNE (f . Pos . PosN) z ral
 
-ifoldrNE :: (PosN n m -> a -> b -> b) -> b -> NERAL n m a -> b
+ifoldrNE :: (PosN' n m -> a -> b -> b) -> b -> NERAL n m a -> b
 ifoldrNE f z (Last  t)   = Tree.ifoldr (f . AtEnd) z t
 ifoldrNE f z (Cons0   r) = ifoldrNE (f . There0) z r
 ifoldrNE f z (Cons1 t r) = Tree.ifoldr (f . Here) (ifoldrNE (f . There1) z r) t
@@ -554,9 +557,9 @@ mapNE f (Cons1 t r) = Cons1 (Tree.map f t) (mapNE f r)
 
 imap :: (Pos n -> a -> b) -> RAL n a -> RAL n b
 imap _ Empty = Empty
-imap f (NonEmpty r) = NonEmpty (imapNE (f . Pos) r)
+imap f (NonEmpty r) = NonEmpty (imapNE (f . Pos . PosN) r)
 
-imapNE :: (PosN n m -> a -> b) -> NERAL n m a -> NERAL n m b
+imapNE :: (PosN' n m -> a -> b) -> NERAL n m a -> NERAL n m b
 imapNE f (Last  t)   = Last (Tree.imap (f . AtEnd) t)
 imapNE f (Cons0   r) = Cons0 (imapNE (f . There0) r)
 imapNE f (Cons1 t r) = Cons1 (Tree.imap (f . Here) t) (imapNE (f . There1) r)
@@ -572,9 +575,9 @@ traverseNE f (Cons1 t r) = Cons1 <$> Tree.traverse f t <*> traverseNE f r
 
 itraverse :: Applicative f => (Pos n -> a -> f b) -> RAL n a -> f (RAL n b)
 itraverse _ Empty        = pure Empty
-itraverse f (NonEmpty r) = NonEmpty <$> itraverseNE (f . Pos) r
+itraverse f (NonEmpty r) = NonEmpty <$> itraverseNE (f . Pos . PosN) r
 
-itraverseNE :: Applicative f => (PosN n m -> a -> f b) -> NERAL n m a -> f (NERAL n m b)
+itraverseNE :: Applicative f => (PosN' n m -> a -> f b) -> NERAL n m a -> f (NERAL n m b)
 itraverseNE f (Last  t)   = Last <$> Tree.itraverse (f . AtEnd) t
 itraverseNE f (Cons0   r) = Cons0 <$> itraverseNE (f . There0) r
 itraverseNE f (Cons1 t r) = Cons1 <$> Tree.itraverse (f . Here) t <*> itraverseNE (f . There1) r
@@ -588,9 +591,9 @@ traverse1NE f (Cons0   r) = Cons0 <$> traverse1NE f r
 traverse1NE f (Cons1 t r) = Cons1 <$> Tree.traverse1 f t <.> traverse1NE f r
 
 itraverse1 :: Apply f => (Pos ('BN n) -> a -> f b) -> RAL ('BN n) a -> f (RAL ('BN n) b)
-itraverse1 f (NonEmpty r) = NonEmpty <$> itraverse1NE (f . Pos) r
+itraverse1 f (NonEmpty r) = NonEmpty <$> itraverse1NE (f . Pos . PosN) r
 
-itraverse1NE :: Apply f => (PosN n m -> a -> f b) -> NERAL n m a -> f (NERAL n m b)
+itraverse1NE :: Apply f => (PosN' n m -> a -> f b) -> NERAL n m a -> f (NERAL n m b)
 itraverse1NE f (Last  t)   = Last <$> Tree.itraverse1 (f . AtEnd) t
 itraverse1NE f (Cons0   r) = Cons0 <$> itraverse1NE (f . There0) r
 itraverse1NE f (Cons1 t r) = Cons1 <$> Tree.itraverse1 (f . Here) t <.> itraverse1NE (f . There1) r
@@ -613,17 +616,17 @@ zipWithNE f (Cons1 t r) (Cons1 t' r') = Cons1 (Tree.zipWith f t t') (zipWithNE f
 -- | Zip two 'RAL's with a function which also takes 'Pos' index.
 izipWith :: (Pos n -> a -> b -> c) -> RAL n a -> RAL n b -> RAL n c
 izipWith _ Empty         Empty         = Empty
-izipWith f (NonEmpty xs) (NonEmpty ys) = NonEmpty (izipWithNE (f . Pos) xs ys)
+izipWith f (NonEmpty xs) (NonEmpty ys) = NonEmpty (izipWithNE (f . Pos . PosN) xs ys)
 
--- | Zip two 'NERAL's with a function which also takes 'PosN' index.
-izipWithNE :: (PosN n m -> a -> b -> c) -> NERAL n m a -> NERAL n m b -> NERAL n m c
+-- | Zip two 'NERAL's with a function which also takes 'PosN'' index.
+izipWithNE :: (PosN' n m -> a -> b -> c) -> NERAL n m a -> NERAL n m b -> NERAL n m c
 izipWithNE f (Last  t)   (Last  t')    = Last (Tree.izipWith (f . AtEnd) t t')
 izipWithNE f (Cons0   r) (Cons0    r') = Cons0 (izipWithNE (f . There0) r r')
 izipWithNE f (Cons1 t r) (Cons1 t' r') = Cons1 (Tree.izipWith (f . Here) t t') (izipWithNE (f . There1) r r')
 
 -- | Repeat a value.
 --
--- >>> repeat 'x' :: RAL Bin5 Char
+-- >>> repeat 'x' :: RAL B.Bin5 Char
 -- NonEmpty (Cons1 (Leaf 'x') (Cons0 (Last (Node (Node (Leaf 'x') (Leaf 'x')) (Node (Leaf 'x') (Leaf 'x'))))))
 --
 repeat :: forall b a. SBinI b => a -> RAL b a
@@ -643,17 +646,17 @@ repeatNE x = case sbinN :: SBinN b of
 
 -- |
 --
--- >>> universe :: RAL Bin2 (Pos Bin2)
+-- >>> universe :: RAL B.Bin2 (Pos B.Bin2)
 -- NonEmpty (Cons0 (Last (Node (Leaf 0) (Leaf 1))))
 --
--- >>> let u = universe :: RAL Bin3 (Pos Bin3)
+-- >>> let u = universe :: RAL B.Bin3 (Pos B.Bin3)
 -- >>> u
 -- NonEmpty (Cons1 (Leaf 0) (Last (Node (Leaf 1) (Leaf 2))))
 --
--- >>> explicitShow $ u ! Pos (Here VNil)
--- "Pos (Here VNil)"
+-- >>> P.explicitShow $ u ! Pos (PosN (Here WE))
+-- "Pos (PosN (Here WE))"
 --
--- >>> let u' = universe :: RAL Bin5 (Pos Bin5)
+-- >>> let u' = universe :: RAL B.Bin5 (Pos B.Bin5)
 --
 -- >>> toList u' == sort (toList u')
 -- True
@@ -661,9 +664,9 @@ repeatNE x = case sbinN :: SBinN b of
 universe :: forall b. SBinI b => RAL b (Pos b)
 universe = case sbin :: SBin b of
     SBZ -> Empty
-    SBN -> NonEmpty (fmap Pos universeNE)
+    SBN -> NonEmpty (fmap (Pos . PosN) universeNE)
 
-universeNE :: forall n b. (N.SNatI n, SBinNI b) => NERAL n b (PosN n b)
+universeNE :: forall n b. (N.SNatI n, SBinNI b) => NERAL n b (PosN' n b)
 universeNE = case sbinN :: SBinN b of
     SBE -> Last   (fmap AtEnd Tree.universe)
     SB0 -> Cons0 (fmap There0 universeNE)

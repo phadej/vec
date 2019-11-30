@@ -56,8 +56,8 @@ module Data.RAL.Tree (
     ) where
 
 import Prelude
-       (Bool (..), Eq (..), Functor (..), Int, Ord (..), Show, id, seq, (*),
-       (.), ($))
+       (Bool (..), Eq (..), Functor (..), Int, Ord (..), Show, id, seq, ($),
+       (*), (.))
 
 import Control.Applicative (Applicative (..), (<$>))
 import Control.DeepSeq     (NFData (..))
@@ -67,7 +67,7 @@ import Data.Monoid         (Monoid (..))
 import Data.Nat            (Nat (..))
 import Data.Semigroup      (Semigroup (..))
 import Data.Typeable       (Typeable)
-import Data.Vec.Lazy       (Vec (..))
+import Data.Wid            (Wid (..))
 
 import qualified Data.Type.Nat as N
 
@@ -101,11 +101,11 @@ data Tree (n :: Nat) a where
 -- Helpers
 -------------------------------------------------------------------------------
 
-goLeft :: (Vec ('S n) Bool -> a) -> Vec n Bool -> a
-goLeft f xs = f (False ::: xs)
+goLeft :: (Wid ('S n) -> a) -> Wid n -> a
+goLeft f xs = f (W0 xs)
 
-goRight :: (Vec ('S n) Bool -> a) -> Vec n Bool -> a
-goRight f xs = f (True ::: xs)
+goRight :: (Wid ('S n) -> a) -> Wid n -> a
+goRight f xs = f (W1 xs)
 
 -------------------------------------------------------------------------------
 -- Instances
@@ -161,7 +161,7 @@ instance N.SNatI n => I.Distributive (Tree n) where
     distribute = I.distributeRep
 
 instance N.SNatI n => I.Representable (Tree n) where
-    type Rep (Tree n) = Vec n Bool
+    type Rep (Tree n) = Wid n
 
     tabulate = tabulate
     index    = (!)
@@ -176,21 +176,21 @@ instance Apply (Tree n) where
     x <. _ = x
     liftF2 = zipWith
 
-instance L.FunctorWithIndex (Vec n Bool) (Tree n) where
+instance L.FunctorWithIndex (Wid n) (Tree n) where
     imap = imap
 
-instance L.FoldableWithIndex (Vec n Bool) (Tree n) where
+instance L.FoldableWithIndex (Wid n) (Tree n) where
     ifoldMap = ifoldMap
     ifoldr   = ifoldr
     ifoldl   = ifoldl
 
-instance L.TraversableWithIndex (Vec n Bool) (Tree n) where
+instance L.TraversableWithIndex (Wid n) (Tree n) where
     itraverse = itraverse
 
 instance L.Each (Tree n a) (Tree n b) a b where
     each = traverse
 
-type instance L.Index (Tree n a)   = Vec n Bool
+type instance L.Index (Tree n a)   = Wid n
 type instance L.IxValue (Tree n a) = a
 
 instance L.Ixed (Tree n a) where
@@ -227,26 +227,26 @@ toList t = go t [] where
 -------------------------------------------------------------------------------
 
 -- | Indexing.
-(!) :: Tree n a -> Vec n Bool -> a
-(!) (Leaf x) VNil = x
-(!) (Node x _) (False ::: is) = x ! is
-(!) (Node _ y) (True  ::: is) = y ! is
+(!) :: Tree n a -> Wid n -> a
+(!) (Leaf x)   WE      = x
+(!) (Node x _) (W0 is) = x ! is
+(!) (Node _ y) (W1 is) = y ! is
 
-tabulate :: forall n a. N.SNatI n => (Vec n Bool -> a) -> Tree n a
+tabulate :: forall n a. N.SNatI n => (Wid n -> a) -> Tree n a
 tabulate f = case N.snat :: N.SNat n of
-    N.SZ -> Leaf (f VNil)
+    N.SZ -> Leaf (f WE)
     N.SS -> Node (tabulate (goLeft f)) (tabulate (goRight f))
 
 -- | Index lens.
 --
 -- >>> let tree = Node (Node (Leaf 'a') (Leaf 'b')) (Node (Leaf 'c') (Leaf 'd'))
--- >>> tree & ix (True ::: False ::: VNil) .~ 'z'
+-- >>> tree & ix (W1 $ W0 WE) .~ 'z'
 -- Node (Node (Leaf 'a') (Leaf 'b')) (Node (Leaf 'z') (Leaf 'd'))
 --
-ix :: Vec n Bool -> L.Lens' (Tree n a) a
-ix VNil           f (Leaf x)   = Leaf <$> f x
-ix (False ::: is) f (Node x y) = (`Node` y) <$> ix is f x
-ix (True  ::: is) f (Node x y) = (x `Node`) <$> ix is f y
+ix :: Wid n -> L.Lens' (Tree n a) a
+ix WE      f (Leaf x)   = Leaf <$> f x
+ix (W0 is) f (Node x y) = (`Node` y) <$> ix is f x
+ix (W1 is) f (Node x y) = (x `Node`) <$> ix is f y
 
 leftmost :: Tree n a -> a
 leftmost (Leaf a)   = a
@@ -264,16 +264,16 @@ foldMap :: Monoid m => (a -> m) -> Tree n a -> m
 foldMap f (Leaf x)   = f x
 foldMap f (Node x y) = mappend (foldMap f x) (foldMap f y)
 
-ifoldMap :: Monoid m => (Vec n Bool -> a -> m) -> Tree n a -> m
-ifoldMap f (Leaf x)   = f VNil x
+ifoldMap :: Monoid m => (Wid n -> a -> m) -> Tree n a -> m
+ifoldMap f (Leaf x)   = f WE x
 ifoldMap f (Node x y) = mappend (ifoldMap (goLeft f) x) (ifoldMap (goRight f) y)
 
 foldMap1 :: Semigroup s => (a -> s) -> Tree n a -> s
 foldMap1 f (Leaf x)   = f x
 foldMap1 f (Node x y) = foldMap1 f x <> foldMap1 f y
 
-ifoldMap1 :: Semigroup s => (Vec n Bool -> a -> s) -> Tree n a -> s
-ifoldMap1 f (Leaf x)   = f VNil x
+ifoldMap1 :: Semigroup s => (Wid n -> a -> s) -> Tree n a -> s
+ifoldMap1 f (Leaf x)   = f WE x
 ifoldMap1 f (Node x y) = ifoldMap1 (goLeft f) x <> ifoldMap1 (goRight f) y
 
 -- | >>> foldr (:) [] $ Node (Leaf True) (Leaf False)
@@ -282,8 +282,8 @@ foldr :: (a -> b -> b) -> b -> Tree n a -> b
 foldr f z (Leaf x)   = f x z
 foldr f z (Node x y) = foldr f (foldr f z y) x
 
-ifoldr :: (Vec n Bool -> a -> b -> b) -> b -> Tree n a -> b
-ifoldr f z (Leaf x)   = f VNil x z
+ifoldr :: (Wid n -> a -> b -> b) -> b -> Tree n a -> b
+ifoldr f z (Leaf x)   = f WE x z
 ifoldr f z (Node x y) = ifoldr (goLeft f) (ifoldr (goRight f) z y) x
 
 -- | >>> foldl (flip (:)) [] $ Node (Leaf True) (Leaf False)
@@ -292,13 +292,13 @@ foldl :: (b -> a -> b) -> b -> Tree n a -> b
 foldl f z (Leaf x) = f z x
 foldl f z (Node x y) = foldl f (foldl f z x) y
 
-ifoldl :: (Vec n Bool -> b -> a -> b) -> b -> Tree n a -> b
-ifoldl f z (Leaf x)   = f VNil z x
+ifoldl :: (Wid n -> b -> a -> b) -> b -> Tree n a -> b
+ifoldl f z (Leaf x)   = f WE z x
 ifoldl f z (Node x y) = ifoldl (goLeft f) (ifoldl (goRight f) z x) y
 
 -- TODO: foldl
 
--- | >>> length (universe :: Tree N.Nat3 (Vec N.Nat3 Bool))
+-- | >>> length (universe :: Tree N.Nat3 (Wid N.Nat3))
 -- 8
 --
 length :: Tree n a -> Int
@@ -318,25 +318,25 @@ map f (Leaf x)   = Leaf (f x)
 map f (Node x y) = Node (map f x) (map f y)
 
 -- | >>> imap (,) $ Node (Leaf True) (Leaf False)
--- Node (Leaf (False ::: VNil,True)) (Leaf (True ::: VNil,False))
-imap :: (Vec n Bool -> a -> b) -> Tree n a -> Tree n b
-imap f (Leaf x) = Leaf (f VNil x)
+-- Node (Leaf (0b0,True)) (Leaf (0b1,False))
+imap :: (Wid n -> a -> b) -> Tree n a -> Tree n b
+imap f (Leaf x) = Leaf (f WE x)
 imap f (Node x y) = Node (imap (goLeft f) x) (imap (goRight f) y)
 
 traverse :: Applicative f => (a -> f b) -> Tree n a -> f (Tree n b)
 traverse f (Leaf x)   = Leaf <$> f x
 traverse f (Node x y) = Node <$> traverse f x <*> traverse f y
 
-itraverse :: Applicative f => (Vec n Bool -> a -> f b) -> Tree n a -> f (Tree n b)
-itraverse f (Leaf x)   = Leaf <$> f VNil x
+itraverse :: Applicative f => (Wid n -> a -> f b) -> Tree n a -> f (Tree n b)
+itraverse f (Leaf x)   = Leaf <$> f WE x
 itraverse f (Node x y) = Node <$> itraverse (goLeft f) x <*> itraverse (goRight f) y
 
 traverse1 :: Apply f => (a -> f b) -> Tree n a -> f (Tree n b)
 traverse1 f (Leaf x)   = Leaf <$> f x
 traverse1 f (Node x y) = Node <$> traverse1 f x <.> traverse1 f y
 
-itraverse1 :: Apply f => (Vec n Bool -> a -> f b) -> Tree n a -> f (Tree n b)
-itraverse1 f (Leaf x)   = Leaf <$> f VNil x
+itraverse1 :: Apply f => (Wid n -> a -> f b) -> Tree n a -> f (Tree n b)
+itraverse1 f (Leaf x)   = Leaf <$> f WE x
 itraverse1 f (Node x y) = Node <$> itraverse1 (goLeft f) x <.> itraverse1 (goRight f) y
 
 -------------------------------------------------------------------------------
@@ -349,8 +349,8 @@ zipWith f (Leaf x)   (Leaf y)   = Leaf (f x y)
 zipWith f (Node x y) (Node u v) = Node (zipWith f x u) (zipWith f y v)
 
 -- | Zip two 'Tree's. with a function that also takes the elements' indices.
-izipWith :: (Vec n Bool -> a -> b -> c) -> Tree n a -> Tree n b -> Tree n c
-izipWith f (Leaf x)   (Leaf y)   = Leaf (f VNil x y)
+izipWith :: (Wid n -> a -> b -> c) -> Tree n a -> Tree n b -> Tree n c
+izipWith f (Leaf x)   (Leaf y)   = Leaf (f WE x y)
 izipWith f (Node x y) (Node u v) = Node (izipWith (goLeft f) x u) (izipWith (goRight f) y v)
 
 -- | Repeat a value.
@@ -367,8 +367,8 @@ repeat x = N.induction1 (Leaf x) (\t -> Node t t)
 
 -- | Get all @'Vec' n 'Bool'@ indices in @'Tree' n@.
 --
--- >>> universe :: Tree N.Nat2 (Vec N.Nat2 Bool)
--- Node (Node (Leaf (False ::: False ::: VNil)) (Leaf (False ::: True ::: VNil))) (Node (Leaf (True ::: False ::: VNil)) (Leaf (True ::: True ::: VNil)))
+-- >>> universe :: Tree N.Nat2 (Wid N.Nat2)
+-- Node (Node (Leaf 0b00) (Leaf 0b01)) (Node (Leaf 0b10) (Leaf 0b11))
 --
-universe :: N.SNatI n => Tree n (Vec n Bool)
+universe :: N.SNatI n => Tree n (Wid n)
 universe = tabulate id

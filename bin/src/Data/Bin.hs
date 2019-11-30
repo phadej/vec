@@ -1,3 +1,4 @@
+{-# LANGUAGE BangPatterns       #-}
 {-# LANGUAGE DeriveDataTypeable #-}
 -- | Binary natural numbers, 'Bin'.
 --
@@ -25,12 +26,18 @@ module Data.Bin (
     predN,
     mult2,
     mult2Plus1,
+    -- ** Data.Bits
+    andN,
+    xorN,
+    complementBitN,
+    clearBitN,
     -- * Aliases
     bin0, bin1, bin2, bin3, bin4, bin5, bin6, bin7, bin8, bin9,
     binN1, binN2, binN3, binN4, binN5, binN6, binN7, binN8, binN9,
     ) where
 
 import Control.DeepSeq (NFData (..))
+import Data.Bits       (Bits (..))
 import Data.Data       (Data)
 import Data.Hashable   (Hashable (..))
 import Data.Monoid     (mappend)
@@ -293,6 +300,150 @@ explicitShowsPrecN d (B1 n)
     = showParen (d > 10)
     $ showString "B1 "
     . explicitShowsPrecN 11 n
+
+-------------------------------------------------------------------------------
+-- Bits
+-------------------------------------------------------------------------------
+
+instance Bits Bin where
+    BZ   .&. _    = BZ
+    _    .&. BZ   = BZ
+    BN a .&. BN b = andN a b
+
+    BZ   `xor` b    = b
+    a    `xor` BZ   = a
+    BN a `xor` BN b = xorN a b
+
+    BZ   .|. b    = b
+    a    .|. BZ   = a
+    BN a .|. BN b = BN (a .|. b)
+
+    bit = BN . bit
+
+    clearBit BZ     _ = BZ
+    clearBit (BN b) n = clearBitN b n
+
+    complementBit BZ n     = bit n
+    complementBit (BN b) n = complementBitN b n
+    
+    zeroBits = BZ
+
+    shiftL BZ _     = BZ
+    shiftL (BN b) n = BN (shiftL b n)
+
+    shiftR BZ _ = BZ
+    shiftR b n
+        | n <= 0 = b
+        | otherwise = shiftR (shiftR1 b) (pred n)
+
+    rotateL = shiftL
+    rotateR = shiftR
+
+    testBit BZ _     = False
+    testBit (BN b) i = testBit b i
+
+    popCount BZ     = 0
+    popCount (BN n) = popCount n
+
+    -- xor -- tricky
+    complement  _  = error "compelement @Bin is undefined"
+    bitSizeMaybe _ = Nothing
+    bitSize _      = error "bitSize @Bin is undefined"
+    isSigned _     = True
+
+andN :: BinN -> BinN -> Bin
+andN BE     BE     = BN BE
+andN BE     (B0 _) = BZ
+andN BE     (B1 _) = BN BE
+andN (B0 _) BE     = BZ
+andN (B1 _) BE     = BN BE
+andN (B0 a) (B0 b) = mult2 (andN a b)
+andN (B0 a) (B1 b) = mult2 (andN a b)
+andN (B1 a) (B0 b) = mult2 (andN a b)
+andN (B1 a) (B1 b) = BN (mult2Plus1 (andN a b))
+
+xorN :: BinN -> BinN -> Bin
+xorN BE     BE     = BZ
+xorN BE     (B0 b) = BN (B1 b)
+xorN BE     (B1 b) = BN (B0 b)
+xorN (B0 b) BE     = BN (B1 b)
+xorN (B1 b) BE     = BN (B0 b)
+xorN (B0 a) (B0 b) = mult2 (xorN a b)
+xorN (B0 a) (B1 b) = BN (mult2Plus1 (xorN a b))
+xorN (B1 a) (B0 b) = BN (mult2Plus1 (xorN a b))
+xorN (B1 a) (B1 b) = mult2 (xorN a b)
+
+clearBitN :: BinN -> Int -> Bin
+clearBitN BE     0 = BZ
+clearBitN BE     _ = BN BE
+clearBitN (B0 b) 0 = BN (B0 b)
+clearBitN (B0 b) n = mult2 (clearBitN b (pred n))
+clearBitN (B1 b) 0 = BN (B0 b)
+clearBitN (B1 b) n = BN (mult2Plus1 (clearBitN b (pred n)))
+
+complementBitN :: BinN -> Int -> Bin
+complementBitN BE     0 = BZ
+complementBitN BE     n = BN (B1 (bit (pred n)))
+complementBitN (B0 b) 0 = BN (B1 b)
+complementBitN (B0 b) n = mult2 (complementBitN b (pred n))
+complementBitN (B1 b) 0 = BN (B0 b)
+complementBitN (B1 b) n = BN (mult2Plus1 (complementBitN b (pred n)))
+
+shiftR1 :: Bin -> Bin
+shiftR1 BZ          = BZ
+shiftR1 (BN BE)     = BZ
+shiftR1 (BN (B0 b)) = BN b
+shiftR1 (BN (B1 b)) = BN b
+
+-- | __NOTE__: '.&.', 'xor', 'shiftR' and 'rotateR' are __NOT_ implemented.
+-- They may make number zero.
+--
+instance Bits BinN where
+    B0 a .|. B0 b = B0 (a .|. b)
+    B0 a .|. B1 b = B1 (a .|. b)
+    B1 a .|. B0 b = B1 (a .|. b)
+    B1 a .|. B1 b = B1 (a .|. b)
+
+    BE   .|. B0 b = B1 b
+    BE   .|. B1 b = B1 b
+    B0 b .|. BE   = B1 b
+    B1 b .|. BE   = B1 b
+
+    BE   .|. BE   = BE
+
+    bit n
+        | n <= 0 = BE
+        | otherwise = B0 (bit (pred n))
+
+    shiftL b n
+        | n <= 0    = b
+        | otherwise = shiftL (B0 b) (pred n)
+
+    rotateL = shiftL
+
+    popCount = go 1 where
+        go !acc BE     = acc
+        go !acc (B0 b) = go acc b
+        go !acc (B1 b) = go (succ acc) b
+
+    testBit BE     0 = True
+    testBit (B0 _) 0 = False
+    testBit (B1 _) 0 = True
+    testBit BE     _ = False
+    testBit (B0 b) n = testBit b (pred n)
+    testBit (B1 b) n = testBit b (pred n)
+
+    zeroBits          = error "zeroBits @BinN is undefined"
+    clearBit _ _      = error "clearBit @BinN is undefined"
+    complementBit _ _ = error "complementBit @BinN is undefined"
+    xor _ _           = error "xor @BinN is undefined"
+    (.&.) _ _         = error "(.&.) @BinN is undefined"
+    shiftR _          = error "shiftR @BinN is undefined"
+    rotateR _         = error "shiftL @BinN is undefined"
+    complement  _     = error "compelement @BinN is undefined"
+    bitSizeMaybe _    = Nothing
+    bitSize _         = error "bitSize @BinN is undefined"
+    isSigned _        = True
 
 -------------------------------------------------------------------------------
 -- Conversions
