@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP                   #-}
 {-# LANGUAGE DataKinds             #-}
 {-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE GADTs                 #-}
@@ -20,18 +21,13 @@ module Data.Vec.Lazy.Inline (
     -- * Conversions
     toPull,
     fromPull,
-    _Pull,
     toList,
     fromList,
-    _Vec,
     fromListPrefix,
     reifyList,
     -- * Indexing
     (!),
-    ix,
-    _Cons,
-    _head,
-    _tail,
+    tabulate,
     cons,
     snoc,
     head,
@@ -60,7 +56,9 @@ module Data.Vec.Lazy.Inline (
     map,
     imap,
     traverse,
+#ifdef MIN_VERSION_semigroupoids
     traverse1,
+#endif
     itraverse,
     itraverse_,
     -- * Zipping
@@ -80,20 +78,28 @@ import Prelude (Int, Maybe (..), Num (..), const, flip, id, ($), (.))
 
 import Control.Applicative (Applicative (pure, (*>)), liftA2, (<$>))
 import Data.Fin            (Fin (..))
-import Data.Functor.Apply  (Apply, liftF2)
 import Data.Monoid         (Monoid (..))
 import Data.Nat            (Nat (..))
 import Data.Semigroup      (Semigroup (..))
 import Data.Vec.Lazy
        (Vec (..), VecEach (..), cons, empty, head, null, reifyList, singleton,
-       tail, _Cons, _head, _tail)
+       tail)
 
 --- Instances
-import qualified Control.Lens as L
 
+#ifdef MIN_VERSION_semigroupoids
+import Data.Functor.Apply  (Apply, liftF2)
+#endif
+
+-- vec siblings
 import qualified Data.Fin      as F
 import qualified Data.Type.Nat as N
 import qualified Data.Vec.Pull as P
+
+-- $setup
+-- >>> :set -XScopedTypeVariables
+-- >>> import Data.Proxy (Proxy (..))
+-- >>> import Prelude (Char, not, uncurry, Bool (..))
 
 -------------------------------------------------------------------------------
 -- Conversions
@@ -122,10 +128,6 @@ fromPull = getFromPull (N.inlineInduction1 start step) where
     step (FromPull f) = FromPull $ \(P.Vec v) -> v FZ ::: f (P.Vec (v . FS))
 
 newtype FromPull n a = FromPull { getFromPull :: P.Vec n a -> Vec n a }
-
--- | An 'L.Iso' from 'toPull' and 'fromPull'.
-_Pull :: N.InlineInduction n => L.Iso (Vec n a) (Vec n b) (P.Vec n a) (P.Vec n b)
-_Pull = L.iso toPull fromPull
 
 -- | Convert 'Vec' to list.
 --
@@ -166,20 +168,6 @@ fromList = getFromList (N.inlineInduction1 start step) where
         (x : xs') -> (x :::) <$> f xs'
 
 newtype FromList n a = FromList { getFromList :: [a] -> Maybe (Vec n a) }
-
--- | Prism from list.
---
--- >>> "foo" ^? _Vec :: Maybe (Vec N.Nat3 Char)
--- Just ('f' ::: 'o' ::: 'o' ::: VNil)
---
--- >>> "foo" ^? _Vec :: Maybe (Vec N.Nat2 Char)
--- Nothing
---
--- >>> _Vec # (True ::: False ::: VNil)
--- [True,False]
---
-_Vec :: N.InlineInduction n => L.Prism' [a] (Vec n a)
-_Vec = L.prism' toList fromList
 
 -- | Convert list @[a]@ to @'Vec' n a@.
 -- Returns 'Nothing' if input list is too short.
@@ -227,25 +215,13 @@ newtype Index n a = Index { getIndex :: Fin n -> Vec n a -> a }
 (!) :: N.InlineInduction n => Vec n a -> Fin n -> a
 (!) = flip flipIndex
 
--- | Index lens.
+-- | Tabulating, inverse of '!'.
 --
--- >>> ('a' ::: 'b' ::: 'c' ::: VNil) ^. ix (FS FZ)
--- 'b'
+-- >>> tabulate id :: Vec N.Nat3 (Fin N.Nat3)
+-- 0 ::: 1 ::: 2 ::: VNil
 --
--- >>> ('a' ::: 'b' ::: 'c' ::: VNil) & ix (FS FZ) .~ 'x'
--- 'a' ::: 'x' ::: 'c' ::: VNil
---
-ix :: N.InlineInduction n => Fin n -> L.Lens' (Vec n a) a
-ix = getIxLens $ N.inlineInduction1 start step where
-    start :: IxLens 'Z a
-    start = IxLens F.absurd
-
-    step :: IxLens m a -> IxLens ('S m) a
-    step (IxLens l) = IxLens $ \i -> case i of
-        FZ   -> _head
-        FS j -> _tail . l j
-
-newtype IxLens n a = IxLens { getIxLens :: Fin n -> L.Lens' (Vec n a) a }
+tabulate :: N.InlineInduction n => (Fin n -> a) -> Vec n a
+tabulate = fromPull . P.tabulate
 
 -- | Add a single element at the end of a 'Vec'.
 --
@@ -402,6 +378,7 @@ traverse f =  getTraverse $ N.inlineInduction1 start step where
 
 newtype Traverse f a n b = Traverse { getTraverse :: Vec n a -> f (Vec n b) }
 
+#ifdef MIN_VERSION_semigroupoids
 -- | Apply an action to non-empty 'Vec', yielding a 'Vec' of results.
 traverse1 :: forall n f a b. (Apply f, N.InlineInduction n) => (a -> f b) -> Vec ('S n) a -> f (Vec ('S n) b)
 traverse1 f = getTraverse1 $ N.inlineInduction1 start step where
@@ -412,6 +389,7 @@ traverse1 f = getTraverse1 $ N.inlineInduction1 start step where
     step (Traverse1 go) = Traverse1 $ \(x ::: xs) -> liftF2 (:::) (f x) (go xs)
 
 newtype Traverse1 f a n b = Traverse1 { getTraverse1 :: Vec ('S n) a -> f (Vec ('S n) b) }
+#endif
 
 -- | Apply an action to every element of a 'Vec' and its index, yielding a 'Vec' of results.
 itraverse :: forall n f a b. (Applicative f, N.InlineInduction n) => (Fin n -> a -> f b) -> Vec n a -> f (Vec n b)
@@ -610,13 +588,3 @@ universe = getUniverse (N.inlineInduction first step) where
     step (Universe go) = Universe (FZ ::: map FS go)
 
 newtype Universe n = Universe { getUniverse :: Vec n (Fin n) }
-
--------------------------------------------------------------------------------
--- Doctest
--------------------------------------------------------------------------------
-
--- $setup
--- >>> :set -XScopedTypeVariables
--- >>> import Control.Lens ((^.), (&), (.~), (^?), (#))
--- >>> import Data.Proxy (Proxy (..))
--- >>> import Prelude (Char, Bool (..), not, uncurry)

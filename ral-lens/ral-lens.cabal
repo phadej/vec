@@ -1,0 +1,59 @@
+cabal-version:      2.2
+name:               ral-lens
+version:            0.1
+synopsis:           Length-indexed random access lists: lens utilities.
+category:           Data, Dependent Types, Singletons, Lens
+description:
+  This package provides lenses and instances for type-classes in @lens@
+  package.
+  .
+  "Data.RAL.Lens" re-exports all orphan instances defined in this package.
+
+homepage:           https://github.com/phadej/vec
+bug-reports:        https://github.com/phadej/vec/issues
+license:            GPL-2.0-or-later
+license-file:       LICENSE
+author:             Oleg Grenrus <oleg.grenrus@iki.fi>
+maintainer:         Oleg.Grenrus <oleg.grenrus@iki.fi>
+copyright:          (c) 2019 Oleg Grenrus
+build-type:         Simple
+extra-source-files: ChangeLog.md
+tested-with:
+  GHC ==7.8.4
+   || ==7.10.3
+   || ==8.0.2
+   || ==8.2.2
+   || ==8.4.4
+   || ==8.6.5
+   || ==8.8.1
+
+source-repository head
+  type:     git
+  location: https://github.com/phadej/vec.git
+  subdir:   ral-lens
+
+library
+  default-language: Haskell2010
+  hs-source-dirs:   src
+  ghc-options:      -Wall -fprint-explicit-kinds
+  exposed-modules:
+    Data.RAL.Lens
+    Data.RAL.Tree.Lens
+
+  build-depends:
+    , base  >=4.7   && <4.14
+    , bin   ^>=0.1
+    , fin   ^>=0.1.1
+    , lens  >=4.16  && <4.19
+    , ral   ^>=0.1
+
+  if !impl(ghc >=8.0)
+    build-depends: semigroups >=0.18.4 && <0.20
+
+  if !impl(ghc >=7.10)
+    build-depends: nats ^>=1.1.2
+
+-- dump-core
+-- if impl(ghc >= 8.0)
+--  build-depends: dump-core
+--  ghc-options: -fplugin=DumpCore -fplugin-opt DumpCore:core-html

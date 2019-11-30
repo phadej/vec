@@ -1,10 +1,12 @@
 # Revision history for vec
 
-## 0.2.1
+## 0.3
 
+- Split `lens` utilities into [`vec-lens`](https://hackage.haskell.org/package/vec-lens) package.
 - Add `snoc` and `reverse` operations
 - Add `repeat`
 - Drop dependency on `base-compat`
+- Add explicit `tabulate`
 
 ## 0.2
 

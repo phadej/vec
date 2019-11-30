@@ -60,18 +60,13 @@ module Data.Vec.DataFamily.SpineStrict (
     -- * Conversions
     toPull,
     fromPull,
-    _Pull,
     toList,
     fromList,
-    _Vec,
     fromListPrefix,
     reifyList,
     -- * Indexing
     (!),
-    ix,
-    _Cons,
-    _head,
-    _tail,
+    tabulate,
     cons,
     snoc,
     head,
@@ -100,7 +95,9 @@ module Data.Vec.DataFamily.SpineStrict (
     map,
     imap,
     traverse,
+#ifdef MIN_VERSION_semigroupoids
     traverse1,
+#endif
     itraverse,
     itraverse_,
     -- * Zipping
@@ -123,26 +120,45 @@ import Prelude
 
 import Control.Applicative (Applicative (..), liftA2, (<$>))
 import Control.DeepSeq     (NFData (..))
-import Data.Distributive   (Distributive (..))
 import Data.Fin            (Fin (..))
-import Data.Functor.Apply  (Apply (..))
-import Data.Functor.Rep    (Representable (..), distributeRep)
 import Data.Hashable       (Hashable (..))
 import Data.Monoid         (Monoid (..))
 import Data.Nat            (Nat (..))
 import Data.Semigroup      (Semigroup (..))
 
 --- Instances
-import qualified Control.Lens               as L
-import qualified Data.Foldable              as I (Foldable (..))
+import qualified Data.Foldable    as I (Foldable (..))
+import qualified Data.Traversable as I (Traversable (..))
+
+#ifdef MIN_VERSION_adjunctions
+import qualified Data.Functor.Rep as I (Representable (..))
+#endif
+
+#ifdef MIN_VERSION_distributive
+import Data.Distributive   (Distributive (..))
+#endif
+
+#ifdef MIN_VERSION_semigroupoids
+import Data.Functor.Apply (Apply (..))
+
 import qualified Data.Functor.Bind          as I (Bind (..))
 import qualified Data.Semigroup.Foldable    as I (Foldable1 (..))
 import qualified Data.Semigroup.Traversable as I (Traversable1 (..))
-import qualified Data.Traversable           as I (Traversable (..))
+#endif
 
+-- vec siblings
 import qualified Data.Fin      as F
 import qualified Data.Type.Nat as N
 import qualified Data.Vec.Pull as P
+
+-- $setup
+-- >>> :set -XScopedTypeVariables -XDataKinds
+-- >>> import Data.Proxy (Proxy (..))
+-- >>> import Prelude (Char, not, uncurry, error)
+
+-------------------------------------------------------------------------------
+-- Type
+-------------------------------------------------------------------------------
 
 infixr 5 :::
 
@@ -214,14 +230,17 @@ instance N.InlineInduction n => I.Foldable (Vec n) where
     product = product
 #endif
 
+#ifdef MIN_VERSION_semigroupoids
 instance (N.InlineInduction m, n ~ 'S m) => I.Foldable1 (Vec n) where
     foldMap1 = foldMap1
+
+instance (N.InlineInduction m, n ~ 'S m) => I.Traversable1 (Vec n) where
+    traverse1 = traverse1
+#endif
 
 instance N.InlineInduction n => I.Traversable (Vec n) where
     traverse = traverse
 
-instance (N.InlineInduction m, n ~ 'S m) => I.Traversable1 (Vec n) where
-    traverse1 = traverse1
 
 instance (NFData a, N.InlineInduction n) => NFData (Vec n a) where
     rnf = getRnf (N.inlineInduction1 z s) where
@@ -252,13 +271,17 @@ instance N.InlineInduction n => Monad (Vec n) where
     (>>=)  = bind
     _ >> x = x
 
+#ifdef MIN_VERSION_distributive
 instance N.InlineInduction n => Distributive (Vec n) where
-    distribute = distributeRep
+    distribute f = tabulate (\k -> fmap (! k) f)
 
-instance N.InlineInduction n => Representable (Vec n) where
+#ifdef MIN_VERSION_adjunctions
+instance N.InlineInduction n => I.Representable (Vec n) where
     type Rep (Vec n) = Fin n
-    tabulate = fromPull . tabulate
-    index    = index . toPull
+    tabulate = tabulate
+    index    = (!)
+#endif
+#endif
 
 instance (Semigroup a, N.InlineInduction n) => Semigroup (Vec n a) where
     (<>) = zipWith (<>)
@@ -267,6 +290,7 @@ instance (Monoid a, N.InlineInduction n) => Monoid (Vec n a) where
     mempty = pure mempty
     mappend = zipWith mappend
 
+#ifdef MIN_VERSION_semigroupoids
 instance N.InlineInduction n => Apply (Vec n) where
     (<.>) = zipWith ($)
     _ .> x = x
@@ -276,54 +300,7 @@ instance N.InlineInduction n => Apply (Vec n) where
 instance N.InlineInduction n => I.Bind (Vec n) where
     (>>-) = bind
     join  = join
-
-instance N.InlineInduction n => L.FunctorWithIndex (Fin n) (Vec n) where
-    imap = imap
-
-instance N.InlineInduction n => L.FoldableWithIndex (Fin n) (Vec n) where
-    ifoldMap = ifoldMap
-    ifoldr   = ifoldr
-
-instance N.InlineInduction n => L.TraversableWithIndex (Fin n) (Vec n) where
-    itraverse = itraverse
-
-instance N.InlineInduction n => L.Each (Vec n a) (Vec n b) a b where
-    each = traverse
-
-type instance L.Index (Vec n a)   = Fin n
-type instance L.IxValue (Vec n a) = a
-
--- | 'Vec' doesn't have 'L.At' instance, as we __cannot__ remove value from 'Vec'.
--- See 'ix' in "Data.Vec.DataFamily.SpineStrict" module for an 'L.Lens' (not 'L.Traversal').
-instance N.InlineInduction n => L.Ixed (Vec n a) where
-    ix = ix
-
-instance L.Field1 (Vec ('S n) a) (Vec ('S n) a) a a where
-    _1 = _head
-
-instance L.Field2 (Vec ('S ('S n)) a) (Vec ('S ('S n)) a) a a where
-    _2 = _tail . _head
-
-instance L.Field3 (Vec ('S ('S ('S n))) a) (Vec ('S ('S ('S n))) a) a a where
-    _3 = _tail . _tail . _head
-
-instance L.Field4 (Vec ('S ('S ('S ('S n)))) a) (Vec ('S ('S ('S ('S n)))) a) a a where
-    _4 = _tail . _tail . _tail . _head
-
-instance L.Field5 (Vec ('S ('S ('S ('S ('S n))))) a) (Vec ('S ('S ('S ('S ('S n))))) a) a a where
-    _5 = _tail . _tail . _tail . _tail . _head
-
-instance L.Field6 (Vec ('S ('S ('S ('S ('S ('S n)))))) a) (Vec ('S ('S ('S ('S ('S ('S n)))))) a) a a where
-    _6 = _tail . _tail . _tail . _tail . _tail . _head
-
-instance L.Field7 (Vec ('S ('S ('S ('S ('S ('S ('S n))))))) a) (Vec ('S ('S ('S ('S ('S ('S ('S n))))))) a) a a where
-    _7 = _tail . _tail . _tail . _tail . _tail . _tail . _head
-
-instance L.Field8 (Vec ('S ('S ('S ('S ('S ('S ('S ('S n)))))))) a) (Vec ('S ('S ('S ('S ('S ('S ('S ('S n)))))))) a) a a where
-    _8 = _tail . _tail . _tail . _tail . _tail . _tail . _tail . _head
-
-instance L.Field9 (Vec ('S ('S ('S ('S ('S ('S ('S ('S ('S n))))))))) a) (Vec ('S ('S ('S ('S ('S ('S ('S ('S ('S n))))))))) a) a a where
-    _9 = _tail . _tail . _tail . _tail . _tail . _tail . _tail . _tail . _head
+#endif
 
 -------------------------------------------------------------------------------
 -- Construction
@@ -369,10 +346,6 @@ fromPull = getFromPull (N.inlineInduction1 start step) where
 
 newtype FromPull n a = FromPull { getFromPull :: P.Vec n a -> Vec n a }
 
--- | An 'I.Iso' from 'toPull' and 'fromPull'.
-_Pull :: N.InlineInduction n => L.Iso (Vec n a) (Vec n b) (P.Vec n a) (P.Vec n b)
-_Pull = L.iso toPull fromPull
-
 -- | Convert 'Vec' to list.
 --
 -- >>> toList $ 'f' ::: 'o' ::: 'o' ::: VNil
@@ -412,20 +385,6 @@ fromList = getFromList (N.inlineInduction1 start step) where
         (x : xs') -> (x :::) <$> f xs'
 
 newtype FromList n a = FromList { getFromList :: [a] -> Maybe (Vec n a) }
-
--- | Prism from list.
---
--- >>> "foo" ^? _Vec :: Maybe (Vec N.Nat3 Char)
--- Just ('f' ::: 'o' ::: 'o' ::: VNil)
---
--- >>> "foo" ^? _Vec :: Maybe (Vec N.Nat2 Char)
--- Nothing
---
--- >>> _Vec # (True ::: False ::: VNil)
--- [True,False]
---
-_Vec :: N.InlineInduction n => L.Prism' [a] (Vec n a)
-_Vec = L.prism' toList fromList
 
 -- | Convert list @[a]@ to @'Vec' n a@.
 -- Returns 'Nothing' if input list is too short.
@@ -481,50 +440,12 @@ newtype Index n a = Index { getIndex :: Fin n -> Vec n a -> a }
 (!) :: N.InlineInduction n => Vec n a -> Fin n -> a
 (!) = flip flipIndex
 
--- | Index lens.
+-- | Tabulating, inverse of '!'.
 --
--- >>> ('a' ::: 'b' ::: 'c' ::: VNil) ^. ix (FS FZ)
--- 'b'
---
--- >>> ('a' ::: 'b' ::: 'c' ::: VNil) & ix (FS FZ) .~ 'x'
--- 'a' ::: 'x' ::: 'c' ::: VNil
---
-ix :: forall n a. N.InlineInduction n => Fin n -> L.Lens' (Vec n a) a
-ix = getIxLens $ N.inlineInduction1 start step where
-    start :: IxLens 'Z a
-    start = IxLens F.absurd
-
-    step :: IxLens m a -> IxLens ('S m) a
-    step (IxLens l) = IxLens $ \i -> case i of
-        FZ   -> _head
-        FS j -> _tail . l j
-
-newtype IxLens n a = IxLens { getIxLens :: Fin n -> L.Lens' (Vec n a) a }
-
--- | Match on non-empty 'Vec'.
---
--- /Note:/ @lens@ 'L._Cons' is a 'L.Prism'.
--- In fact, @'Vec' n a@ cannot have an instance of 'L.Cons' as types don't match.
---
-_Cons :: L.Iso (Vec ('S n) a) (Vec ('S n) b) (a, Vec n a) (b, Vec n b)
-_Cons = L.iso (\(x ::: xs) -> (x, xs)) (\(x, xs) -> x ::: xs)
-
--- | Head lens. /Note:/ @lens@ 'L._head' is a 'L.Traversal''.
---
--- >>> ('a' ::: 'b' ::: 'c' ::: VNil) ^. _head
--- 'a'
---
--- >>> ('a' ::: 'b' ::: 'c' ::: VNil) & _head .~ 'x'
--- 'x' ::: 'b' ::: 'c' ::: VNil
---
-_head :: L.Lens' (Vec ('S n) a) a
-_head f (x ::: xs) = (::: xs) <$> f x
-{-# INLINE head #-}
-
--- | Head lens. /Note:/ @lens@ 'L._head' is a 'L.Traversal''.
-_tail :: L.Lens' (Vec ('S n) a) (Vec n a)
-_tail f (x ::: xs) = (x :::) <$> f xs
-{-# INLINE _tail #-}
+-- >>> tabulate id :: Vec N.Nat3 (Fin N.Nat3)
+-- 0 ::: 1 ::: 2 ::: VNil
+tabulate :: N.InlineInduction n => (Fin n -> a) -> Vec n a
+tabulate = fromPull . P.tabulate
 
 -- | Cons an element in front of a 'Vec'.
 cons :: a -> Vec n a -> Vec ('S n) a
@@ -692,6 +613,7 @@ traverse f =  getTraverse $ N.inlineInduction1 start step where
 
 newtype Traverse f a n b = Traverse { getTraverse :: Vec n a -> f (Vec n b) }
 
+#ifdef MIN_VERSION_semigroupoids
 -- | Apply an action to non-empty 'Vec', yielding a 'Vec' of results.
 traverse1 :: forall n f a b. (Apply f, N.InlineInduction n) => (a -> f b) -> Vec ('S n) a -> f (Vec ('S n) b)
 traverse1 f = getTraverse1 $ N.inlineInduction1 start step where
@@ -702,6 +624,7 @@ traverse1 f = getTraverse1 $ N.inlineInduction1 start step where
     step (Traverse1 go) = Traverse1 $ \(x ::: xs) -> liftF2 (:::) (f x) (go xs)
 
 newtype Traverse1 f a n b = Traverse1 { getTraverse1 :: Vec ('S n) a -> f (Vec ('S n) b) }
+#endif
 
 -- | Apply an action to every element of a 'Vec' and its index, yielding a 'Vec' of results.
 itraverse :: forall n f a b. (Applicative f, N.InlineInduction n) => (Fin n -> a -> f b) -> Vec n a -> f (Vec n b)
@@ -915,11 +838,23 @@ newtype Universe n = Universe { getUniverse :: Vec n (Fin n) }
 
 -- | Ensure spine.
 --
--- >>> view (ix F.fin1) $ set (ix F.fin1) 'x' (error "err" :: Vec N.Nat2 Char)
+-- If we have an undefined 'Vec',
+--
+-- >>> let v = error "err" :: Vec N.Nat3 Char
+--
+-- And insert data into it later:
+--
+-- >>> let setHead :: a -> Vec ('S n) a -> Vec ('S n) a; setHead x (_ ::: xs) = x ::: xs
+--
+-- Then without a spine, it will fail:
+--
+-- >>> head $ setHead 'x' v
 -- *** Exception: err
 -- ...
 --
--- >>> view (ix F.fin1) $ set (ix F.fin1) 'x' $ ensureSpine (error "err" :: Vec N.Nat2 Char)
+-- But with the spine, it won't:
+--
+-- >>> head $ setHead 'x' $ ensureSpine v
 -- 'x'
 --
 ensureSpine :: N.InlineInduction n => Vec n a -> Vec n a
@@ -931,13 +866,3 @@ ensureSpine = getEnsureSpine (N.inlineInduction1 first step) where
     step (EnsureSpine go) = EnsureSpine $ \ ~(x ::: xs) -> x ::: go xs
 
 newtype EnsureSpine n a = EnsureSpine { getEnsureSpine :: Vec n a -> Vec n a }
-
--------------------------------------------------------------------------------
--- Doctest
--------------------------------------------------------------------------------
-
--- $setup
--- >>> :set -XScopedTypeVariables
--- >>> import Control.Lens ((^.), (&), (.~), (^?), (#), set, view)
--- >>> import Data.Proxy (Proxy (..))
--- >>> import Prelude (Char, not, uncurry, error)

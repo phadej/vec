@@ -2,3 +2,30 @@ branches: master
 tests:    >=8.0
 doctest:  >=8.6
 haddock:  >=8.6
+
+constraint-set vec-no-distributive
+  constraints: vec -distributive
+
+constraint-set vec-no-semigroupoids
+  constraints: vec -semigroupoids
+
+constraint-set vec-no-adjunctions
+  constraints: vec -adjunctions
+
+constraint-set ral-no-distributive
+  constraints: ral -distributive
+
+constraint-set ral-no-semigroupoids
+  constraints: ral -semigroupoids
+
+constraint-set ral-no-adjunctions
+  constraints: ral -adjunctions
+
+constraint-set mini
+  constraints: vec -adjunctions
+  constraints: vec -distributive
+  constraints: vec -semigroupoids
+
+  constraints: ral -adjunctions
+  constraints: ral -distributive
+  constraints: ral -semigroupoids

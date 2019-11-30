@@ -6,6 +6,7 @@
 {-# LANGUAGE RankNTypes            #-}
 {-# LANGUAGE ScopedTypeVariables   #-}
 {-# LANGUAGE TypeFamilies          #-}
+{-# LANGUAGE UndecidableInstances  #-}
 -- | Pull/representable @'Vec' n a = 'Fin' n -> a@.
 --
 -- The module tries to have same API as "Data.Vec.Lazy", missing bits:
@@ -19,15 +20,11 @@ module Data.Vec.Pull (
     -- * Conversions
     toList,
     fromList,
-    _Vec,
     fromListPrefix,
     reifyList,
     -- * Indexing
     (!),
-    ix,
-    _Cons,
-    _head,
-    _tail,
+    tabulate,
     cons,
     snoc,
     head,
@@ -66,11 +63,8 @@ import Prelude
        Num (..), all, const, id, ($), (.))
 
 import Control.Applicative (Applicative (..), (<$>))
-import Control.Lens        ((<&>))
-import Data.Distributive   (Distributive (..))
 import Data.Fin            (Fin (..))
-import Data.Functor.Apply  (Apply (..))
-import Data.Functor.Rep    (Representable (..))
+import Data.List.NonEmpty  (NonEmpty (..))
 import Data.Monoid         (Monoid (..))
 import Data.Nat            (Nat (..))
 import Data.Proxy          (Proxy (..))
@@ -78,13 +72,36 @@ import Data.Semigroup      (Semigroup (..))
 import Data.Typeable       (Typeable)
 
 --- Instances
-import qualified Control.Lens            as L
-import qualified Data.Foldable           as I (Foldable (..))
+import qualified Data.Foldable as I (Foldable (..))
+
+#ifdef MIN_VERSION_adjunctions
+import qualified Data.Functor.Rep as I (Representable (..))
+#endif
+
+#ifdef MIN_VERSION_distributive
+import Data.Distributive   (Distributive (..))
+#endif
+
+#ifdef MIN_VERSION_semigroupoids
+import Data.Functor.Apply (Apply (..))
+
 import qualified Data.Functor.Bind       as I (Bind (..))
 import qualified Data.Semigroup.Foldable as I (Foldable1 (..))
+#endif
 
+-- vec siblings
 import qualified Data.Fin      as F
 import qualified Data.Type.Nat as N
+
+-- $setup
+-- >>> :set -XScopedTypeVariables
+-- >>> import Data.Proxy (Proxy (..))
+-- >>> import Prelude (Char, Bool (..), not)
+-- >>> import qualified Data.Vec.Lazy as L
+
+-------------------------------------------------------------------------------
+-- Type
+-------------------------------------------------------------------------------
 
 -- | Easily fuseable 'Vec'.
 --
@@ -102,6 +119,11 @@ instance Functor (Vec n) where
 instance N.SNatI n => I.Foldable (Vec n) where
     foldMap = foldMap
 
+#ifdef MIN_VERSION_semigroupoids
+instance (N.SNatI m, n ~ 'S m)  => I.Foldable1 (Vec n) where
+    foldMap1 = foldMap1
+#endif
+
 instance Applicative (Vec n) where
     pure   = repeat
     (<*>)  = zipWith ($)
@@ -116,13 +138,17 @@ instance Monad (Vec n) where
     (>>=)  = bind
     _ >> x = x
 
+#ifdef MIN_VERSION_distributive
 instance Distributive (Vec n) where
     distribute = Vec . distribute . fmap unVec
 
-instance Representable (Vec n) where
+#ifdef MIN_VERSION_adjunctions
+instance I.Representable (Vec n) where
     type Rep (Vec n) = Fin n
     tabulate = Vec
     index    = unVec
+#endif
+#endif
 
 instance Semigroup a => Semigroup (Vec n a) where
     Vec a <> Vec b = Vec (a <> b)
@@ -131,6 +157,7 @@ instance Monoid a => Monoid (Vec n a) where
     mempty = Vec mempty
     Vec a `mappend` Vec b = Vec (mappend a b)
 
+#ifdef MIN_VERSION_semigroupoids
 instance Apply (Vec n) where
     (<.>)  = zipWith ($)
     _ .> x = x
@@ -140,13 +167,7 @@ instance Apply (Vec n) where
 instance I.Bind (Vec n) where
     (>>-) = bind
     join  = join
-
-instance L.FunctorWithIndex (Fin n) (Vec n) where
-    imap = imap
-
-instance N.SNatI n => L.FoldableWithIndex (Fin n) (Vec n) where
-    ifoldMap = ifoldMap
-    ifoldr   = ifoldr
+#endif
 
 -------------------------------------------------------------------------------
 -- Construction
@@ -198,10 +219,6 @@ fromList = getFromList (N.induction1 start step) where
 
 newtype FromList n a = FromList { getFromList :: [a] -> Maybe (Vec n a) }
 
--- | Prism from list.
-_Vec :: N.SNatI n => L.Prism' [a] (Vec n a)
-_Vec = L.prism' toList fromList
-
 -- | Convert list @[a]@ to @'Vec' n a@.
 -- Returns 'Nothing' if input list is too short.
 --
@@ -240,46 +257,9 @@ reifyList (x : xs) f = reifyList xs $ \xs' -> f (cons x xs')
 (!) :: Vec n a -> Fin n -> a
 (!) = unVec
 
--- | Index lens.
---
--- >>> ('a' L.::: 'b' L.::: 'c' L.::: L.VNil) ^. L._Pull . ix (FS FZ)
--- 'b'
---
--- >>> ('a' L.::: 'b' L.::: 'c' L.::: L.VNil) & L._Pull . ix (FS FZ) .~ 'x'
--- 'a' ::: 'x' ::: 'c' ::: VNil
---
-ix :: Fin n -> L.Lens' (Vec n a) a
-ix i f (Vec v) = f (v i) <&> \a -> Vec $ \j ->
-    if i == j
-    then a
-    else v j
-
--- | Match on non-empty 'Vec'.
---
--- /Note:/ @lens@ 'L._Cons' is a 'L.Prism'.
--- In fact, @'Vec' n a@ cannot have an instance of 'L.Cons' as types don't match.
---
-_Cons :: L.Iso (Vec ('S n) a) (Vec ('S n) b) (a, Vec n a) (b, Vec n b)
-_Cons = L.iso (\(Vec v) -> (v FZ, Vec (v . FS))) (\(x, xs) -> cons x xs)
-
--- | Head lens. /Note:/ @lens@ 'L._head' is a 'L.Traversal''.
---
--- >>> ('a' L.::: 'b' L.::: 'c' L.::: L.VNil) ^. L._Pull . _head
--- 'a'
---
--- >>> ('a' L.::: 'b' L.::: 'c' L.::: L.VNil) & L._Pull . _head .~ 'x'
--- 'x' ::: 'b' ::: 'c' ::: VNil
---
-_head :: L.Lens' (Vec ('S n) a) a
-_head f (Vec v) = f (v FZ) <&> \a -> Vec $ \j -> case j of
-    FZ -> a
-    _   -> v j
-{-# INLINE head #-}
-
--- | Head lens. /Note:/ @lens@ 'L._head' is a 'L.Traversal''.
-_tail :: L.Lens' (Vec ('S n) a) (Vec n a)
-_tail f (Vec v) = f (Vec (v . FS)) <&> \xs -> cons (v FZ) xs
-{-# INLINE _tail #-}
+-- Tabulating, inverse of '!'.
+tabulate :: (Fin n -> a) -> Vec n a
+tabulate = Vec
 
 -- | Cons an element in front of a 'Vec'.
 cons :: a -> Vec n a -> Vec ('S n) a
@@ -318,13 +298,13 @@ reverse (Vec v) = Vec (v . F.mirror)
 -- Mapping
 -------------------------------------------------------------------------------
 
--- | >>> over L._Pull (map not) (True L.::: False L.::: L.VNil)
+-- | >>> L.fromPull $ map not $ L.toPull $ True L.::: False L.::: L.VNil
 -- False ::: True ::: VNil
 --
 map :: (a -> b) -> Vec n a -> Vec n b
 map f (Vec v) = Vec (f . v)
 
--- | >>> over L._Pull (imap (,)) ('a' L.::: 'b' L.::: 'c' L.::: L.VNil)
+-- | >>> L.fromPull $ imap (,) $ L.toPull $ 'a' L.::: 'b' L.::: 'c' L.::: L.VNil
 -- (0,'a') ::: (1,'b') ::: (2,'c') ::: VNil
 --
 imap :: (Fin n -> a -> b) -> Vec n a -> Vec n b
@@ -338,17 +318,22 @@ imap f (Vec v) = Vec $ \i -> f i (v i)
 foldMap :: (Monoid m, N.SNatI n) => (a -> m) -> Vec n a -> m
 foldMap f (Vec v) = I.foldMap (f . v) F.universe
 
--- | See 'I.Foldable1'.
-foldMap1 :: (Semigroup s, N.SNatI n) => (a -> s) -> Vec ('S n) a -> s
-foldMap1 f (Vec v) = I.foldMap1 (f . v) F.universe1
-
 -- | See 'I.FoldableWithIndex'.
 ifoldMap :: (Monoid m, N.SNatI n) => (Fin n -> a -> m) -> Vec n a -> m
 ifoldMap f (Vec v) = I.foldMap (\i -> f i (v i)) F.universe
 
+-- | See 'I.Foldable1'.
+foldMap1 :: (Semigroup s, N.SNatI n) => (a -> s) -> Vec ('S n) a -> s
+foldMap1 f (Vec v) = neFoldMap (f . v) F.universe1
+
 -- | There is no type-class for this :(
 ifoldMap1 :: (Semigroup s, N.SNatI n) => (Fin ('S n) -> a -> s) -> Vec ('S n) a -> s
-ifoldMap1 f (Vec v) = I.foldMap1 (\i -> f i (v i)) F.universe1
+ifoldMap1 f (Vec v) = neFoldMap (\i -> f i (v i)) F.universe1
+
+neFoldMap :: Semigroup s => (a -> s) -> NonEmpty a -> s
+neFoldMap f (z :| zs) = go z zs where
+    go x []       = f x
+    go x (y : ys) = f x <> go y ys
 
 -- | Right fold.
 foldr :: N.SNatI n => (a -> b -> b) -> b -> Vec n a -> b
@@ -424,14 +409,3 @@ join (Vec v) = Vec $ \i -> unVec (v i) i
 -- 0 ::: 1 ::: 2 ::: VNil
 universe :: N.SNatI n => Vec n (Fin n)
 universe = Vec id
-
--------------------------------------------------------------------------------
--- Doctest
--------------------------------------------------------------------------------
-
--- $setup
--- >>> :set -XScopedTypeVariables
--- >>> import Control.Lens ((^.), (&), (.~), over)
--- >>> import Data.Proxy (Proxy (..))
--- >>> import Prelude (Char, Bool (..), not)
--- >>> import qualified Data.Vec.Lazy as L
