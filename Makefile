@@ -14,3 +14,7 @@ ghcid-fin :
 
 ghcid-vec :
 	ghcid -c 'cabal new-repl vec' -C vec
+
+deps.png :
+	cabal build --disable-tests --disable-benchmarks -w ghc-8.6.5 --dry-run all
+	cabal-plan dot --tred --tred-weights --hide-builtin --output deps.png --run-dot-png
