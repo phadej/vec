@@ -216,10 +216,11 @@ class Pop0 a b | b -> a where
     pop0 :: PosN n a -> PosN n ('B0 b)
 
 instance Pop0 'BE 'BE where
-    pop0 = weakenRight1N
+    pop0 (AtEnd n) = There0 (AtEnd (True ::: n))
 
 instance SBinNI b => Pop0 ('B1 ('B0 b)) ('B1 b) where
-    pop0 = weakenRight1N
+    pop0 (Here v)            = There0 (Here (True ::: v))
+    pop0 (There1 (There0 p)) = There0 (There1 p)
 
 instance (SBinNI b, Pop0 a b) => Pop0 ('B1 a) ('B0 b) where
     pop0 (There1 p) = There0 (pop0 p)
@@ -255,7 +256,7 @@ weakenRight1N :: forall b n. SBinNI b => PosN n b -> PosN n (SuccN' b)
 weakenRight1N = weakenRight1N' sbinN
 
 weakenRight1N' :: forall b n. SBinN b -> PosN n b -> PosN n (SuccN' b)
-weakenRight1N' SBE (AtEnd v)  = There0 (AtEnd (True ::: v)) -- weakenRight1V v))
+weakenRight1N' SBE (AtEnd v)  = There0 (AtEnd (True ::: v))
 weakenRight1N' SB0 (There0 p) = There1 p
 weakenRight1N' SB1 (There1 p) = There0 (weakenRight1N' sbinN p)
 weakenRight1N' s@SB1 (Here v) = There0 $ recur s v where
