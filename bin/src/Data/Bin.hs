@@ -395,8 +395,9 @@ shiftR1 (BN BE)     = BZ
 shiftR1 (BN (B0 b)) = BN b
 shiftR1 (BN (B1 b)) = BN b
 
--- | __NOTE__: '.&.|, 'xor' nor 'shiftR' or 'roteteR' are implemented.
+-- | __NOTE__: '.&.', 'xor', 'shiftR' and 'rotateR' are __NOT_ implemented.
 -- They may make number zero.
+--
 instance Bits BinN where
     B0 a .|. B0 b = B0 (a .|. b)
     B0 a .|. B1 b = B1 (a .|. b)

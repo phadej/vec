@@ -50,6 +50,7 @@ library
   ghc-options:      -Wall -fprint-explicit-kinds
   exposed-modules:
     Data.Bin
+    Data.Wid
     Data.Type.Bin
 
   build-depends:
