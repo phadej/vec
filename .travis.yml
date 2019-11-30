@@ -119,20 +119,26 @@ install:
   - rm -rf cabal.project cabal.project.local cabal.project.freeze
   - touch cabal.project
   - |
+    echo "packages: bin" >> cabal.project
     echo "packages: dec" >> cabal.project
     echo "packages: fin" >> cabal.project
-    echo "packages: vec" >> cabal.project
-    echo "packages: bin" >> cabal.project
     echo "packages: ral" >> cabal.project
+    echo "packages: vec" >> cabal.project
+    echo "packages: ral-lens" >> cabal.project
+    echo "packages: vec-lens" >> cabal.project
   - |
-  - "for pkg in $($HCPKG list --simple-output); do echo $pkg | sed 's/-[^-]*$//' | (grep -vE -- '^(bin|dec|fin|ral|vec)$' || true) | sed 's/^/constraints: /' | sed 's/$/ installed/' >> cabal.project.local; done"
+    echo "constraints: ral -semigroupoids" >> cabal.project
+    echo "constraints: ral -adjunctions"   >> cabal.project
+  - "for pkg in $($HCPKG list --simple-output); do echo $pkg | sed 's/-[^-]*$//' | (grep -vE -- '^(bin|dec|fin|ral|ral-lens|vec|vec-lens)$' || true) | sed 's/^/constraints: /' | sed 's/$/ installed/' >> cabal.project.local; done"
   - cat cabal.project || true
   - cat cabal.project.local || true
+  - if [ -f "bin/configure.ac" ]; then (cd "bin" && autoreconf -i); fi
   - if [ -f "dec/configure.ac" ]; then (cd "dec" && autoreconf -i); fi
   - if [ -f "fin/configure.ac" ]; then (cd "fin" && autoreconf -i); fi
-  - if [ -f "vec/configure.ac" ]; then (cd "vec" && autoreconf -i); fi
-  - if [ -f "bin/configure.ac" ]; then (cd "bin" && autoreconf -i); fi
   - if [ -f "ral/configure.ac" ]; then (cd "ral" && autoreconf -i); fi
+  - if [ -f "vec/configure.ac" ]; then (cd "vec" && autoreconf -i); fi
+  - if [ -f "ral-lens/configure.ac" ]; then (cd "ral-lens" && autoreconf -i); fi
+  - if [ -f "vec-lens/configure.ac" ]; then (cd "vec-lens" && autoreconf -i); fi
   - ${CABAL} v2-freeze $WITHCOMPILER ${TEST} ${BENCH} | color_cabal_output
   - "cat cabal.project.freeze | sed -E 's/^(constraints: *| *)//' | sed 's/any.//'"
   - rm  cabal.project.freeze
@@ -147,22 +153,28 @@ script:
   - cd ${DISTDIR} || false
   - find . -maxdepth 1 -type f -name '*.tar.gz' -exec tar -xvf '{}' \;
   - find . -maxdepth 1 -type f -name '*.tar.gz' -exec rm       '{}' \;
+  - PKGDIR_bin="$(find . -maxdepth 1 -type d -regex '.*/bin-[0-9.]*')"
   - PKGDIR_dec="$(find . -maxdepth 1 -type d -regex '.*/dec-[0-9.]*')"
   - PKGDIR_fin="$(find . -maxdepth 1 -type d -regex '.*/fin-[0-9.]*')"
-  - PKGDIR_vec="$(find . -maxdepth 1 -type d -regex '.*/vec-[0-9.]*')"
-  - PKGDIR_bin="$(find . -maxdepth 1 -type d -regex '.*/bin-[0-9.]*')"
   - PKGDIR_ral="$(find . -maxdepth 1 -type d -regex '.*/ral-[0-9.]*')"
+  - PKGDIR_vec="$(find . -maxdepth 1 -type d -regex '.*/vec-[0-9.]*')"
+  - PKGDIR_ral_lens="$(find . -maxdepth 1 -type d -regex '.*/ral-lens-[0-9.]*')"
+  - PKGDIR_vec_lens="$(find . -maxdepth 1 -type d -regex '.*/vec-lens-[0-9.]*')"
   # Generate cabal.project
   - rm -rf cabal.project cabal.project.local cabal.project.freeze
   - touch cabal.project
   - |
+    echo "packages: ${PKGDIR_bin}" >> cabal.project
     echo "packages: ${PKGDIR_dec}" >> cabal.project
     echo "packages: ${PKGDIR_fin}" >> cabal.project
-    echo "packages: ${PKGDIR_vec}" >> cabal.project
-    echo "packages: ${PKGDIR_bin}" >> cabal.project
     echo "packages: ${PKGDIR_ral}" >> cabal.project
+    echo "packages: ${PKGDIR_vec}" >> cabal.project
+    echo "packages: ${PKGDIR_ral_lens}" >> cabal.project
+    echo "packages: ${PKGDIR_vec_lens}" >> cabal.project
   - |
-  - "for pkg in $($HCPKG list --simple-output); do echo $pkg | sed 's/-[^-]*$//' | (grep -vE -- '^(bin|dec|fin|ral|vec)$' || true) | sed 's/^/constraints: /' | sed 's/$/ installed/' >> cabal.project.local; done"
+    echo "constraints: ral -semigroupoids" >> cabal.project
+    echo "constraints: ral -adjunctions"   >> cabal.project
+  - "for pkg in $($HCPKG list --simple-output); do echo $pkg | sed 's/-[^-]*$//' | (grep -vE -- '^(bin|dec|fin|ral|ral-lens|vec|vec-lens)$' || true) | sed 's/^/constraints: /' | sed 's/$/ installed/' >> cabal.project.local; done"
   - cat cabal.project || true
   - cat cabal.project.local || true
   # Building...
@@ -174,22 +186,42 @@ script:
   # Testing...
   - if [ $HCNUMVER -ge 80000 ] ; then ${CABAL} v2-test $WITHCOMPILER ${TEST} ${BENCH} all | color_cabal_output ; fi
   # Doctest...
+  - if [ $HCNUMVER -ge 80600 ] ; then (cd ${PKGDIR_bin} && doctest  src) ; fi
   - if [ $HCNUMVER -ge 80600 ] ; then (cd ${PKGDIR_dec} && doctest  src) ; fi
   - if [ $HCNUMVER -ge 80600 ] ; then (cd ${PKGDIR_fin} && doctest  src) ; fi
-  - if [ $HCNUMVER -ge 80600 ] ; then (cd ${PKGDIR_vec} && doctest  src) ; fi
-  - if [ $HCNUMVER -ge 80600 ] ; then (cd ${PKGDIR_bin} && doctest  src) ; fi
   - if [ $HCNUMVER -ge 80600 ] ; then (cd ${PKGDIR_ral} && doctest  src) ; fi
+  - if [ $HCNUMVER -ge 80600 ] ; then (cd ${PKGDIR_vec} && doctest  src) ; fi
+  - if [ $HCNUMVER -ge 80600 ] ; then (cd ${PKGDIR_ral_lens} && doctest  src) ; fi
+  - if [ $HCNUMVER -ge 80600 ] ; then (cd ${PKGDIR_vec_lens} && doctest  src) ; fi
   # cabal check...
+  - (cd ${PKGDIR_bin} && ${CABAL} -vnormal check)
   - (cd ${PKGDIR_dec} && ${CABAL} -vnormal check)
   - (cd ${PKGDIR_fin} && ${CABAL} -vnormal check)
-  - (cd ${PKGDIR_vec} && ${CABAL} -vnormal check)
-  - (cd ${PKGDIR_bin} && ${CABAL} -vnormal check)
   - (cd ${PKGDIR_ral} && ${CABAL} -vnormal check)
+  - (cd ${PKGDIR_vec} && ${CABAL} -vnormal check)
+  - (cd ${PKGDIR_ral_lens} && ${CABAL} -vnormal check)
+  - (cd ${PKGDIR_vec_lens} && ${CABAL} -vnormal check)
   # haddock...
   - if [ $HCNUMVER -ge 80600 ] ; then ${CABAL} v2-haddock $WITHCOMPILER --with-haddock $HADDOCK ${TEST} ${BENCH} all | color_cabal_output ; fi
   # Building without installed constraints for packages in global-db...
   - rm -f cabal.project.local
   - ${CABAL} v2-build $WITHCOMPILER --disable-tests --disable-benchmarks all | color_cabal_output
+  # Constraint sets
+  - rm -rf cabal.project.local
+  # Constraint set vec-no-distributive
+  - ${CABAL} v2-build $WITHCOMPILER --disable-tests --disable-benchmarks --constraint='vec -distributive' all | color_cabal_output
+  # Constraint set vec-no-semigroupoids
+  - ${CABAL} v2-build $WITHCOMPILER --disable-tests --disable-benchmarks --constraint='vec -semigroupoids' all | color_cabal_output
+  # Constraint set vec-no-adjunctions
+  - ${CABAL} v2-build $WITHCOMPILER --disable-tests --disable-benchmarks --constraint='vec -adjunctions' all | color_cabal_output
+  # Constraint set ral-no-distributive
+  - ${CABAL} v2-build $WITHCOMPILER --disable-tests --disable-benchmarks --constraint='ral -distributive' all | color_cabal_output
+  # Constraint set ral-no-semigroupoids
+  - ${CABAL} v2-build $WITHCOMPILER --disable-tests --disable-benchmarks --constraint='ral -semigroupoids' all | color_cabal_output
+  # Constraint set ral-no-adjunctions
+  - ${CABAL} v2-build $WITHCOMPILER --disable-tests --disable-benchmarks --constraint='ral -adjunctions' all | color_cabal_output
+  # Constraint set mini
+  - ${CABAL} v2-build $WITHCOMPILER --disable-tests --disable-benchmarks --constraint='vec -adjunctions' --constraint='vec -distributive' --constraint='vec -semigroupoids' --constraint='ral -adjunctions' --constraint='ral -distributive' --constraint='ral -semigroupoids' all | color_cabal_output
 
 # REGENDATA ("0.7.20191106",["--config=cabal.haskell-ci","cabal.project"])
 # EOF

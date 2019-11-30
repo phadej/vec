@@ -20,6 +20,11 @@
 
 ![](https://raw.githubusercontent.com/phadej/vec/master/deps.png)
 
+And with dependency flags turned off:
+
+![](https://raw.githubusercontent.com/phadej/vec/master/deps-mini.png)
+
+
 ## Benchmarks: dotProduct
 
 - `list` version sets the baseline, built-in fusion seems to kick in.

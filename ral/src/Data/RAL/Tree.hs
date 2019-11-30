@@ -22,7 +22,6 @@ module Data.RAL.Tree (
     -- * Indexing
     (!),
     tabulate,
-    ix,
     leftmost,
     rightmost,
 
@@ -41,9 +40,11 @@ module Data.RAL.Tree (
     map,
     imap,
     traverse,
-    traverse1,
     itraverse,
+#ifdef MIN_VERSION_semigroupoids
+    traverse1,
     itraverse1,
+#endif
     -- TODO: itraverse_,
 
     -- * Zipping
@@ -61,7 +62,6 @@ import Prelude
 
 import Control.Applicative (Applicative (..), (<$>))
 import Control.DeepSeq     (NFData (..))
-import Data.Functor.Apply  (Apply (..))
 import Data.Hashable       (Hashable (..))
 import Data.Monoid         (Monoid (..))
 import Data.Nat            (Nat (..))
@@ -72,18 +72,26 @@ import Data.Wid            (Wid (..))
 import qualified Data.Type.Nat as N
 
 -- instances
-import qualified Control.Lens               as L
-import qualified Data.Distributive          as I (Distributive (..))
-import qualified Data.Foldable              as I (Foldable (..))
-import qualified Data.Functor.Rep           as I
-                 (Representable (..), distributeRep)
+import qualified Data.Foldable    as I (Foldable (..))
+import qualified Data.Traversable as I (Traversable (..))
+
+#ifdef MIN_VERSION_distributive
+import qualified Data.Distributive as I (Distributive (..))
+
+#ifdef MIN_VERSION_adjunctions
+import qualified Data.Functor.Rep as I (Representable (..))
+#endif
+#endif
+
+#ifdef MIN_VERSION_semigroupoids
+import Data.Functor.Apply (Apply (..))
+
 import qualified Data.Semigroup.Foldable    as I (Foldable1 (..))
 import qualified Data.Semigroup.Traversable as I (Traversable1 (..))
-import qualified Data.Traversable           as I (Traversable (..))
+#endif
 
 -- $setup
 -- >>> :set -XScopedTypeVariables
--- >>> import Control.Lens ((^.), (&), (.~), (^?), (#))
 -- >>> import Data.Proxy (Proxy (..))
 -- >>> import Prelude (Char, not, uncurry, flip)
 
@@ -131,11 +139,13 @@ instance I.Foldable (Tree n) where
 instance I.Traversable (Tree n) where
     traverse = traverse
 
+#ifdef MIN_VERSION_semigroupoids
 instance I.Foldable1 (Tree n) where
     foldMap1 = foldMap1
 
 instance I.Traversable1 (Tree n) where
     traverse1 = traverse1
+#endif
 
 instance NFData a => NFData (Tree n a) where
     rnf (Leaf x)   = rnf x
@@ -150,51 +160,37 @@ instance Hashable a => Hashable (Tree n a) where
 
 instance N.SNatI n => Applicative (Tree n) where
     pure = repeat
-    (<*>) = (<.>)
-    (<*) = (<.)
-    (*>) = (.>)
+    (<*>) = zipWith ($)
+    x <* _ = x
+    _ *> x = x
 #if MIN_VERSION_base(4,10,0)
-    liftA2 = liftF2
+    liftA2 = zipWith
 #endif
 
+#ifdef MIN_VERSION_distributive
 instance N.SNatI n => I.Distributive (Tree n) where
-    distribute = I.distributeRep
+    distribute f = tabulate (\k -> fmap (! k) f)
 
+#ifdef MIN_VERSION_adjunctions
 instance N.SNatI n => I.Representable (Tree n) where
     type Rep (Tree n) = Wid n
 
     tabulate = tabulate
     index    = (!)
+#endif
+#endif
 
 instance Semigroup a => Semigroup (Tree n a) where
     Leaf x   <> Leaf y   = Leaf (x <> y)
     Node x y <> Node u v = Node (x <> u) (y <> v)
 
+#ifdef MIN_VERSION_semigroupoids
 instance Apply (Tree n) where
     (<.>)  = zipWith ($)
     _ .> x = x
     x <. _ = x
     liftF2 = zipWith
-
-instance L.FunctorWithIndex (Wid n) (Tree n) where
-    imap = imap
-
-instance L.FoldableWithIndex (Wid n) (Tree n) where
-    ifoldMap = ifoldMap
-    ifoldr   = ifoldr
-    ifoldl   = ifoldl
-
-instance L.TraversableWithIndex (Wid n) (Tree n) where
-    itraverse = itraverse
-
-instance L.Each (Tree n a) (Tree n b) a b where
-    each = traverse
-
-type instance L.Index (Tree n a)   = Wid n
-type instance L.IxValue (Tree n a) = a
-
-instance L.Ixed (Tree n a) where
-    ix = ix
+#endif
 
 -------------------------------------------------------------------------------
 -- Construction
@@ -221,7 +217,6 @@ toList t = go t [] where
     go (Leaf x) = (x :)
     go (Node x y) = go x . go y
 
-
 -------------------------------------------------------------------------------
 -- Indexing
 -------------------------------------------------------------------------------
@@ -236,17 +231,6 @@ tabulate :: forall n a. N.SNatI n => (Wid n -> a) -> Tree n a
 tabulate f = case N.snat :: N.SNat n of
     N.SZ -> Leaf (f WE)
     N.SS -> Node (tabulate (goLeft f)) (tabulate (goRight f))
-
--- | Index lens.
---
--- >>> let tree = Node (Node (Leaf 'a') (Leaf 'b')) (Node (Leaf 'c') (Leaf 'd'))
--- >>> tree & ix (W1 $ W0 WE) .~ 'z'
--- Node (Node (Leaf 'a') (Leaf 'b')) (Node (Leaf 'z') (Leaf 'd'))
---
-ix :: Wid n -> L.Lens' (Tree n a) a
-ix WE      f (Leaf x)   = Leaf <$> f x
-ix (W0 is) f (Node x y) = (`Node` y) <$> ix is f x
-ix (W1 is) f (Node x y) = (x `Node`) <$> ix is f y
 
 leftmost :: Tree n a -> a
 leftmost (Leaf a)   = a
@@ -331,6 +315,7 @@ itraverse :: Applicative f => (Wid n -> a -> f b) -> Tree n a -> f (Tree n b)
 itraverse f (Leaf x)   = Leaf <$> f WE x
 itraverse f (Node x y) = Node <$> itraverse (goLeft f) x <*> itraverse (goRight f) y
 
+#ifdef MIN_VERSION_semigroupoids
 traverse1 :: Apply f => (a -> f b) -> Tree n a -> f (Tree n b)
 traverse1 f (Leaf x)   = Leaf <$> f x
 traverse1 f (Node x y) = Node <$> traverse1 f x <.> traverse1 f y
@@ -338,6 +323,7 @@ traverse1 f (Node x y) = Node <$> traverse1 f x <.> traverse1 f y
 itraverse1 :: Apply f => (Wid n -> a -> f b) -> Tree n a -> f (Tree n b)
 itraverse1 f (Leaf x)   = Leaf <$> f WE x
 itraverse1 f (Node x y) = Node <$> itraverse1 (goLeft f) x <.> itraverse1 (goRight f) y
+#endif
 
 -------------------------------------------------------------------------------
 -- Zipping

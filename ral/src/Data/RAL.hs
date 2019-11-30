@@ -42,6 +42,8 @@ module Data.RAL (
     -- * Indexing
     (!),
     indexNE,
+    tabulate,
+    tabulateNE,
 
     -- * Folds
     foldMap,
@@ -64,12 +66,14 @@ module Data.RAL (
     imapNE,
     traverse,
     traverseNE,
-    traverse1,
-    traverse1NE,
     itraverse,
     itraverseNE,
+#ifdef MIN_VERSION_semigroupoids
+    traverse1,
+    traverse1NE,
     itraverse1,
     itraverse1NE,
+#endif
 
     -- * Zipping
     zipWith,
@@ -89,9 +93,6 @@ import Control.Applicative (Applicative (..), (<$>))
 import Control.DeepSeq     (NFData (..))
 import Data.Bin            (Bin (..), BinN (..))
 import Data.Bin.Pos        (Pos (..), PosN (..), PosN' (..))
-import Data.Distributive   (Distributive (..))
-import Data.Functor.Apply  (Apply (..))
-import Data.Functor.Rep    (Representable (..), distributeRep)
 import Data.Hashable       (Hashable (..))
 import Data.List.NonEmpty  (NonEmpty (..))
 import Data.Monoid         (Monoid (..))
@@ -105,18 +106,29 @@ import qualified Data.RAL.Tree as Tree
 import qualified Data.Type.Bin as B
 import qualified Data.Type.Nat as N
 
-import qualified Control.Lens               as L
 import qualified Data.Foldable              as I (Foldable (..))
+import qualified Data.Traversable           as I (Traversable (..))
+
+#ifdef MIN_VERSION_distributive
+import qualified Data.Distributive as I (Distributive (..))
+
+#ifdef MIN_VERSION_adjunctions
+import qualified Data.Functor.Rep as I (Representable (..))
+#endif
+#endif
+
+#ifdef MIN_VERSION_semigroupoids
+import Data.Functor.Apply (Apply (..))
+
 import qualified Data.Semigroup.Foldable    as I (Foldable1 (..))
 import qualified Data.Semigroup.Traversable as I (Traversable1 (..))
-import qualified Data.Traversable           as I (Traversable (..))
+#endif
 
 import Data.RAL.Tree (Tree (..))
 
 -- $setup
 -- >>> :set -XScopedTypeVariables -XDataKinds
 -- >>> import Prelude (print, Char, Bounded (..))
--- >>> import Control.Lens ((^.), (&), (.~), (^?), (#))
 -- >>> import Data.List (sort)
 -- >>> import Data.Wid (Wid (..))
 -- >>> import Data.Bin.Pos (top, pop)
@@ -177,23 +189,25 @@ instance I.Foldable (NERAL n b) where
     null _ = False
 #endif
 
-instance b ~ 'BN n => I.Foldable1 (RAL b) where
-    foldMap1 = foldMap1
-
-instance I.Foldable1 (NERAL n b) where
-    foldMap1 = foldMap1NE
-
 instance I.Traversable (RAL b) where
     traverse = traverse
 
 instance I.Traversable (NERAL n b) where
     traverse = traverseNE
 
+#ifdef MIN_VERSION_semigroupoids
+instance b ~ 'BN n => I.Foldable1 (RAL b) where
+    foldMap1 = foldMap1
+
+instance I.Foldable1 (NERAL n b) where
+    foldMap1 = foldMap1NE
+
 instance b ~ 'BN n => I.Traversable1 (RAL b) where
     traverse1 = traverse1
 
 instance I.Traversable1 (NERAL n b) where
     traverse1 = traverse1NE
+#endif
 
 instance NFData a => NFData (RAL b a) where
     rnf Empty          = ()
@@ -212,45 +226,43 @@ instance Hashable a => Hashable (NERAL n b a) where
 
 instance SBinI b => Applicative (RAL b) where
     pure   = repeat
-    (<*>)  = (<.>)
-    (<*)   = (<.)
-    (*>)   = (.>)
+    (<*>)  = zipWith ($)
+    x <* _ = x
+    _ *> x = x
 #if MIN_VERSION_base(4,10,0)
-    liftA2 = liftF2
+    liftA2 = zipWith
 #endif
 
 instance (SBinNI b, N.SNatI n) => Applicative (NERAL n b) where
     pure   = repeatNE
-    (<*>)  = (<.>)
-    (<*)   = (<.)
-    (*>)   = (.>)
+    (<*>)  = zipWithNE ($)
+    x <* _ = x
+    _ *> x = x
 #if MIN_VERSION_base(4,10,0)
-    liftA2 = liftF2
+    liftA2 = zipWithNE
 #endif
 
 -- TODO: Monad?
 
-instance SBinI b => Distributive (RAL b) where
-    distribute = distributeRep
+#ifdef MIN_VERSION_distributive
+instance SBinI b => I.Distributive (RAL b) where
+    distribute f = tabulate (\k -> fmap (! k) f)
 
-instance (SBinNI b, N.SNatI n) => Distributive (NERAL n b) where
-    distribute = distributeRep
+instance (SBinNI b, N.SNatI n) => I.Distributive (NERAL n b) where
+    distribute f = tabulateNE (\k -> fmap (`indexNE` k) f)
 
-instance SBinI b => Representable (RAL b) where
+#ifdef MIN_VERSION_adjunctions
+instance SBinI b => I.Representable (RAL b) where
     type Rep (RAL b) = Pos b
-    index = (!)
-    tabulate f = case sbin :: SBin b of
-        SBZ -> Empty
-        SBN -> NonEmpty (tabulate (f . Pos . PosN))
+    index    = (!)
+    tabulate = tabulate
 
-instance (SBinNI b, N.SNatI n) => Representable (NERAL n b) where
+instance (SBinNI b, N.SNatI n) => I.Representable (NERAL n b) where
     type Rep (NERAL n b) = PosN' n b
-    index = indexNE
-
-    tabulate f = case sbinN :: SBinN b of
-        SBE -> Last (tabulate (f . AtEnd))
-        SB0 -> Cons0 (tabulate (f . There0))
-        SB1 -> Cons1 (tabulate (f . Here)) (tabulate (f . There1))
+    index    = indexNE
+    tabulate = tabulateNE
+#endif
+#endif
 
 instance Semigroup a => Semigroup (RAL b a) where
     (<>) = zipWith (<>)
@@ -266,6 +278,7 @@ instance (Monoid a, SBinNI b, N.SNatI n) => Monoid (NERAL n b a) where
     mempty  = repeatNE mempty
     mappend = zipWithNE mappend
 
+#ifdef MIN_VERSION_semigroupoids
 instance Apply (RAL b) where
     (<.>) = zipWith ($)
     liftF2 = zipWith
@@ -277,46 +290,9 @@ instance Apply (NERAL n b) where
     liftF2 = zipWithNE
     _ .> x = x
     x <. _ = x
+#endif
 
 -- TODO: I.Bind?
-
-instance L.FunctorWithIndex (Pos b) (RAL b) where
-    imap = imap
-
-instance L.FunctorWithIndex (PosN' n b) (NERAL n b) where
-    imap = imapNE
-
-instance L.FoldableWithIndex (Pos b) (RAL b) where
-    ifoldMap = ifoldMap
-    ifoldr   = ifoldr
-
-instance L.FoldableWithIndex (PosN' n b) (NERAL n b) where
-    ifoldMap = ifoldMapNE
-    ifoldr   = ifoldrNE
-
-instance L.TraversableWithIndex (Pos b) (RAL b) where
-    itraverse = itraverse
-
-instance L.TraversableWithIndex (PosN' n b) (NERAL n b) where
-    itraverse = itraverseNE
-
-instance L.Each (RAL n a) (RAL n b) a b where
-    each = traverse
-
-instance L.Each (NERAL n m a) (NERAL n m b) a b where
-    each = traverseNE
-
-type instance L.Index   (RAL n a) = Pos n
-type instance L.IxValue (RAL n a) = a
-
-type instance L.Index   (NERAL n b a) = PosN' n b
-type instance L.IxValue (NERAL n b a) = a
-
-instance L.Ixed (RAL b a) where
-    ix = ix
-
-instance L.Ixed (NERAL n b a) where
-    ix = ixNE
 
 -------------------------------------------------------------------------------
 -- Construction
@@ -462,19 +438,16 @@ indexNE (Cons0 ral)   (There0 i) = indexNE ral i
 indexNE (Cons1 t _)   (Here i)   = t Tree.! i
 indexNE (Cons1 _ ral) (There1 i) = indexNE ral i
 
--- | Index lens.
---
--- >>> let Just ral = fromList "xyz" :: Maybe (RAL B.Bin3 Char)
--- >>> ral & ix maxBound .~ 'Z'
--- NonEmpty (Cons1 (Leaf 'x') (Last (Node (Leaf 'y') (Leaf 'Z'))))
-ix :: Pos b -> L.Lens' (RAL b a) a
-ix (Pos (PosN n)) f (NonEmpty x) = NonEmpty <$> ixNE n f x
+tabulate :: forall b a. SBinI b => (Pos b -> a) -> RAL b a
+tabulate f = case sbin :: SBin b of
+    SBZ -> Empty
+    SBN -> NonEmpty (tabulateNE (f . Pos . PosN))
 
-ixNE :: PosN' n b -> L.Lens' (NERAL n b a) a
-ixNE (AtEnd i)  f (Last  t)   = Last <$> Tree.ix i f t
-ixNE (There0 i) f (Cons0   r) = Cons0 <$> ixNE i f r
-ixNE (There1 i) f (Cons1 t r) = (t `Cons1`) <$> ixNE i f r
-ixNE (Here i)   f (Cons1 t r) = (`Cons1` r) <$> Tree.ix i f t
+tabulateNE :: forall b n a. (SBinNI b, N.SNatI n) => (PosN' n b -> a) -> NERAL n b a
+tabulateNE f = case sbinN :: SBinN b of
+    SBE -> Last (Tree.tabulate (f . AtEnd))
+    SB0 -> Cons0 (tabulateNE (f . There0))
+    SB1 -> Cons1 (Tree.tabulate (f . Here)) (tabulateNE (f . There1))
 
 -------------------------------------------------------------------------------
 -- Folds
@@ -582,6 +555,7 @@ itraverseNE f (Last  t)   = Last <$> Tree.itraverse (f . AtEnd) t
 itraverseNE f (Cons0   r) = Cons0 <$> itraverseNE (f . There0) r
 itraverseNE f (Cons1 t r) = Cons1 <$> Tree.itraverse (f . Here) t <*> itraverseNE (f . There1) r
 
+#ifdef MIN_VERSION_semigroupoids
 traverse1 :: Apply f => (a -> f b) -> RAL ('BN n) a -> f (RAL ('BN n) b)
 traverse1 f (NonEmpty r) = NonEmpty <$> traverse1NE f r
 
@@ -597,6 +571,7 @@ itraverse1NE :: Apply f => (PosN' n m -> a -> f b) -> NERAL n m a -> f (NERAL n 
 itraverse1NE f (Last  t)   = Last <$> Tree.itraverse1 (f . AtEnd) t
 itraverse1NE f (Cons0   r) = Cons0 <$> itraverse1NE (f . There0) r
 itraverse1NE f (Cons1 t r) = Cons1 <$> Tree.itraverse1 (f . Here) t <.> itraverse1NE (f . There1) r
+#endif
 
 -------------------------------------------------------------------------------
 -- Zipping

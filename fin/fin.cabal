@@ -67,6 +67,7 @@ tested-with:
 source-repository head
   type:     git
   location: https://github.com/phadej/vec.git
+  subdir:   fin
 
 library
   exposed-modules:
@@ -118,6 +119,3 @@ test-suite inspection
 
   if !impl(ghc >=8.0)
     buildable: False
-
-  -- useful for development
-  ghc-options:

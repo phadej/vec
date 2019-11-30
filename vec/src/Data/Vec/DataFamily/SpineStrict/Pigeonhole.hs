@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP                   #-}
 {-# LANGUAGE ConstraintKinds       #-}
 {-# LANGUAGE DataKinds             #-}
 {-# LANGUAGE DefaultSignatures     #-}
@@ -28,24 +29,29 @@ import Prelude (Functor (..), fst, uncurry, ($), (.))
 
 import Control.Applicative             (Applicative (..), (<$>))
 import Control.Arrow                   (first)
+import Data.Fin                        (Fin (..))
 import Data.Functor.Confusing          (confusing, fusing, iconfusing)
 import Data.Functor.Identity           (Identity (..))
 import Data.Functor.Product            (Product (..))
-import Data.Functor.Rep                (tabulate)
-import Data.Nat                        (Nat)
+import Data.Nat                        (Nat (..))
 import Data.Proxy                      (Proxy (..))
-import Data.Vec.DataFamily.SpineStrict (Vec (..))
+import Data.Vec.DataFamily.SpineStrict (Vec (..), tabulate)
 import GHC.Generics                    ((:*:) (..), M1 (..), Par1 (..), U1 (..))
 
+import qualified Control.Lens.Yocto              as Lens
+import qualified Data.Fin                        as F
 import qualified Data.Fin.Enum                   as F
 import qualified Data.Type.Nat                   as N
 import qualified Data.Vec.DataFamily.SpineStrict as V
 import qualified GHC.Generics                    as G
 
+#ifdef MIN_VERSION_transformers_compat
+import Control.Monad.Trans.Instances ()
+#endif
+
 -- $setup
 -- >>> :set -XDeriveGeneric
 -- >>> import Control.Applicative (Const (..))
--- >>> import Control.Lens (view, over)
 -- >>> import Data.Char (toUpper)
 -- >>> import Data.Void (absurd)
 -- >>> import GHC.Generics (Generic, Generic1)
@@ -119,13 +125,13 @@ gindex fa i = gfrom fa V.! F.gfrom i
 
 -- | Tabulate.
 --
--- >>> tabulate (\() -> 'x') :: Identity Char
+-- >>> gtabulate (\() -> 'x') :: Identity Char
 -- Identity 'x'
 --
--- >>> tabulate absurd :: Proxy Integer
+-- >>> gtabulate absurd :: Proxy Integer
 -- Proxy
 --
--- >>> tabulate absurd :: Proxy Integer
+-- >>> gtabulate absurd :: Proxy Integer
 -- Proxy
 --
 gtabulate
@@ -137,10 +143,10 @@ gtabulate idx = gto $ tabulate (idx . F.gto)
 
 -- | A lens. @i -> Lens' (t a) a@
 --
--- >>> view (gix ()) (Identity 'x')
+-- >>> Lens.view (gix ()) (Identity 'x')
 -- 'x'
 --
--- >>> over (gix ()) toUpper (Identity 'x')
+-- >>> Lens.over (gix ()) toUpper (Identity 'x')
 -- Identity 'X'
 --
 gix :: ( G.Generic i, F.GFrom i, G.Generic1 t, GTo t, GFrom t
@@ -148,8 +154,40 @@ gix :: ( G.Generic i, F.GFrom i, G.Generic1 t, GTo t, GFrom t
        , Functor f
        )
     => i -> (a -> f a) -> t a -> f (t a)
-gix i = fusing $ \ab ta -> gto <$> V.ix (F.gfrom i) ab (gfrom ta)
+gix i = fusing $ \ab ta -> gto <$> ix (F.gfrom i) ab (gfrom ta)
 
+-------------------------------------------------------------------------------
+-- Vendored in ix
+-------------------------------------------------------------------------------
+
+-- | Index lens.
+--
+-- >>> Lens.view (ix (FS FZ)) ('a' ::: 'b' ::: 'c' ::: VNil)
+-- 'b'
+--
+-- >>> Lens.set (ix (FS FZ)) 'x' ('a' ::: 'b' ::: 'c' ::: VNil)
+-- 'a' ::: 'x' ::: 'c' ::: VNil
+--
+ix :: forall n f a. (N.InlineInduction n, Functor f) => Fin n -> Lens.LensLike' f (Vec n a) a
+ix = getIxLens $ N.inlineInduction1 start step where
+    start :: IxLens f 'Z a
+    start = IxLens F.absurd
+
+    step :: IxLens f m a -> IxLens f ('S m) a
+    step (IxLens l) = IxLens $ \i -> case i of
+        FZ   -> _head
+        FS j -> _tail . l j
+
+newtype IxLens f n a = IxLens { getIxLens :: Fin n -> Lens.LensLike' f (Vec n a) a }
+
+_head :: Lens.Lens' (Vec ('S n) a) a
+_head f (x ::: xs) = (::: xs) <$> f x
+{-# INLINE _head #-}
+
+-- | Head lens. /Note:/ @lens@ 'Lens._head' is a 'Lens.Traversal''.
+_tail :: Lens.Lens' (Vec ('S n) a) (Vec n a)
+_tail f (x ::: xs) = (x :::) <$> f xs
+{-# INLINE _tail #-}
 
 -------------------------------------------------------------------------------
 -- Generic traversable with index

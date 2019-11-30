@@ -1,8 +1,12 @@
+packages: bin
 packages: dec
 packages: fin
-packages: vec
-packages: bin
 packages: ral
+packages: vec
+
+packages: ral-lens
+packages: vec-lens
+
 tests: true
 
 package dec
@@ -13,3 +17,11 @@ package fin
 
 package vec
   ghc-options: -Wall
+
+-- constraints: vec -distributive
+-- constraints: vec -semigroupoids
+-- constraints: vec -adjunctions
+
+-- constraints: ral -distributive
+-- constraints: ral -semigroupoids
+-- constraints: ral -adjunctions
