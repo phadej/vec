@@ -37,7 +37,6 @@ library
   ghc-options:      -Wall -fprint-explicit-kinds
   exposed-modules:
     Data.RAL
-    Data.RAL.Pos
     Data.RAL.Tree
 
   build-depends:
@@ -50,7 +49,6 @@ library
     , hashable       >=1.2.7.0 && <1.4
     , lens           >=4.16    && <4.19
     , semigroupoids  >=5.2.2   && <5.4
-    , vec            >=0.2.1   && <0.3
 
   if !impl(ghc >=8.0)
     build-depends: semigroups >=0.18.4 && <0.20
