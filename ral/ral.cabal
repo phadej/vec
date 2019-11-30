@@ -1,4 +1,4 @@
-cabal-version:      >=1.10
+cabal-version:      2.2
 name:               ral
 version:            0.1
 synopsis:           Length-indexed random access lists.
@@ -10,7 +10,7 @@ description:
 
 homepage:           https://github.com/phadej/vec
 bug-reports:        https://github.com/phadej/vec/issues
-license:            BSD3
+license:            GPL-2.0-or-later
 license-file:       LICENSE
 author:             Oleg Grenrus <oleg.grenrus@iki.fi>
 maintainer:         Oleg.Grenrus <oleg.grenrus@iki.fi>

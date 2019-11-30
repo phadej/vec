@@ -1,16 +1,16 @@
-cabal-version:      >=1.10
+cabal-version:      2.2
 name:               bin
 version:            0.1
 synopsis:           Bin: binary natural numbers.
 category:           Data, Dependent Types, Singletons, Math
 description:
-  This package provides a binary natural number.
-  Also on type level as @DataKinds@.
+  This package provides /binary natural numbers/ ("Data.Bin");
+  also utilities to work on the type level with @DataKinds@ ("Data.Type.Bin").
   .
   @
   data Bin
-  \    = BZ         -- ^ zero
-  \    | BN BinN    -- ^ non-zero
+  \    = BZ       -- ^ zero
+  \    | BN BinN  -- ^ non-zero
   .
   data BinN
   \    = BE       -- ^ one
@@ -18,12 +18,15 @@ description:
   \    | B1 BinN  -- ^ double plus 1
   @
   .
+  There are /ordinals/ in "Data.Bin.Pos" module, as well as
+  fixed width integers in "Data.Wid".
+  .
   Another implementation is at <https://hackage.haskell.org/package/nat>,
   this differs in naming, and provides promoted variant.
 
 homepage:           https://github.com/phadej/vec
 bug-reports:        https://github.com/phadej/vec/issues
-license:            BSD3
+license:            GPL-2.0-or-later
 license-file:       LICENSE
 author:             Oleg Grenrus <oleg.grenrus@iki.fi>
 maintainer:         Oleg.Grenrus <oleg.grenrus@iki.fi>
