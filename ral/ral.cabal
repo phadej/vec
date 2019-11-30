@@ -58,6 +58,10 @@ library
   if !impl(ghc >=7.10)
     build-depends: nats >=1.1.2 && <1.2
 
+  if impl(ghc >=8.0)
+    exposed-modules: Data.HRAL
+    build-depends:   hkd ==0.1.*
+
 -- dump-core
 -- if impl(ghc >= 8.0)
 --  build-depends: dump-core
