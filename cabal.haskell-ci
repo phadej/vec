@@ -3,6 +3,8 @@ tests:    >=8.0
 doctest:  >=8.6
 haddock:  >=8.6
 
+jobs-selection: any
+
 constraint-set vec-no-distributive
   constraints: vec -distributive
 

@@ -10,6 +10,8 @@ doctest :
 	doctest --fast -fdiagnostics-color=never vec/src
 	doctest --fast -fdiagnostics-color=never vec-lens/src
 	doctest --fast -fdiagnostics-color=never ral-lens/src
+	doctest --fast -fdiagnostics-color=never vec-optics/src
+	doctest --fast -fdiagnostics-color=never ral-optics/src
 
 ghcid-fin :
 	ghcid -c 'cabal new-repl fin' -C fin
