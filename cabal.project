@@ -10,6 +10,8 @@ packages: vec-lens
 packages: ral-optics
 packages: vec-optics
 
+packages: tests
+
 tests: true
 
 package dec

@@ -6,6 +6,7 @@
 - Add `mirror`, `weakenRight1` and `weakenLeft1`.
 - Add `Mult2` and `DivMod2`
 - Explicitly derive `Typeable SNat` and `Typeable LEProof`.
+- Derive 'Typeable' for 'Z' and 'S' on GHC-7.8 explicitly.
 
 ## 0.1
 

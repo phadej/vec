@@ -128,8 +128,9 @@ install:
     echo "packages: vec-lens" >> cabal.project
     if [ $HCNUMVER -ge 80000 ] ; then echo "packages: ral-optics" >> cabal.project ; fi
     if [ $HCNUMVER -ge 80000 ] ; then echo "packages: vec-optics" >> cabal.project ; fi
+    echo "packages: tests" >> cabal.project
   - |
-  - "for pkg in $($HCPKG list --simple-output); do echo $pkg | sed 's/-[^-]*$//' | (grep -vE -- '^(bin|dec|fin|ral|ral-lens|ral-optics|vec|vec-lens|vec-optics)$' || true) | sed 's/^/constraints: /' | sed 's/$/ installed/' >> cabal.project.local; done"
+  - "for pkg in $($HCPKG list --simple-output); do echo $pkg | sed 's/-[^-]*$//' | (grep -vE -- '^(bin|dec|fin|ral|ral-lens|ral-optics|tests|vec|vec-lens|vec-optics)$' || true) | sed 's/^/constraints: /' | sed 's/$/ installed/' >> cabal.project.local; done"
   - cat cabal.project || true
   - cat cabal.project.local || true
   - if [ -f "bin/configure.ac" ]; then (cd "bin" && autoreconf -i); fi
@@ -141,6 +142,7 @@ install:
   - if [ -f "vec-lens/configure.ac" ]; then (cd "vec-lens" && autoreconf -i); fi
   - if [ -f "ral-optics/configure.ac" ]; then (cd "ral-optics" && autoreconf -i); fi
   - if [ -f "vec-optics/configure.ac" ]; then (cd "vec-optics" && autoreconf -i); fi
+  - if [ -f "tests/configure.ac" ]; then (cd "tests" && autoreconf -i); fi
   - ${CABAL} v2-freeze $WITHCOMPILER ${TEST} ${BENCH} | color_cabal_output
   - "cat cabal.project.freeze | sed -E 's/^(constraints: *| *)//' | sed 's/any.//'"
   - rm  cabal.project.freeze
@@ -164,6 +166,7 @@ script:
   - PKGDIR_vec_lens="$(find . -maxdepth 1 -type d -regex '.*/vec-lens-[0-9.]*')"
   - PKGDIR_ral_optics="$(find . -maxdepth 1 -type d -regex '.*/ral-optics-[0-9.]*')"
   - PKGDIR_vec_optics="$(find . -maxdepth 1 -type d -regex '.*/vec-optics-[0-9.]*')"
+  - PKGDIR_tests="$(find . -maxdepth 1 -type d -regex '.*/tests-[0-9.]*')"
   # Generate cabal.project
   - rm -rf cabal.project cabal.project.local cabal.project.freeze
   - touch cabal.project
@@ -177,8 +180,9 @@ script:
     echo "packages: ${PKGDIR_vec_lens}" >> cabal.project
     if [ $HCNUMVER -ge 80000 ] ; then echo "packages: ${PKGDIR_ral_optics}" >> cabal.project ; fi
     if [ $HCNUMVER -ge 80000 ] ; then echo "packages: ${PKGDIR_vec_optics}" >> cabal.project ; fi
+    echo "packages: ${PKGDIR_tests}" >> cabal.project
   - |
-  - "for pkg in $($HCPKG list --simple-output); do echo $pkg | sed 's/-[^-]*$//' | (grep -vE -- '^(bin|dec|fin|ral|ral-lens|ral-optics|vec|vec-lens|vec-optics)$' || true) | sed 's/^/constraints: /' | sed 's/$/ installed/' >> cabal.project.local; done"
+  - "for pkg in $($HCPKG list --simple-output); do echo $pkg | sed 's/-[^-]*$//' | (grep -vE -- '^(bin|dec|fin|ral|ral-lens|ral-optics|tests|vec|vec-lens|vec-optics)$' || true) | sed 's/^/constraints: /' | sed 's/$/ installed/' >> cabal.project.local; done"
   - cat cabal.project || true
   - cat cabal.project.local || true
   # Building...
@@ -199,6 +203,7 @@ script:
   - if [ $HCNUMVER -ge 80600 ] ; then (cd ${PKGDIR_vec_lens} && doctest  src) ; fi
   - if [ $HCNUMVER -ge 80600 ] ; then (cd ${PKGDIR_ral_optics} && doctest  src) ; fi
   - if [ $HCNUMVER -ge 80600 ] ; then (cd ${PKGDIR_vec_optics} && doctest  src) ; fi
+  - if [ $HCNUMVER -ge 80600 ] ; then (cd ${PKGDIR_tests} && doctest  src) ; fi
   # cabal check...
   - (cd ${PKGDIR_bin} && ${CABAL} -vnormal check)
   - (cd ${PKGDIR_dec} && ${CABAL} -vnormal check)
@@ -209,6 +214,7 @@ script:
   - (cd ${PKGDIR_vec_lens} && ${CABAL} -vnormal check)
   - if [ $HCNUMVER -ge 80000 ] ; then (cd ${PKGDIR_ral_optics} && ${CABAL} -vnormal check) ; fi
   - if [ $HCNUMVER -ge 80000 ] ; then (cd ${PKGDIR_vec_optics} && ${CABAL} -vnormal check) ; fi
+  - (cd ${PKGDIR_tests} && ${CABAL} -vnormal check)
   # haddock...
   - if [ $HCNUMVER -ge 80600 ] ; then ${CABAL} v2-haddock $WITHCOMPILER --with-haddock $HADDOCK ${TEST} ${BENCH} all | color_cabal_output ; fi
   # Building without installed constraints for packages in global-db...
