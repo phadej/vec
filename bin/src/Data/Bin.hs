@@ -1,5 +1,11 @@
 {-# LANGUAGE BangPatterns       #-}
+{-# LANGUAGE CPP                #-}
 {-# LANGUAGE DeriveDataTypeable #-}
+
+#if __GLASGOW_HASKELL__ < 710
+{-# LANGUAGE DataKinds          #-}
+{-# LANGUAGE StandaloneDeriving #-}
+#endif
 -- | Binary natural numbers, 'Bin'.
 --
 -- This module is designed to be imported qualified.
@@ -46,7 +52,8 @@ import Data.Typeable   (Typeable)
 import GHC.Exception   (ArithException (..), throw)
 import Numeric.Natural (Natural)
 
-import qualified Data.Nat as N
+import qualified Data.Nat        as N
+import qualified Test.QuickCheck as QC
 
 -- $setup
 -- >>> import Data.List (sort)
@@ -75,6 +82,11 @@ data Bin
     | BN BinN    -- ^ non-zero
   deriving (Eq, Ord, Typeable, Data)
 
+#if __GLASGOW_HASKELL__ < 710
+deriving instance Typeable 'BZ
+deriving instance Typeable 'BN
+#endif
+
 -- | Non-zero binary natural numbers.
 --
 -- We could have called this type @Bin1@,
@@ -84,6 +96,12 @@ data BinN
     | B0 BinN  -- ^ mult2
     | B1 BinN  -- ^ mult2 plus 1
   deriving (Eq, Typeable, Data)
+
+#if __GLASGOW_HASKELL__ < 710
+deriving instance Typeable 'BE
+deriving instance Typeable 'B0
+deriving instance Typeable 'B1
+#endif
 
 -- >>> sort [0 .. 9 :: Bin]
 -- [0,1,2,3,4,5,6,7,8,9]
@@ -258,6 +276,51 @@ mult2Plus1 BZ     = BE
 mult2Plus1 (BN b) = B1 b
 
 -------------------------------------------------------------------------------
+-- QuickCheck
+-------------------------------------------------------------------------------
+
+instance QC.Arbitrary Bin where
+    arbitrary = QC.frequency [ (1, return BZ), (20, fmap BN QC.arbitrary) ]
+
+    shrink BZ     = []
+    shrink (BN b) = BZ : map BN (QC.shrink b)
+
+instance QC.CoArbitrary Bin where
+    coarbitrary = QC.coarbitrary . sp where
+        sp :: Bin -> Maybe BinN
+        sp BZ     = Nothing
+        sp (BN n) = Just n
+
+instance QC.Function Bin where
+    function = QC.functionMap sp (maybe BZ BN) where
+        sp :: Bin -> Maybe BinN
+        sp BZ     = Nothing
+        sp (BN n) = Just n
+
+instance QC.Arbitrary BinN where
+    arbitrary = do
+        bs <- QC.arbitrary :: QC.Gen [Bool]
+        return (foldr (\b -> if b then B1 else B0) BE bs)
+
+    shrink BE     = []
+    shrink (B1 b) = b : B0 b : map B1 (QC.shrink b)
+    shrink (B0 b) = b : map B0 (QC.shrink b)
+
+instance QC.CoArbitrary BinN where
+    coarbitrary = QC.coarbitrary . sp where
+        sp :: BinN -> Maybe (Either BinN BinN)
+        sp BE     = Nothing
+        sp (B0 b) = Just (Left b)
+        sp (B1 b) = Just (Right b)
+
+instance QC.Function BinN where
+    function = QC.functionMap sp (maybe BE (either B0 B1)) where
+        sp :: BinN -> Maybe (Either BinN BinN)
+        sp BE     = Nothing
+        sp (B0 b) = Just (Left b)
+        sp (B1 b) = Just (Right b)
+
+-------------------------------------------------------------------------------
 -- Showing
 -------------------------------------------------------------------------------
 
@@ -325,7 +388,7 @@ instance Bits Bin where
 
     complementBit BZ n     = bit n
     complementBit (BN b) n = complementBitN b n
-    
+
     zeroBits = BZ
 
     shiftL BZ _     = BZ
@@ -349,7 +412,7 @@ instance Bits Bin where
     complement  _  = error "compelement @Bin is undefined"
     bitSizeMaybe _ = Nothing
     bitSize _      = error "bitSize @Bin is undefined"
-    isSigned _     = True
+    isSigned _     = False
 
 andN :: BinN -> BinN -> Bin
 andN BE     BE     = BN BE

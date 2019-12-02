@@ -34,19 +34,21 @@ module Data.Bin.Pos (
     ) where
 
 import Prelude
-       (Bounded (..), Eq, map, Int, Ord (..), Ordering (..), Show (..),
-       ShowS, String, showParen, showString, ($), (*), (+), (.), (++))
+       (Bounded (..), Eq, Int, Integer, Num, Ord (..), Ordering (..),
+       Show (..), ShowS, String, Either (..), either, fmap, fromIntegral, map, showParen,
+       showString, ($), (*), (+), (++), (.))
 
-import Data.Bin            (Bin (..), BinN (..))
-import Data.Nat            (Nat (..))
-import Data.Proxy          (Proxy (..))
-import Data.Typeable       (Typeable)
-import Data.Wid            (Wid (..))
-import Numeric.Natural     (Natural)
+import Data.Bin        (Bin (..), BinN (..))
+import Data.Nat        (Nat (..))
+import Data.Proxy      (Proxy (..))
+import Data.Typeable   (Typeable)
+import Data.Wid        (Wid (..))
+import Numeric.Natural (Natural)
 
-import qualified Data.Type.Bin as B
-import qualified Data.Type.Nat as N
-import qualified Data.Wid      as W
+import qualified Data.Type.Bin   as B
+import qualified Data.Type.Nat   as N
+import qualified Data.Wid        as W
+import qualified Test.QuickCheck as QC
 
 import Data.Type.Bin
 
@@ -68,7 +70,7 @@ data Pos (b :: Bin) where
 
 -- | 'PosN' is to 'BinN' is what 'Fin' is to 'Nat', when 'n' is 'Z'.
 newtype PosN (b :: BinN) = PosN { unPosN :: PosN' 'Z b }
-  deriving (Eq, Ord)
+  deriving (Eq, Ord, Typeable)
 
 -- | 'PosN'' is a structure inside 'PosN'.
 data PosN' (n :: Nat) (b :: BinN) where
@@ -125,6 +127,56 @@ instance (N.SNatI n, SBinNI b) => Bounded (PosN' n b) where
         SBE -> AtEnd maxBound
         SB0 -> There0 maxBound
         SB1 -> There1 maxBound
+
+-------------------------------------------------------------------------------
+-- QuickCheck
+-------------------------------------------------------------------------------
+
+instance (SBinNI n, b ~ 'BN n) => QC.Arbitrary (Pos b) where
+    arbitrary = fmap Pos QC.arbitrary
+
+instance QC.CoArbitrary (Pos b) where
+    coarbitrary = QC.coarbitrary . (fromIntegral :: Natural -> Integer) . toNatural
+
+instance (SBinNI n, b ~ 'BN n) => QC.Function (Pos b) where
+    function = QC.functionMap (\(Pos p) -> p) Pos
+
+instance SBinNI b => QC.Arbitrary (PosN b) where
+    arbitrary = fmap PosN QC.arbitrary
+
+instance QC.CoArbitrary (PosN b) where
+    coarbitrary = QC.coarbitrary . (fromIntegral :: Natural -> Integer) . toNaturalN
+
+instance SBinNI b => QC.Function (PosN b) where
+    function = QC.functionMap (\(PosN p) -> p) PosN
+
+instance (N.SNatI n, SBinNI b) => QC.Arbitrary (PosN' n b) where
+    arbitrary = case sbinN :: SBinN b of
+        SBE -> fmap AtEnd QC.arbitrary
+        SB0 -> fmap There0 QC.arbitrary
+        SB1 -> sb1freq
+      where
+        sb1freq :: forall bb. SBinNI bb => QC.Gen (PosN' n ('B1 bb))
+        sb1freq = QC.frequency
+            [ (fHere,  fmap Here QC.arbitrary)
+            , (fThere, fmap There1 QC.arbitrary)
+            ]
+          where
+            fHere  = getKNat (exp2 :: KNat Int n)
+            fThere = fHere * 2 * B.reflectNToNum (Proxy :: Proxy bb)
+
+instance N.SNatI n => QC.CoArbitrary (PosN' n b) where
+    coarbitrary = QC.coarbitrary . (fromIntegral :: Natural -> Integer) . toNaturalN'
+
+instance (N.SNatI n, SBinNI b) => QC.Function (PosN' n b) where
+    function = case sbinN :: SBinN b of
+        SBE -> QC.functionMap (\(AtEnd t)  -> t) AtEnd
+        SB0 -> QC.functionMap (\(There0 r) -> r) There0
+        SB1 -> QC.functionMap sp (either Here There1) where
+      where
+        sp :: PosN' n ('B1 bb) -> Either (Wid n) (PosN' ('S n) bb)
+        sp (Here t)   = Left t
+        sp (There1 p) = Right p
 
 -------------------------------------------------------------------------------
 -- Showing
@@ -191,7 +243,7 @@ toNaturalN' (Here v)   = W.toNatural v
 toNaturalN' (There1 p) = getKNat (exp2 :: KNat Natural n) + toNaturalN' p
 toNaturalN' (There0 p) = toNaturalN' p
 
-exp2 :: N.SNatI n => KNat Natural n
+exp2 :: Num a => N.SNatI n => KNat a n
 exp2 = N.induction (KNat 1) (\(KNat n) -> KNat (n * 2))
 
 -------------------------------------------------------------------------------

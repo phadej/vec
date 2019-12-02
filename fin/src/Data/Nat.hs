@@ -1,4 +1,10 @@
+{-# LANGUAGE CPP                #-}
 {-# LANGUAGE DeriveDataTypeable #-}
+
+#if __GLASGOW_HASKELL__ < 710
+{-# LANGUAGE DataKinds          #-}
+{-# LANGUAGE StandaloneDeriving #-}
+#endif
 -- | 'Nat' numbers.
 --
 -- This module is designed to be imported qualified.
@@ -23,6 +29,8 @@ import Data.Typeable   (Typeable)
 import GHC.Exception   (ArithException (..), throw)
 import Numeric.Natural (Natural)
 
+import qualified Test.QuickCheck as QC
+
 -------------------------------------------------------------------------------
 -- Nat
 -------------------------------------------------------------------------------
@@ -32,6 +40,11 @@ import Numeric.Natural (Natural)
 -- Better than GHC's built-in 'GHC.TypeLits.Nat' for some use cases.
 --
 data Nat = Z | S Nat deriving (Eq, Ord, Typeable, Data)
+
+#if __GLASGOW_HASKELL__ < 710
+deriving instance Typeable 'Z
+deriving instance Typeable 'S
+#endif
 
 -- | 'Nat' is printed as 'Natural'.
 --
@@ -89,6 +102,23 @@ instance NFData Nat where
 
 instance Hashable Nat where
     hashWithSalt salt = hashWithSalt salt . toInteger
+
+-------------------------------------------------------------------------------
+-- QuickCheck
+-------------------------------------------------------------------------------
+
+instance QC.Arbitrary Nat where
+    arbitrary = fmap fromNatural QC.arbitrarySizedNatural
+
+    shrink Z     = []
+    shrink (S n) = n : QC.shrink n
+
+instance QC.CoArbitrary Nat where
+    coarbitrary Z     = QC.variant (0 :: Int) 
+    coarbitrary (S n) = QC.variant (1 :: Int) . QC.coarbitrary n
+
+instance QC.Function Nat where
+    function = QC.functionIntegral
 
 -------------------------------------------------------------------------------
 -- Showing

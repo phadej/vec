@@ -16,6 +16,23 @@ module Data.Wid (
     toNatural,
     -- * Universe
     universe,
+    -- * Bits
+    --
+    -- | We have implementation of some 'Bits' members, which doesn't
+    -- need 'N.SNatI' constraint.
+    xor,
+    (.&.),
+    (.|.),
+    complement,
+    shiftR,
+    shiftL,
+    rotateL,
+    rotateR,
+    popCount,
+    setBit,
+    clearBit,
+    complementBit,
+    testBit,
     -- * Extras
     shiftL1,
     shiftR1,
@@ -24,14 +41,16 @@ module Data.Wid (
     ) where
 
 import Control.DeepSeq (NFData (..))
-import Data.Bits       (Bits (..), FiniteBits (..))
 import Data.Hashable   (Hashable (..))
 import Data.Nat        (Nat (..))
 import Data.Proxy      (Proxy (..))
 import Data.Typeable   (Typeable)
 import Numeric.Natural (Natural)
 
-import qualified Data.Type.Nat as N
+import qualified Data.Type.Nat   as N
+import qualified Test.QuickCheck as QC
+
+import qualified Data.Bits as I (Bits (..), FiniteBits (..))
 
 -- $setup
 -- >>> :set -XDataKinds
@@ -105,7 +124,7 @@ instance N.SNatI n => Bounded (Wid n) where
 -- Bits & FiniteBits
 -------------------------------------------------------------------------------
 
--- | 'bitSize', 'bitSizeMaybe', and 'bit' are unimplemented.
+-- |
 --
 -- >>> let u = W0 $ W0 $ W1 $ W1 WE
 -- >>> let v = W0 $ W1 $ W0 $ W1 WE
@@ -127,72 +146,133 @@ instance N.SNatI n => Bounded (Wid n) where
 -- >>> popCount u
 -- 2
 --
-instance Bits (Wid n) where
-    complement WE     = WE
-    complement (W0 w) = W1 (complement w)
-    complement (W1 w) = W0 (complement w)
-
-    WE   .&. _    = WE
-    W1 a .&. W1 b = W1 (a .&. b)
-    W1 a .&. W0 b = W0 (a .&. b)
-    W0 a .&. W1 b = W0 (a .&. b)
-    W0 a .&. W0 b = W0 (a .&. b)
-
-    WE   .|. _    = WE
-    W1 a .|. W1 b = W1 (a .|. b)
-    W1 a .|. W0 b = W1 (a .|. b)
-    W0 a .|. W1 b = W1 (a .|. b)
-    W0 a .|. W0 b = W0 (a .|. b)
-
-    xor (WE  )  _     = WE
-    xor (W1 a) (W1 b) = W0 (xor a b)
-    xor (W1 a) (W0 b) = W1 (xor a b)
-    xor (W0 a) (W1 b) = W1 (xor a b)
-    xor (W0 a) (W0 b) = W0 (xor a b)
+instance N.SNatI n => I.Bits (Wid n) where
+    complement = complement
+    (.&.) = (.&.)
+    (.|.) = (.|.)
+    xor   = xor
 
     isSigned _ = False
 
-    shiftR w n
-        | n <= 0 = w
-        | otherwise = shiftR (shiftR1 w) (pred n)
+    shiftR = shiftR
+    shiftL = shiftL
+    rotateR = rotateR
+    rotateL = rotateL
 
-    shiftL w n
-        | n <= 0 = w
-        | otherwise = shiftL (shiftL1 w) (pred n)
+    clearBit      = clearBit
+    complementBit = complementBit
+    setBit        = setBit
+    testBit       = testBit
 
-    rotateR w n
-        | n <= 0 = w
-        | otherwise = rotateR (rotateR1 w) (pred n)
+    zeroBits = N.induction WE W0
 
-    rotateL w n
-        | n <= 0 = w
-        | otherwise = rotateL (rotateL1 w) (pred n)
+    popCount = popCount
 
-    popCount = go 0 where
-        go :: Int -> Wid m -> Int
-        go !acc WE     = acc
-        go !acc (W0 w) = go acc w
-        go !acc (W1 w) = go (succ acc) w
+    -- this is good enough
+    bit = setBit I.zeroBits
 
-    testBit WE _ = False
-    testBit (W0 w) n = if n == 0 then False else testBit w (pred n)
-    testBit (W1 w) n = if n == 0 then True  else testBit w (pred n)
+    bitSizeMaybe = Just . I.finiteBitSize
+    bitSize      = I.finiteBitSize
 
-    -- this is wrong, but we don't want N.SNatI n here.
-    bitSize      _ = error "bitSize @(Wid n) is unimplenented"
-    bitSizeMaybe _ = error "bitSizeMaybe @(Wid n) is unimplenented"
-    bit          _ = error "bit @(Wid n) is unimplenented"
-
-instance N.SNatI n => FiniteBits (Wid n) where
+instance N.SNatI n => I.FiniteBits (Wid n) where
     finiteBitSize _ = N.reflectToNum (Proxy :: Proxy n)
 
 #if MIN_VERSION_base(4,8,0)
-    countLeadingZeros = go 0 where
-        go :: Int -> Wid m -> Int
-        go !acc WE     = acc
-        go !acc (W0 w) = go (succ acc) w
-        go !acc (W1 _) = acc
+    countLeadingZeros = countLeadingZeros
 #endif
+
+testBit :: Wid n -> Int -> Bool
+testBit w0 i = snd (go 0 w0) where
+    go :: Int -> Wid n -> (Int, Bool)
+    go j WE = (j, False)
+    go j (W0 w) =
+        let j''      = succ j'
+            (j', b') = go j w
+        in (j'', if i == j' then False else b')
+    go j (W1 w) =
+        let j''      = succ j'
+            (j', b') = go j w
+        in (j'', if i == j' then True else b')
+    
+
+mapWithBit :: (Bool -> Int -> Bool) -> Wid n -> Wid n
+mapWithBit f = snd . go 0 where
+    go :: Int -> Wid n -> (Int, Wid n)
+    go i WE     = (i, WE)
+    go i (W0 w) = 
+        let (i'', b)  = g False i'
+            (i',  w') = go i w
+        in (i'', if b then W1 w' else W0 w')
+    go i (W1 w) = 
+        let (i'', b)  = g True i'
+            (i',  w') = go i w
+        in (i'', if b then W1 w' else W0 w')
+    
+    g :: Bool -> Int -> (Int, Bool)
+    g b j = (succ j, f b j)
+
+clearBit          :: Wid n -> Int -> Wid n
+clearBit      w i = mapWithBit (\b j -> if j == i then False else b) w
+
+setBit            :: Wid n -> Int -> Wid n
+setBit        w i = mapWithBit (\b j -> if j == i then True  else b) w
+
+complementBit     :: Wid n -> Int -> Wid n
+complementBit w i = mapWithBit (\b j -> if j == i then not b else b) w
+
+
+complement :: Wid n -> Wid n
+complement WE     = WE
+complement (W0 w) = W1 (complement w)
+complement (W1 w) = W0 (complement w)
+
+(.&.) :: Wid n -> Wid n -> Wid n
+WE   .&. _    = WE
+W1 a .&. W1 b = W1 (a .&. b)
+W1 a .&. W0 b = W0 (a .&. b)
+W0 a .&. W1 b = W0 (a .&. b)
+W0 a .&. W0 b = W0 (a .&. b)
+
+(.|.) :: Wid n -> Wid n -> Wid n
+WE   .|. _    = WE
+W1 a .|. W1 b = W1 (a .|. b)
+W1 a .|. W0 b = W1 (a .|. b)
+W0 a .|. W1 b = W1 (a .|. b)
+W0 a .|. W0 b = W0 (a .|. b)
+
+xor :: Wid n -> Wid n -> Wid n
+xor WE      _     = WE
+xor (W1 a) (W1 b) = W0 (xor a b)
+xor (W1 a) (W0 b) = W1 (xor a b)
+xor (W0 a) (W1 b) = W1 (xor a b)
+xor (W0 a) (W0 b) = W0 (xor a b)
+
+shiftR :: Wid n -> Int -> Wid n
+shiftR w n
+    | n <= 0 = w
+    | otherwise = shiftR (shiftR1 w) (pred n)
+
+shiftL :: Wid n -> Int -> Wid n
+shiftL w n
+    | n <= 0 = w
+    | otherwise = shiftL (shiftL1 w) (pred n)
+
+rotateR :: Wid n -> Int -> Wid n
+rotateR w n
+    | n <= 0 = w
+    | otherwise = rotateR (rotateR1 w) (pred n)
+
+rotateL :: Wid n -> Int -> Wid n
+rotateL w n
+    | n <= 0 = w
+    | otherwise = rotateL (rotateL1 w) (pred n)
+
+popCount :: Wid n -> Int
+popCount = go 0 where
+    go :: Int -> Wid m -> Int
+    go !acc WE     = acc
+    go !acc (W0 w) = go acc w
+    go !acc (W1 w) = go (succ acc) w
 
 shiftL1 :: Wid n -> Wid n
 shiftL1 WE = WE
@@ -244,6 +324,47 @@ dropLast' (W0 w@(W0 _)) = fmap W0 (dropLast' w)
 dropLast' (W0 w@(W1 _)) = fmap W0 (dropLast' w)
 dropLast' (W1 w@(W0 _)) = fmap W1 (dropLast' w)
 dropLast' (W1 w@(W1 _)) = fmap W1 (dropLast' w)
+
+countLeadingZeros :: Wid n -> Int
+countLeadingZeros = go 0 where
+    go :: Int -> Wid m -> Int
+    go !acc WE     = acc
+    go !acc (W0 w) = go (succ acc) w
+    go !acc (W1 _) = acc
+
+-------------------------------------------------------------------------------
+-- QuickCheck
+-------------------------------------------------------------------------------
+
+instance N.SNatI n => QC.Arbitrary (Wid n) where
+    arbitrary = case N.snat :: N.SNat n of
+        N.SZ -> return WE
+        N.SS -> QC.oneof [ fmap W0 QC.arbitrary, fmap W1 QC.arbitrary ]
+
+    shrink = shrink
+
+shrink :: Wid n -> [Wid n]
+shrink WE = []
+shrink (W1 w) = W0 w : fmap W1 (shrink w)
+shrink (W0 w) = fmap W0 (shrink w)
+
+instance QC.CoArbitrary (Wid n) where
+    coarbitrary WE     = id
+    coarbitrary (W0 w) = QC.coarbitrary (False, w)
+    coarbitrary (W1 w) = QC.coarbitrary (True,  w)
+
+instance N.SNatI n => QC.Function (Wid n) where
+    function = case N.snat :: N.SNat n of
+        N.SZ -> QC.functionMap (const ()) (const WE)
+        N.SS -> QC.functionMap toPair fromPair
+      where
+        toPair :: Wid ('S m) -> (Bool, Wid m)
+        toPair (W0 w) = (False, w)
+        toPair (W1 w) = (True,  w)
+
+        fromPair :: (Bool, Wid m) -> Wid ('S m)
+        fromPair (False, w) = W0 w
+        fromPair (True,  w) = W1 w
 
 -------------------------------------------------------------------------------
 -- Showing

@@ -5,6 +5,7 @@
 {-# LANGUAGE KindSignatures       #-}
 {-# LANGUAGE ScopedTypeVariables  #-}
 {-# LANGUAGE StandaloneDeriving   #-}
+{-# LANGUAGE TypeOperators        #-}
 {-# LANGUAGE UndecidableInstances #-}
 -- | Finite numbers.
 --
@@ -61,6 +62,11 @@ import Numeric.Natural    (Natural)
 
 import qualified Data.List.NonEmpty as NE
 import qualified Data.Type.Nat      as N
+import qualified Test.QuickCheck    as QC
+
+-------------------------------------------------------------------------------
+-- Type
+-------------------------------------------------------------------------------
 
 -- | Finite numbers: @[0..n-1]@.
 data Fin (n :: Nat) where
@@ -194,6 +200,39 @@ instance NFData (Fin n) where
 
 instance Hashable (Fin n) where
     hashWithSalt salt = hashWithSalt salt . cata (0 :: Integer) succ
+
+-------------------------------------------------------------------------------
+-- QuickCheck
+-------------------------------------------------------------------------------
+
+instance (n ~ 'S m, N.SNatI m) => QC.Arbitrary (Fin n) where
+    arbitrary = getArb $ N.induction (Arb (return FZ)) step where
+        step :: forall p. N.SNatI p => Arb p -> Arb ('S p)
+        step (Arb p) = Arb $ QC.frequency
+            [ (1,                                 return FZ)
+            , (N.reflectToNum (Proxy :: Proxy p), fmap FS p)
+            ]
+
+    shrink = shrink
+
+shrink :: Fin n -> [Fin n]
+shrink FZ      = []
+shrink (FS FZ) = [FZ]
+shrink (FS n)  = map FS (shrink n)
+
+newtype Arb n = Arb { getArb :: QC.Gen (Fin ('S n)) }
+
+instance QC.CoArbitrary (Fin n) where
+    coarbitrary FZ     = QC.variant (0 :: Int)
+    coarbitrary (FS n) = QC.variant (1 :: Int) . QC.coarbitrary n
+
+instance (n ~ 'S m, N.SNatI m) => QC.Function (Fin n) where
+    function = case N.snat :: N.SNat m of
+        N.SZ -> QC.functionMap (\FZ -> ()) (\() -> FZ)
+        N.SS -> QC.functionMap isMin       (maybe FZ FS)
+
+-- TODO: https://github.com/nick8325/quickcheck/pull/283
+-- newtype Fun b m = Fun { getFun :: (Fin ('S m) -> b) -> Fin ('S m) QC.:-> b }
 
 -------------------------------------------------------------------------------
 -- Showing

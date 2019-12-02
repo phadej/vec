@@ -19,6 +19,7 @@ module Data.Type.Bin (
     withSBin, withSBinN,
     reify, reifyN,
     reflect, reflectN,
+    reflectToNum, reflectNToNum,
     -- * Type equality
     eqBin, eqBinN,
     -- * Induction
@@ -132,6 +133,19 @@ reflect p = case sbin :: SBin b of
 -- | Reflect type-level 'BinN' to the term level.
 reflectN :: forall b proxy. SBinNI b => proxy b -> BinN
 reflectN _ = unKN (inductionN (KN BE) (mapKN B0) (mapKN B1) :: KN BinN b)
+
+-- | Reflect type-level 'Bin' to the term level 'Num'.
+reflectToNum :: forall b proxy a. (SBinI b, Num a) => proxy b -> a
+reflectToNum p = case sbin :: SBin b of
+    SBZ -> 0
+    SBN -> aux p
+  where
+    aux :: forall bn. SBinNI bn => proxy ('BN bn) -> a
+    aux _ = reflectNToNum (Proxy :: Proxy bn)
+
+-- | Reflect type-level 'BinN' to the term level 'Num'.
+reflectNToNum :: forall b proxy a. (SBinNI b, Num a) => proxy b -> a
+reflectNToNum _ = unKN (inductionN (KN 1) (mapKN (2*)) (mapKN (\x -> 2 * x + 1)) :: KN a b)
 
 -- | Convert 'SBin' to 'Bin'
 sbinToBin :: forall n. SBin n -> Bin
