@@ -132,7 +132,7 @@ import Data.RAL.Tree (Tree (..))
 -- >>> :set -XScopedTypeVariables -XDataKinds
 -- >>> import Prelude (print, Char, Bounded (..))
 -- >>> import Data.List (sort)
--- >>> import Data.Fiw (Fiw (..))
+-- >>> import Data.Wrd (Wrd (..))
 -- >>> import Data.Bin.Pos (top, pop)
 -- >>> import qualified Data.Bin.Pos as P
 

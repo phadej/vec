@@ -19,7 +19,7 @@ description:
   @
   .
   There are /ordinals/ in "Data.Bin.Pos" module, as well as
-  fixed width integers in "Data.Fiw".
+  fixed width integers in "Data.Wrd".
   .
   Another implementation is at <https://hackage.haskell.org/package/nat>,
   this differs in naming, and provides promoted variant.
@@ -56,7 +56,7 @@ library
     Data.Bin.Pos
     Data.BinP
     Data.BinP.PosP
-    Data.Fiw
+    Data.Wrd
     Data.Type.Bin
     Data.Type.BinP
 

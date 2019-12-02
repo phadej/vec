@@ -11,7 +11,7 @@ module Data.RAL.Optics (
 import Control.Applicative ((<$>))
 import Data.Bin.Pos        (Pos (..))
 import Data.BinP.PosP      (PosP (..), PosP' (..))
-import Data.Fiw            (Fiw (..))
+import Data.Wrd            (Wrd (..))
 import Prelude             (Functor)
 
 import qualified Optics.Core as L
@@ -51,7 +51,7 @@ ixNEVL (There0 i) f (Cons0   r) = Cons0 <$> ixNEVL i f r
 ixNEVL (There1 i) f (Cons1 t r) = (t `Cons1`) <$> ixNEVL i f r
 ixNEVL (Here i)   f (Cons1 t r) = (`Cons1` r) <$> treeIxVL i f t
 
-treeIxVL :: Functor f => Fiw n -> LensLikeVL' f (Tree n a) a
+treeIxVL :: Functor f => Wrd n -> LensLikeVL' f (Tree n a) a
 treeIxVL WE      f (Leaf x)   = Leaf <$> f x
 treeIxVL (W0 is) f (Node x y) = (`Node` y) <$> treeIxVL is f x
 treeIxVL (W1 is) f (Node x y) = (x `Node`) <$> treeIxVL is f y
