@@ -10,44 +10,36 @@
 {-# LANGUAGE StandaloneDeriving     #-}
 {-# LANGUAGE UndecidableInstances   #-}
 module Data.Bin.Pos (
-    Pos (..),
-    PosN (..),
-    PosN' (..),
+    Pos (..), PosP,
     -- * Top & Pop
     top, pop, Pop,
     -- * Showing
     explicitShow,
-    explicitShowN,
-    explicitShowN',
     explicitShowsPrec,
-    explicitShowsPrecN,
-    explicitShowsPrecN',
     -- * Conversions
-    toNatural, toNaturalN, toNaturalN',
+    toNatural,
     -- * Interesting
     absurd,
     boring,
     -- * Weakening (succ)
-    weakenRight1, weakenRight1N,
+    weakenRight1,
     -- * Universe
-    universe, universeN, universeN',
+    universe,
     ) where
 
 import Prelude
-       (Bounded (..), Eq, Int, Integer, Num, Ord (..), Ordering (..),
-       Show (..), ShowS, String, Either (..), either, fmap, fromIntegral, map, showParen,
-       showString, ($), (*), (+), (++), (.))
+       (Bounded (..), Eq, Int, Integer, Ord (..), Show (..), ShowS, String,
+       fmap, fromIntegral, map, showParen, showString, ($), (.))
 
-import Data.Bin        (Bin (..), BinN (..))
+import Data.Bin        (Bin (..), BinP (..))
+import Data.BinP.PosP  (PosP (..), PosP' (..))
 import Data.Nat        (Nat (..))
-import Data.Proxy      (Proxy (..))
 import Data.Typeable   (Typeable)
-import Data.Wid        (Wid (..))
+import Data.Fiw        (Fiw (..))
 import Numeric.Natural (Natural)
 
+import qualified Data.BinP.PosP  as PP
 import qualified Data.Type.Bin   as B
-import qualified Data.Type.Nat   as N
-import qualified Data.Wid        as W
 import qualified Test.QuickCheck as QC
 
 import Data.Type.Bin
@@ -65,32 +57,11 @@ import Data.Type.Bin
 -- The name is picked, as sthe lack of beter alternatives.
 --
 data Pos (b :: Bin) where
-    Pos :: PosN b -> Pos ('BN b)
-  deriving (Typeable)
-
--- | 'PosN' is to 'BinN' is what 'Fin' is to 'Nat', when 'n' is 'Z'.
-newtype PosN (b :: BinN) = PosN { unPosN :: PosN' 'Z b }
-  deriving (Eq, Ord, Typeable)
-
--- | 'PosN'' is a structure inside 'PosN'.
-data PosN' (n :: Nat) (b :: BinN) where
-    AtEnd  :: Wid n          -> PosN' n 'BE      -- ^ position is either at the last digit;
-    Here   :: Wid n          -> PosN' n ('B1 b)  -- ^ somewhere here
-    There1 :: PosN' ('S n) b -> PosN' n ('B1 b)  -- ^ or there, if the bit is one;
-    There0 :: PosN' ('S n) b -> PosN' n ('B0 b)  -- ^ or only there if it is none.
+    Pos :: PosP b -> Pos ('BP b)
   deriving (Typeable)
 
 deriving instance Eq (Pos b)
 deriving instance Ord (Pos b)
-
-deriving instance Eq (PosN' n b)
-instance Ord (PosN' n b) where
-    compare (AtEnd  x) (AtEnd  y) = compare x y
-    compare (Here   x) (Here   y) = compare x y
-    compare (Here   _) (There1 _) = LT
-    compare (There1 _) (Here   _) = GT
-    compare (There1 x) (There1 y) = compare x y
-    compare (There0 x) (There0 y) = compare x y
 
 -------------------------------------------------------------------------------
 -- Instances
@@ -99,84 +70,26 @@ instance Ord (PosN' n b) where
 instance Show (Pos b) where
     showsPrec d = showsPrec d . toNatural
 
-instance Show (PosN b) where
-    showsPrec d = showsPrec d . toNaturalN
-
-instance N.SNatI n => Show (PosN' n b) where
-    showsPrec d = showsPrec d . toNaturalN'
-
 -- |
 --
 -- >>> minBound < (maxBound :: Pos Bin5)
 -- True
-instance (SBinNI n, b ~ 'BN n) => Bounded (Pos b) where
+instance (SBinPI n, b ~ 'BP n) => Bounded (Pos b) where
     minBound = Pos minBound
     maxBound = Pos maxBound
-
-instance SBinNI b => Bounded (PosN b) where
-    minBound = PosN minBound
-    maxBound = PosN maxBound
-
-instance (N.SNatI n, SBinNI b) => Bounded (PosN' n b) where
-    minBound = case sbinN :: SBinN b of
-        SBE -> AtEnd minBound
-        SB0 -> There0 minBound
-        SB1 -> Here minBound
-
-    maxBound = case sbinN :: SBinN b of
-        SBE -> AtEnd maxBound
-        SB0 -> There0 maxBound
-        SB1 -> There1 maxBound
 
 -------------------------------------------------------------------------------
 -- QuickCheck
 -------------------------------------------------------------------------------
 
-instance (SBinNI n, b ~ 'BN n) => QC.Arbitrary (Pos b) where
+instance (SBinPI n, b ~ 'BP n) => QC.Arbitrary (Pos b) where
     arbitrary = fmap Pos QC.arbitrary
 
 instance QC.CoArbitrary (Pos b) where
     coarbitrary = QC.coarbitrary . (fromIntegral :: Natural -> Integer) . toNatural
 
-instance (SBinNI n, b ~ 'BN n) => QC.Function (Pos b) where
+instance (SBinPI n, b ~ 'BP n) => QC.Function (Pos b) where
     function = QC.functionMap (\(Pos p) -> p) Pos
-
-instance SBinNI b => QC.Arbitrary (PosN b) where
-    arbitrary = fmap PosN QC.arbitrary
-
-instance QC.CoArbitrary (PosN b) where
-    coarbitrary = QC.coarbitrary . (fromIntegral :: Natural -> Integer) . toNaturalN
-
-instance SBinNI b => QC.Function (PosN b) where
-    function = QC.functionMap (\(PosN p) -> p) PosN
-
-instance (N.SNatI n, SBinNI b) => QC.Arbitrary (PosN' n b) where
-    arbitrary = case sbinN :: SBinN b of
-        SBE -> fmap AtEnd QC.arbitrary
-        SB0 -> fmap There0 QC.arbitrary
-        SB1 -> sb1freq
-      where
-        sb1freq :: forall bb. SBinNI bb => QC.Gen (PosN' n ('B1 bb))
-        sb1freq = QC.frequency
-            [ (fHere,  fmap Here QC.arbitrary)
-            , (fThere, fmap There1 QC.arbitrary)
-            ]
-          where
-            fHere  = getKNat (exp2 :: KNat Int n)
-            fThere = fHere * 2 * B.reflectNToNum (Proxy :: Proxy bb)
-
-instance N.SNatI n => QC.CoArbitrary (PosN' n b) where
-    coarbitrary = QC.coarbitrary . (fromIntegral :: Natural -> Integer) . toNaturalN'
-
-instance (N.SNatI n, SBinNI b) => QC.Function (PosN' n b) where
-    function = case sbinN :: SBinN b of
-        SBE -> QC.functionMap (\(AtEnd t)  -> t) AtEnd
-        SB0 -> QC.functionMap (\(There0 r) -> r) There0
-        SB1 -> QC.functionMap sp (either Here There1) where
-      where
-        sp :: PosN' n ('B1 bb) -> Either (Wid n) (PosN' ('S n) bb)
-        sp (Here t)   = Left t
-        sp (There1 p) = Right p
 
 -------------------------------------------------------------------------------
 -- Showing
@@ -185,41 +98,11 @@ instance (N.SNatI n, SBinNI b) => QC.Function (PosN' n b) where
 explicitShow :: Pos b -> String
 explicitShow b = explicitShowsPrec 0 b ""
 
-explicitShowN :: PosN b -> String
-explicitShowN b = explicitShowsPrecN 0 b ""
-
-explicitShowN' :: PosN' n b -> String
-explicitShowN' b = explicitShowsPrecN' 0 b ""
-
 explicitShowsPrec :: Int -> Pos b ->ShowS
 explicitShowsPrec d (Pos b)
     = showParen (d > 10)
     $ showString "Pos "
-    . explicitShowsPrecN 11 b
-
-explicitShowsPrecN :: Int -> PosN b ->ShowS
-explicitShowsPrecN d (PosN p)
-    = showParen (d > 10)
-    $ showString "PosN "
-    . explicitShowsPrecN' 11 p
-
-explicitShowsPrecN' :: Int -> PosN' n b ->ShowS
-explicitShowsPrecN' d (AtEnd v)
-    = showParen (d > 10)
-    $ showString "AtEnd "
-    . showsPrec 11 v
-explicitShowsPrecN' d (Here v)
-    = showParen (d > 10)
-    $ showString "Here "
-    . showsPrec 11 v
-explicitShowsPrecN' d (There1 p)
-    = showParen (d > 10)
-    $ showString "There1 "
-    . explicitShowsPrecN' 11 p
-explicitShowsPrecN' d (There0 p)
-    = showParen (d > 10)
-    $ showString "There0 "
-    . explicitShowsPrecN' 11 p
+    . PP.explicitShowsPrec 11 b
 
 -------------------------------------------------------------------------------
 -- Conversions
@@ -230,21 +113,7 @@ explicitShowsPrecN' d (There0 p)
 -- >>> map toNatural (universe :: [Pos Bin7])
 -- [0,1,2,3,4,5,6]
 toNatural :: Pos b -> Natural
-toNatural (Pos p) = toNaturalN p
-
--- | Convert 'PosN' to 'Natural'.
-toNaturalN :: PosN b -> Natural
-toNaturalN (PosN p) = toNaturalN' p
-
--- | Convert 'PosN'' to 'Natural'.
-toNaturalN' :: forall n b. N.SNatI n => PosN' n b -> Natural
-toNaturalN' (AtEnd v)  = W.toNatural v
-toNaturalN' (Here v)   = W.toNatural v
-toNaturalN' (There1 p) = getKNat (exp2 :: KNat Natural n) + toNaturalN' p
-toNaturalN' (There0 p) = toNaturalN' p
-
-exp2 :: Num a => N.SNatI n => KNat a n
-exp2 = N.induction (KNat 1) (\(KNat n) -> KNat (n * 2))
+toNatural (Pos p) = PP.toNatural p
 
 -------------------------------------------------------------------------------
 -- Interesting
@@ -258,7 +127,7 @@ absurd x = case x of {}
 --
 -- >>> boring
 -- 0
-boring :: Pos ('BN 'BE)
+boring :: Pos ('BP 'BE)
 boring = minBound
 
 -------------------------------------------------------------------------------
@@ -283,36 +152,42 @@ boring = minBound
 -- >>> pop (pop top) :: Pos Bin9
 -- 2
 --
-top :: SBinNI b => Pos ('BN b)
+top :: SBinPI b => Pos ('BP b)
 top = minBound
 
 -- | See 'top'.
-pop :: Pop a b => Pos ('BN a) -> Pos ('BN b)
-pop (Pos (PosN n)) = Pos (PosN (pop' n))
+pop :: Pop a b => Pos ('BP a) -> Pos ('BP b)
+pop (Pos (PosP n)) = Pos (PosP (pop' n))
 
 -- | Class implmenenting 'pop'.
 class Pop a b | b -> a where
-    pop' :: PosN' n a -> PosN' n b
+    pop' :: PosP' n a -> PosP' n b
 
-instance SBinNI b => Pop ('B0 b) ('B1 b) where
-    pop' = weakenRight1N' sbinN
+instance SBinPI b => Pop ('B0 b) ('B1 b) where
+    pop' = PP.weakenRight1' sbinp
 
 instance Pop0 a b => Pop a ('B0 b) where
     pop' = pop0
 
 class Pop0 a b | b -> a where
-    pop0 :: PosN' n a -> PosN' n ('B0 b)
+    pop0 :: PosP' n a -> PosP' n ('B0 b)
 
 instance Pop0 'BE 'BE where
     pop0 (AtEnd n) = There0 (AtEnd (W1 n))
 
-instance SBinNI b => Pop0 ('B1 ('B0 b)) ('B1 b) where
+instance SBinPI b => Pop0 ('B1 ('B0 b)) ('B1 b) where
     pop0 (Here v)            = There0 (Here (W1 v))
     pop0 (There1 (There0 p)) = There0 (There1 p)
 
-instance (SBinNI b, Pop0 a b) => Pop0 ('B1 a) ('B0 b) where
+instance (SBinPI b, Pop0 a b) => Pop0 ('B1 a) ('B0 b) where
     pop0 (There1 p) = There0 (pop0 p)
     pop0 (Here v)   = There0 (weakenRight1V (W1 v))
+
+weakenRight1V :: forall b n. SBinPI b => Fiw ('S n) -> PosP' ('S n) b
+weakenRight1V v = case sbinp :: SBinP b of
+    SBE -> AtEnd v
+    SB0 -> There0 (weakenRight1V (W0 v))
+    SB1 -> Here v
 
 -------------------------------------------------------------------------------
 -- Append and Split
@@ -337,25 +212,8 @@ instance (SBinNI b, Pop0 a b) => Pop0 ('B1 a) ('B0 b) where
 -- >>> map weakenRight1 $ (universe :: [Pos Bin6])
 -- [1,2,3,4,5,6]
 --
-weakenRight1 :: SBinNI b => Pos ('BN b) -> Pos (SuccN b)
-weakenRight1 (Pos b) = Pos (weakenRight1N b)
-
-weakenRight1N :: SBinNI b => PosN b -> PosN (SuccN' b)
-weakenRight1N (PosN n) = PosN (weakenRight1N' sbinN n)
-
-weakenRight1N' :: forall b n. SBinN b -> PosN' n b -> PosN' n (SuccN' b)
-weakenRight1N' SBE (AtEnd v)  = There0 (AtEnd (W1 v))
-weakenRight1N' SB0 (There0 p) = There1 p
-weakenRight1N' SB1 (There1 p) = There0 (weakenRight1N' sbinN p)
-weakenRight1N' s@SB1 (Here v) = There0 $ recur s v where
-    recur :: forall bb. SBinNI bb => SBinN ('B1 bb) -> Wid n -> PosN' ('S n) (SuccN' bb)
-    recur _ v' = withSuccN (Proxy :: Proxy bb) $ weakenRight1V (W1 v')
-
-weakenRight1V :: forall b n. SBinNI b => Wid ('S n) -> PosN' ('S n) b
-weakenRight1V v = case sbinN :: SBinN b of
-    SBE -> AtEnd v
-    SB0 -> There0 (weakenRight1V (W0 v))
-    SB1 -> Here v
+weakenRight1 :: SBinPI b => Pos ('BP b) -> Pos (Succ'' b)
+weakenRight1 (Pos b) = Pos (PP.weakenRight1 b)
 
 -------------------------------------------------------------------------------
 -- Universe
@@ -367,38 +225,13 @@ weakenRight1V v = case sbinN :: SBinN b of
 -- [0,1,2,3,4,5,6,7,8]
 --
 -- >>> traverse_ (putStrLn . explicitShow) (universe :: [Pos Bin5])
--- Pos (PosN (Here WE))
--- Pos (PosN (There1 (There0 (AtEnd 0b00))))
--- Pos (PosN (There1 (There0 (AtEnd 0b01))))
--- Pos (PosN (There1 (There0 (AtEnd 0b10))))
--- Pos (PosN (There1 (There0 (AtEnd 0b11))))
+-- Pos (PosP (Here WE))
+-- Pos (PosP (There1 (There0 (AtEnd 0b00))))
+-- Pos (PosP (There1 (There0 (AtEnd 0b01))))
+-- Pos (PosP (There1 (There0 (AtEnd 0b10))))
+-- Pos (PosP (There1 (There0 (AtEnd 0b11))))
 --
 universe :: forall b. B.SBinI b => [Pos b]
 universe = case B.sbin :: SBin b of
     B.SBZ -> []
-    B.SBN -> map Pos universeN
-
--- |
---
--- >>> universeN :: [PosN BinN9]
--- [0,1,2,3,4,5,6,7,8]
---
-universeN :: forall b. SBinNI b => [PosN b]
-universeN = map PosN universeN'
-
--- | This gives a hint, what the @n@ parameter means in 'PosN''.
---
--- >>> universeN' :: [PosN' N.Nat2 BinN2]
--- [0,1,2,3,4,5,6,7]
---
-universeN' :: forall b n. (N.SNatI n, SBinNI b) => [PosN' n b]
-universeN' = case B.sbinN :: SBinN b of
-    B.SBE -> map AtEnd W.universe
-    B.SB0 -> map There0 universeN'
-    B.SB1 -> map Here W.universe ++ map There1 universeN'
-
--------------------------------------------------------------------------------
--- Helpers
--------------------------------------------------------------------------------
-
-newtype KNat a (n :: Nat) = KNat { getKNat :: a }
+    B.SBP -> map Pos PP.universe
