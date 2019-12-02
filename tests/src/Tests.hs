@@ -6,19 +6,22 @@
 #endif
 module Tests (main) where
 
-import Data.Bin        (BinN (..))
-import Data.Bin.Pos    (Pos, PosN)
-import Data.Wid        (Wid)
+import Data.Bin        (BinP (..))
+import Data.Bin.Pos    (Pos, PosP)
+import Data.Fiw        (Fiw)
 import Data.Word       (Word64, Word8)
 import Numeric.Natural (Natural)
 import Test.Tasty      (TestTree, defaultMain, testGroup)
 
 import qualified Data.Bin        as B
 import qualified Data.Bin.Pos    as P
+import qualified Data.BinP       as BP
+import qualified Data.BinP.PosP  as PP
 import qualified Data.Fin        as F
 import qualified Data.Type.Bin   as B
+import qualified Data.Type.BinP  as BP
 import qualified Data.Type.Nat   as N
-import qualified Data.Wid        as W
+import qualified Data.Fiw        as W
 import qualified Test.QuickCheck as QC
 
 import Models
@@ -33,7 +36,7 @@ main = defaultMain $ testGroup "packages"
 
     , testGroup "bin"
         [ binTests
-        , widTests
+        , fiwTests
         , posTests
         ]
 
@@ -66,27 +69,27 @@ finTests = testGroup "Data.Fin"
     ]
 
 -------------------------------------------------------------------------------
--- Wid
+-- Fiw
 -------------------------------------------------------------------------------
 
-widTests :: TestTree
-widTests = testGroup "Data.Wid"
-    [ bitsTests       wid8
-    , bitsTests       wid64
-    , finiteBitsTests wid8
-    , finiteBitsTests wid64
-    , ordTests        wid8
-    , ordTests        wid64
+fiwTests :: TestTree
+fiwTests = testGroup "Data.Fiw"
+    [ bitsTests       fiw8
+    , bitsTests       fiw64
+    , finiteBitsTests fiw8
+    , finiteBitsTests fiw64
+    , ordTests        fiw8
+    , ordTests        fiw64
 
-    , testUniformity (QC.arbitrary :: QC.Gen (Wid N.Nat2)) id 4
-    , testUniformity (QC.arbitrary :: QC.Gen (Wid N.Nat5)) id 32
+    , testUniformity (QC.arbitrary :: QC.Gen (Fiw N.Nat2)) id 4
+    , testUniformity (QC.arbitrary :: QC.Gen (Fiw N.Nat5)) id 32
     ]
   where
-    wid8 :: Wid N.Nat8 -> Word8
-    wid8 = fromIntegral . W.toNatural
+    fiw8 :: Fiw N.Nat8 -> Word8
+    fiw8 = fromIntegral . W.toNatural
 
-    wid64 :: Wid (N.Mult N.Nat8 N.Nat8) -> Word64
-    wid64 = fromIntegral . W.toNatural
+    fiw64 :: Fiw (N.Mult N.Nat8 N.Nat8) -> Word64
+    fiw64 = fromIntegral . W.toNatural
 
 -------------------------------------------------------------------------------
 -- Bin
@@ -96,9 +99,9 @@ binTests :: TestTree
 binTests = testGroup "Data.Bin"
     [ bitsTests' False  B.toNatural
     , ordTests          B.toNatural
-    , ordTests          B.toNaturalN
+    , ordTests          BP.toNatural
     , numTests          B.toNatural
-    , numTests          B.toNaturalN
+    , numTests          BP.toNatural
     ]
 
 -------------------------------------------------------------------------------
@@ -107,18 +110,18 @@ binTests = testGroup "Data.Bin"
 
 posTests :: TestTree
 posTests = testGroup "Data.Pos"
-    [ ordTests (P.toNatural  :: Pos B.Bin4   -> Natural)
-    , ordTests (P.toNaturalN :: PosN B.BinN5 -> Natural)
+    [ ordTests (P.toNatural  :: Pos B.Bin4    -> Natural)
+    , ordTests (PP.toNatural :: PosP BP.BinP5 -> Natural)
 
     -- uniformity with binary pos is tricky
     , testUniformity (QC.arbitrary :: QC.Gen (Pos B.Bin2)) id 2
     , testUniformity (QC.arbitrary :: QC.Gen (Pos B.Bin5)) id 5
     , testUniformity (QC.arbitrary :: QC.Gen (Pos B.Bin7)) id 7
 
-    , testUniformity (QC.arbitrary :: QC.Gen (PosN B.BinN2)) id 2
-    , testUniformity (QC.arbitrary :: QC.Gen (PosN B.BinN5)) id 5
-    , testUniformity (QC.arbitrary :: QC.Gen (PosN B.BinN7)) id 7
+    , testUniformity (QC.arbitrary :: QC.Gen (PosP BP.BinP2)) id 2
+    , testUniformity (QC.arbitrary :: QC.Gen (PosP BP.BinP5)) id 5
+    , testUniformity (QC.arbitrary :: QC.Gen (PosP BP.BinP7)) id 7
 
-    , testUniformity (QC.arbitrary :: QC.Gen (PosN ('B1 ('B1 ('B1 ('B1 'BE)))))) id 31
-    , testUniformity (QC.arbitrary :: QC.Gen (PosN ('B1 ('B1 ('B0 ('B1 'BE)))))) id 27
+    , testUniformity (QC.arbitrary :: QC.Gen (PosP ('B1 ('B1 ('B1 ('B1 'BE)))))) id 31
+    , testUniformity (QC.arbitrary :: QC.Gen (PosP ('B1 ('B1 ('B0 ('B1 'BE)))))) id 27
     ]

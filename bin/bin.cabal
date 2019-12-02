@@ -10,16 +10,16 @@ description:
   @
   data Bin
   \    = BZ       -- ^ zero
-  \    | BN BinN  -- ^ non-zero
+  \    | BP BinP  -- ^ non-zero
   .
-  data BinN
+  data BinP
   \    = BE       -- ^ one
-  \    | B0 BinN  -- ^ double
-  \    | B1 BinN  -- ^ double plus 1
+  \    | B0 BinP  -- ^ double
+  \    | B1 BinP  -- ^ double plus 1
   @
   .
   There are /ordinals/ in "Data.Bin.Pos" module, as well as
-  fixed width integers in "Data.Wid".
+  fixed width integers in "Data.Fiw".
   .
   Another implementation is at <https://hackage.haskell.org/package/nat>,
   this differs in naming, and provides promoted variant.
@@ -54,8 +54,11 @@ library
   exposed-modules:
     Data.Bin
     Data.Bin.Pos
+    Data.BinP
+    Data.BinP.PosP
+    Data.Fiw
     Data.Type.Bin
-    Data.Wid
+    Data.Type.BinP
 
   build-depends:
     , base        >=4.7     && <4.14

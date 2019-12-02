@@ -6,9 +6,9 @@
 {-# LANGUAGE KindSignatures      #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE StandaloneDeriving  #-}
--- | Fixed-'Wid'th (unsigned) integers.
-module Data.Wid (
-    Wid (..),
+-- | Fixed-'Fiw'th (unsigned) integers.
+module Data.Fiw (
+    Fiw (..),
     -- * Showing
     explicitShow,
     explicitShowsPrec,
@@ -59,31 +59,31 @@ import qualified Data.Bits as I (Bits (..), FiniteBits (..))
 -- Data
 -------------------------------------------------------------------------------
 
--- | Fixed-'Wid'th unsigned integers.
+-- | __Fi__xed-__W__idth unsigned integers.
 --
 -- The number is thought to be stored in big-endian format,
 -- i.e. most-significant bit first. (as in binary literals).
 --
-data Wid (n :: Nat) where
-    WE :: Wid 'Z
-    W0 :: Wid n -> Wid ('S n)
-    W1 :: Wid n -> Wid ('S n)
+data Fiw (n :: Nat) where
+    WE :: Fiw 'Z
+    W0 :: Fiw n -> Fiw ('S n)
+    W1 :: Fiw n -> Fiw ('S n)
   deriving (Typeable)
 
-deriving instance Eq (Wid n)
+deriving instance Eq (Fiw n)
 
 -------------------------------------------------------------------------------
 -- Instances
 -------------------------------------------------------------------------------
 
-instance Ord (Wid n) where
+instance Ord (Fiw n) where
     compare WE WE = EQ
     compare (W0 a) (W0 b) = compare a b
     compare (W0 _) (W1 _) = LT
     compare (W1 _) (W0 _) = GT
     compare (W1 a) (W1 b) = compare a b
 
--- | 'Wid' is printed as a binary literal.
+-- | 'Fiw' is printed as a binary literal.
 --
 -- >>> let i = W1 $ W0 $ W1 $ W0 WE
 -- >>> i
@@ -94,29 +94,29 @@ instance Ord (Wid n) where
 --
 -- At the time being, there is no 'Num' instance.
 --
-instance Show (Wid n) where
+instance Show (Fiw n) where
     showsPrec _ WE = showString "WE"
     showsPrec _ w  = showString "0b" . foldr f id (goBits w)
       where
         f True  acc = showChar '1' . acc
         f False acc = showChar '0' . acc
 
-        goBits :: Wid m -> [Bool]
+        goBits :: Fiw m -> [Bool]
         goBits WE = []
         goBits (W0 n) = False : goBits n
         goBits (W1 n) = True  : goBits n
 
-instance NFData (Wid n) where
+instance NFData (Fiw n) where
     rnf WE     = ()
     rnf (W0 w) = rnf w
     rnf (W1 w) = rnf w
 
-instance Hashable (Wid n) where
+instance Hashable (Fiw n) where
     hashWithSalt salt WE     = salt `hashWithSalt` (0 :: Int)
     hashWithSalt salt (W0 w) = salt `hashWithSalt` (1 :: Int) `hashWithSalt` w
     hashWithSalt salt (W1 w) = salt `hashWithSalt` (2 :: Int) `hashWithSalt` w
 
-instance N.SNatI n => Bounded (Wid n) where
+instance N.SNatI n => Bounded (Fiw n) where
     minBound = N.induction WE W0
     maxBound = N.induction WE W1
 
@@ -146,7 +146,7 @@ instance N.SNatI n => Bounded (Wid n) where
 -- >>> popCount u
 -- 2
 --
-instance N.SNatI n => I.Bits (Wid n) where
+instance N.SNatI n => I.Bits (Fiw n) where
     complement = complement
     (.&.) = (.&.)
     (.|.) = (.|.)
@@ -174,16 +174,16 @@ instance N.SNatI n => I.Bits (Wid n) where
     bitSizeMaybe = Just . I.finiteBitSize
     bitSize      = I.finiteBitSize
 
-instance N.SNatI n => I.FiniteBits (Wid n) where
+instance N.SNatI n => I.FiniteBits (Fiw n) where
     finiteBitSize _ = N.reflectToNum (Proxy :: Proxy n)
 
 #if MIN_VERSION_base(4,8,0)
     countLeadingZeros = countLeadingZeros
 #endif
 
-testBit :: Wid n -> Int -> Bool
+testBit :: Fiw n -> Int -> Bool
 testBit w0 i = snd (go 0 w0) where
-    go :: Int -> Wid n -> (Int, Bool)
+    go :: Int -> Fiw n -> (Int, Bool)
     go j WE = (j, False)
     go j (W0 w) =
         let j''      = succ j'
@@ -195,9 +195,9 @@ testBit w0 i = snd (go 0 w0) where
         in (j'', if i == j' then True else b')
     
 
-mapWithBit :: (Bool -> Int -> Bool) -> Wid n -> Wid n
+mapWithBit :: (Bool -> Int -> Bool) -> Fiw n -> Fiw n
 mapWithBit f = snd . go 0 where
-    go :: Int -> Wid n -> (Int, Wid n)
+    go :: Int -> Fiw n -> (Int, Fiw n)
     go i WE     = (i, WE)
     go i (W0 w) = 
         let (i'', b)  = g False i'
@@ -211,85 +211,85 @@ mapWithBit f = snd . go 0 where
     g :: Bool -> Int -> (Int, Bool)
     g b j = (succ j, f b j)
 
-clearBit          :: Wid n -> Int -> Wid n
+clearBit          :: Fiw n -> Int -> Fiw n
 clearBit      w i = mapWithBit (\b j -> if j == i then False else b) w
 
-setBit            :: Wid n -> Int -> Wid n
+setBit            :: Fiw n -> Int -> Fiw n
 setBit        w i = mapWithBit (\b j -> if j == i then True  else b) w
 
-complementBit     :: Wid n -> Int -> Wid n
+complementBit     :: Fiw n -> Int -> Fiw n
 complementBit w i = mapWithBit (\b j -> if j == i then not b else b) w
 
 
-complement :: Wid n -> Wid n
+complement :: Fiw n -> Fiw n
 complement WE     = WE
 complement (W0 w) = W1 (complement w)
 complement (W1 w) = W0 (complement w)
 
-(.&.) :: Wid n -> Wid n -> Wid n
+(.&.) :: Fiw n -> Fiw n -> Fiw n
 WE   .&. _    = WE
 W1 a .&. W1 b = W1 (a .&. b)
 W1 a .&. W0 b = W0 (a .&. b)
 W0 a .&. W1 b = W0 (a .&. b)
 W0 a .&. W0 b = W0 (a .&. b)
 
-(.|.) :: Wid n -> Wid n -> Wid n
+(.|.) :: Fiw n -> Fiw n -> Fiw n
 WE   .|. _    = WE
 W1 a .|. W1 b = W1 (a .|. b)
 W1 a .|. W0 b = W1 (a .|. b)
 W0 a .|. W1 b = W1 (a .|. b)
 W0 a .|. W0 b = W0 (a .|. b)
 
-xor :: Wid n -> Wid n -> Wid n
+xor :: Fiw n -> Fiw n -> Fiw n
 xor WE      _     = WE
 xor (W1 a) (W1 b) = W0 (xor a b)
 xor (W1 a) (W0 b) = W1 (xor a b)
 xor (W0 a) (W1 b) = W1 (xor a b)
 xor (W0 a) (W0 b) = W0 (xor a b)
 
-shiftR :: Wid n -> Int -> Wid n
+shiftR :: Fiw n -> Int -> Fiw n
 shiftR w n
     | n <= 0 = w
     | otherwise = shiftR (shiftR1 w) (pred n)
 
-shiftL :: Wid n -> Int -> Wid n
+shiftL :: Fiw n -> Int -> Fiw n
 shiftL w n
     | n <= 0 = w
     | otherwise = shiftL (shiftL1 w) (pred n)
 
-rotateR :: Wid n -> Int -> Wid n
+rotateR :: Fiw n -> Int -> Fiw n
 rotateR w n
     | n <= 0 = w
     | otherwise = rotateR (rotateR1 w) (pred n)
 
-rotateL :: Wid n -> Int -> Wid n
+rotateL :: Fiw n -> Int -> Fiw n
 rotateL w n
     | n <= 0 = w
     | otherwise = rotateL (rotateL1 w) (pred n)
 
-popCount :: Wid n -> Int
+popCount :: Fiw n -> Int
 popCount = go 0 where
-    go :: Int -> Wid m -> Int
+    go :: Int -> Fiw m -> Int
     go !acc WE     = acc
     go !acc (W0 w) = go acc w
     go !acc (W1 w) = go (succ acc) w
 
-shiftL1 :: Wid n -> Wid n
+shiftL1 :: Fiw n -> Fiw n
 shiftL1 WE = WE
 shiftL1 (W0 w) = pushBack w
 shiftL1 (W1 w) = pushBack w
 
-shiftR1 :: Wid n -> Wid n
+shiftR1 :: Fiw n -> Fiw n
 shiftR1 WE       = WE
 shiftR1 w@(W0 _) = W0 (dropLast w)
 shiftR1 w@(W1 _) = W0 (dropLast w)
 
-rotateL1 :: Wid n -> Wid n
+rotateL1 :: Fiw n -> Fiw n
 rotateL1 WE = WE
 rotateL1 (W0 w) = pushBack' w False
 rotateL1 (W1 w) = pushBack' w True
 
-rotateR1 :: Wid n -> Wid n
+rotateR1 :: Fiw n -> Fiw n
 rotateR1 WE       = WE
 rotateR1 w@(W0 _) = case dropLast' w of
     (True, w')  -> W1 w'
@@ -298,18 +298,18 @@ rotateR1 w@(W1 _) = case dropLast' w of
     (True, w')  -> W1 w'
     (False, w') -> W0 w'
 
-pushBack ::  Wid n ->  Wid ('S n)
+pushBack ::  Fiw n ->  Fiw ('S n)
 pushBack WE     = W0 WE
 pushBack (W0 w) = W0 (pushBack w)
 pushBack (W1 w) = W1 (pushBack w)
 
-pushBack' ::  Wid n -> Bool -> Wid ('S n)
+pushBack' ::  Fiw n -> Bool -> Fiw ('S n)
 pushBack' WE     False = W0 WE
 pushBack' WE     True  = W1 WE
 pushBack' (W0 w) b     = W0 (pushBack' w b)
 pushBack' (W1 w) b     = W1 (pushBack' w b)
 
-dropLast :: Wid ('S n) -> Wid n
+dropLast :: Fiw ('S n) -> Fiw n
 dropLast (W0 WE)       = WE
 dropLast (W1 WE)       = WE
 dropLast (W0 w@(W0 _)) = W0 (dropLast w)
@@ -317,7 +317,7 @@ dropLast (W0 w@(W1 _)) = W0 (dropLast w)
 dropLast (W1 w@(W0 _)) = W1 (dropLast w)
 dropLast (W1 w@(W1 _)) = W1 (dropLast w)
 
-dropLast' :: Wid ('S n) -> (Bool, Wid n)
+dropLast' :: Fiw ('S n) -> (Bool, Fiw n)
 dropLast' (W0 WE)       = (False, WE)
 dropLast' (W1 WE)       = (True, WE)
 dropLast' (W0 w@(W0 _)) = fmap W0 (dropLast' w)
@@ -325,9 +325,9 @@ dropLast' (W0 w@(W1 _)) = fmap W0 (dropLast' w)
 dropLast' (W1 w@(W0 _)) = fmap W1 (dropLast' w)
 dropLast' (W1 w@(W1 _)) = fmap W1 (dropLast' w)
 
-countLeadingZeros :: Wid n -> Int
+countLeadingZeros :: Fiw n -> Int
 countLeadingZeros = go 0 where
-    go :: Int -> Wid m -> Int
+    go :: Int -> Fiw m -> Int
     go !acc WE     = acc
     go !acc (W0 w) = go (succ acc) w
     go !acc (W1 _) = acc
@@ -336,33 +336,33 @@ countLeadingZeros = go 0 where
 -- QuickCheck
 -------------------------------------------------------------------------------
 
-instance N.SNatI n => QC.Arbitrary (Wid n) where
+instance N.SNatI n => QC.Arbitrary (Fiw n) where
     arbitrary = case N.snat :: N.SNat n of
         N.SZ -> return WE
         N.SS -> QC.oneof [ fmap W0 QC.arbitrary, fmap W1 QC.arbitrary ]
 
     shrink = shrink
 
-shrink :: Wid n -> [Wid n]
+shrink :: Fiw n -> [Fiw n]
 shrink WE = []
 shrink (W1 w) = W0 w : fmap W1 (shrink w)
 shrink (W0 w) = fmap W0 (shrink w)
 
-instance QC.CoArbitrary (Wid n) where
+instance QC.CoArbitrary (Fiw n) where
     coarbitrary WE     = id
     coarbitrary (W0 w) = QC.coarbitrary (False, w)
     coarbitrary (W1 w) = QC.coarbitrary (True,  w)
 
-instance N.SNatI n => QC.Function (Wid n) where
+instance N.SNatI n => QC.Function (Fiw n) where
     function = case N.snat :: N.SNat n of
         N.SZ -> QC.functionMap (const ()) (const WE)
         N.SS -> QC.functionMap toPair fromPair
       where
-        toPair :: Wid ('S m) -> (Bool, Wid m)
+        toPair :: Fiw ('S m) -> (Bool, Fiw m)
         toPair (W0 w) = (False, w)
         toPair (W1 w) = (True,  w)
 
-        fromPair :: (Bool, Wid m) -> Wid ('S m)
+        fromPair :: (Bool, Fiw m) -> Fiw ('S m)
         fromPair (False, w) = W0 w
         fromPair (True,  w) = W1 w
 
@@ -370,7 +370,7 @@ instance N.SNatI n => QC.Function (Wid n) where
 -- Showing
 -------------------------------------------------------------------------------
 
--- | 'show' displaying a structure of @'Wid' n@
+-- | 'show' displaying a structure of @'Fiw' n@
 --
 -- >>> explicitShow WE
 -- "WE"
@@ -381,10 +381,10 @@ instance N.SNatI n => QC.Function (Wid n) where
 -- >>> explicitShow $ W1 $ W0 $ W1 $ W0 WE
 -- "W1 $ W0 $ W1 $ W0 WE"
 --
-explicitShow :: Wid n -> String
+explicitShow :: Fiw n -> String
 explicitShow w = explicitShowsPrec 0 w ""
 
--- | 'showsPrec' displaying a structure of @'Wid' n@.
+-- | 'showsPrec' displaying a structure of @'Fiw' n@.
 --
 -- >>> explicitShowsPrec 0 (W0 WE) ""
 -- "W0 WE"
@@ -392,7 +392,7 @@ explicitShow w = explicitShowsPrec 0 w ""
 -- >>> explicitShowsPrec 1 (W0 WE) ""
 -- "(W0 WE)"
 --
-explicitShowsPrec :: Int -> Wid n -> ShowS
+explicitShowsPrec :: Int -> Fiw n -> ShowS
 explicitShowsPrec _ WE = showString "WE"
 explicitShowsPrec d w  = showParen (d > 0) $
     go (goBits w)
@@ -403,7 +403,7 @@ explicitShowsPrec d w  = showParen (d > 0) $
     go (False : bs) = showString "W0 $ " . go bs
     go (True  : bs) = showString "W1 $ " . go bs
 
-    goBits :: Wid m -> [Bool]
+    goBits :: Fiw m -> [Bool]
     goBits WE = []
     goBits (W0 n) = False : goBits n
     goBits (W1 n) = True  : goBits n
@@ -421,12 +421,12 @@ explicitShowsPrec d w  = showParen (d > 0) $
 -- >>> toNatural u
 -- 58
 --
--- >>> map toNatural (universe :: [Wid N.Nat3])
+-- >>> map toNatural (universe :: [Fiw N.Nat3])
 -- [0,1,2,3,4,5,6,7]
 --
-toNatural :: Wid n -> Natural
+toNatural :: Fiw n -> Natural
 toNatural = go 0 where
-    go :: Natural -> Wid m -> Natural
+    go :: Natural -> Fiw m -> Natural
     go !acc WE = acc
     go !acc (W0 w) = go (2 * acc)     w
     go !acc (W1 w) = go (2 * acc + 1) w
@@ -435,16 +435,16 @@ toNatural = go 0 where
 -- Universe
 -------------------------------------------------------------------------------
 
--- | All values, i.e. universe of @'Wid' @.
+-- | All values, i.e. universe of @'Fiw' @.
 --
--- >>> universe :: [Wid 'Z]
+-- >>> universe :: [Fiw 'Z]
 -- [WE]
 --
--- >>> universe :: [Wid N.Nat3]
+-- >>> universe :: [Fiw N.Nat3]
 -- [0b000,0b001,0b010,0b011,0b100,0b101,0b110,0b111]
-universe :: forall n. N.SNatI n => [Wid n]
+universe :: forall n. N.SNatI n => [Fiw n]
 universe = getUniverse $ N.induction (Universe [WE]) go where
     go :: Universe m -> Universe ('S m)
     go (Universe u) = Universe (map W0 u ++ map W1 u)
 
-newtype Universe n = Universe { getUniverse :: [Wid n] }
+newtype Universe n = Universe { getUniverse :: [Fiw n] }
