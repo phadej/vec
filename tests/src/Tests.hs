@@ -8,7 +8,7 @@ module Tests (main) where
 
 import Data.Bin        (BinP (..))
 import Data.Bin.Pos    (Pos, PosP)
-import Data.Fiw        (Fiw)
+import Data.Wrd        (Wrd)
 import Data.Word       (Word64, Word8)
 import Numeric.Natural (Natural)
 import Test.Tasty      (TestTree, defaultMain, testGroup)
@@ -21,7 +21,7 @@ import qualified Data.Fin        as F
 import qualified Data.Type.Bin   as B
 import qualified Data.Type.BinP  as BP
 import qualified Data.Type.Nat   as N
-import qualified Data.Fiw        as W
+import qualified Data.Wrd        as W
 import qualified Test.QuickCheck as QC
 
 import Models
@@ -36,7 +36,7 @@ main = defaultMain $ testGroup "packages"
 
     , testGroup "bin"
         [ binTests
-        , fiwTests
+        , wrdTests
         , posTests
         ]
 
@@ -53,7 +53,7 @@ main = defaultMain $ testGroup "packages"
 natTests :: TestTree
 natTests = testGroup "Data.Nat"
     [ ordTests          N.toNatural
-    , numTests          N.toNatural
+    , numTests' False   N.toNatural
     ]
 
 -------------------------------------------------------------------------------
@@ -69,27 +69,29 @@ finTests = testGroup "Data.Fin"
     ]
 
 -------------------------------------------------------------------------------
--- Fiw
+-- Wrd
 -------------------------------------------------------------------------------
 
-fiwTests :: TestTree
-fiwTests = testGroup "Data.Fiw"
-    [ bitsTests       fiw8
-    , bitsTests       fiw64
-    , finiteBitsTests fiw8
-    , finiteBitsTests fiw64
-    , ordTests        fiw8
-    , ordTests        fiw64
+wrdTests :: TestTree
+wrdTests = testGroup "Data.Wrd"
+    [ bitsTests       wrd8
+    , bitsTests       wrd64
+    , finiteBitsTests wrd8
+    , finiteBitsTests wrd64
+    , ordTests        wrd8
+    , ordTests        wrd64
+    , numTests        wrd8
+    , numTests        wrd64
 
-    , testUniformity (QC.arbitrary :: QC.Gen (Fiw N.Nat2)) id 4
-    , testUniformity (QC.arbitrary :: QC.Gen (Fiw N.Nat5)) id 32
+    , testUniformity (QC.arbitrary :: QC.Gen (Wrd N.Nat2)) id 4
+    , testUniformity (QC.arbitrary :: QC.Gen (Wrd N.Nat5)) id 32
     ]
   where
-    fiw8 :: Fiw N.Nat8 -> Word8
-    fiw8 = fromIntegral . W.toNatural
+    wrd8 :: Wrd N.Nat8 -> Word8
+    wrd8 = fromIntegral . W.toNatural
 
-    fiw64 :: Fiw (N.Mult N.Nat8 N.Nat8) -> Word64
-    fiw64 = fromIntegral . W.toNatural
+    wrd64 :: Wrd (N.Mult N.Nat8 N.Nat8) -> Word64
+    wrd64 = fromIntegral . W.toNatural
 
 -------------------------------------------------------------------------------
 -- Bin
@@ -100,8 +102,8 @@ binTests = testGroup "Data.Bin"
     [ bitsTests' False  B.toNatural
     , ordTests          B.toNatural
     , ordTests          BP.toNatural
-    , numTests          B.toNatural
-    , numTests          BP.toNatural
+    , numTests' False   B.toNatural
+    , numTests' False   BP.toNatural
     ]
 
 -------------------------------------------------------------------------------

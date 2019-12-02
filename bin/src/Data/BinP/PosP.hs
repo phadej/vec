@@ -36,13 +36,13 @@ import Data.Bin        (BinP (..))
 import Data.Nat        (Nat (..))
 import Data.Proxy      (Proxy (..))
 import Data.Typeable   (Typeable)
-import Data.Fiw        (Fiw (..))
+import Data.Wrd        (Wrd (..))
 import Numeric.Natural (Natural)
 
 import qualified Data.Type.Bin   as B
 import qualified Data.Type.BinP   as BP
 import qualified Data.Type.Nat   as N
-import qualified Data.Fiw        as W
+import qualified Data.Wrd        as W
 import qualified Test.QuickCheck as QC
 
 import Data.Type.BinP
@@ -61,8 +61,8 @@ newtype PosP (b :: BinP) = PosP { unPosP :: PosP' 'Z b }
 
 -- | 'PosP'' is a structure inside 'PosP'.
 data PosP' (n :: Nat) (b :: BinP) where
-    AtEnd  :: Fiw n          -> PosP' n 'BE      -- ^ position is either at the last digit;
-    Here   :: Fiw n          -> PosP' n ('B1 b)  -- ^ somewhere here
+    AtEnd  :: Wrd n          -> PosP' n 'BE      -- ^ position is either at the last digit;
+    Here   :: Wrd n          -> PosP' n ('B1 b)  -- ^ somewhere here
     There1 :: PosP' ('S n) b -> PosP' n ('B1 b)  -- ^ or there, if the bit is one;
     There0 :: PosP' ('S n) b -> PosP' n ('B0 b)  -- ^ or only there if it is none.
   deriving (Typeable)
@@ -138,7 +138,7 @@ instance (N.SNatI n, SBinPI b) => QC.Function (PosP' n b) where
         SB0 -> QC.functionMap (\(There0 r) -> r) There0
         SB1 -> QC.functionMap sp (either Here There1) where
       where
-        sp :: PosP' n ('B1 bb) -> Either (Fiw n) (PosP' ('S n) bb)
+        sp :: PosP' n ('B1 bb) -> Either (Wrd n) (PosP' ('S n) bb)
         sp (Here t)   = Left t
         sp (There1 p) = Right p
 
@@ -217,10 +217,10 @@ weakenRight1' SBE (AtEnd v)  = There0 (AtEnd (W1 v))
 weakenRight1' SB0 (There0 p) = There1 p
 weakenRight1' SB1 (There1 p) = There0 (weakenRight1' sbinp p)
 weakenRight1' s@SB1 (Here v) = There0 $ recur s v where
-    recur :: forall bb. SBinPI bb => SBinP ('B1 bb) -> Fiw n -> PosP' ('S n) (Succ bb)
+    recur :: forall bb. SBinPI bb => SBinP ('B1 bb) -> Wrd n -> PosP' ('S n) (Succ bb)
     recur _ v' = withSucc (Proxy :: Proxy bb) $ weakenRight1V (W1 v')
 
-weakenRight1V :: forall b n. SBinPI b => Fiw ('S n) -> PosP' ('S n) b
+weakenRight1V :: forall b n. SBinPI b => Wrd ('S n) -> PosP' ('S n) b
 weakenRight1V v = case sbinp :: SBinP b of
     SBE -> AtEnd v
     SB0 -> There0 (weakenRight1V (W0 v))

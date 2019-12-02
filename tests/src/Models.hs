@@ -35,11 +35,22 @@ numTests
     :: forall a b. (Typeable a, Typeable b, Num a, Num b, Show a, Show b, QC.Arbitrary a, Eq b)
     => (a -> b)
     -> TestTree
-numTests a2b = testGroup ("Num: " ++ nameA ++ " compared to " ++ nameB)
+numTests = numTests' True
+
+numTests'
+    :: forall a b. (Typeable a, Typeable b, Num a, Num b, Show a, Show b, QC.Arbitrary a, Eq b)
+    => Bool -- negate
+    -> (a -> b)
+    -> TestTree
+numTests' neg a2b = testGroup ("Num: " ++ nameA ++ " compared to " ++ nameB) $
     [ modelTest a2b constraint "(+)"    (mapAAA (+))
     , modelTest a2b constraint "(*)"    (mapAAA (*))
     , modelTest a2b constraint "signum" (mapAA signum)
+    , modelTest a2b constraint "abs"    (mapAA abs)
     ]
+    ++ [ modelTest a2b constraint "(-)"         (mapAAA (-))          | neg ]
+    ++ [ modelTest a2b constraint "negate"      (mapAA negate)        | neg ]
+    ++ [ modelTest a2b constraint "fromInteger" (mapXA fromInteger)   | neg ]
   where
     nameA      = show $ typeRep (Proxy :: Proxy a)
     nameB      = show $ typeRep (Proxy :: Proxy b)

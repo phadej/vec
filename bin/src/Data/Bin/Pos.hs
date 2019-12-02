@@ -35,7 +35,7 @@ import Data.Bin        (Bin (..), BinP (..))
 import Data.BinP.PosP  (PosP (..), PosP' (..))
 import Data.Nat        (Nat (..))
 import Data.Typeable   (Typeable)
-import Data.Fiw        (Fiw (..))
+import Data.Wrd        (Wrd (..))
 import Numeric.Natural (Natural)
 
 import qualified Data.BinP.PosP  as PP
@@ -183,7 +183,7 @@ instance (SBinPI b, Pop0 a b) => Pop0 ('B1 a) ('B0 b) where
     pop0 (There1 p) = There0 (pop0 p)
     pop0 (Here v)   = There0 (weakenRight1V (W1 v))
 
-weakenRight1V :: forall b n. SBinPI b => Fiw ('S n) -> PosP' ('S n) b
+weakenRight1V :: forall b n. SBinPI b => Wrd ('S n) -> PosP' ('S n) b
 weakenRight1V v = case sbinp :: SBinP b of
     SBE -> AtEnd v
     SB0 -> There0 (weakenRight1V (W0 v))

@@ -85,8 +85,8 @@ modelTest a2b _ name f2g = testProperty name $ \fa ->
         gb' = fmap a2b ga
 
         msg = unlines
-            [ show fa                   ++ " --> " ++ show ga ++ " --> " ++ show gb
-            , map (const ' ') (show fa) ++ " --> " ++ show fb ++ " --> " ++ show gb'
+            [ show fa                   ++ " --> " ++ show ga ++ " --> " ++ show gb'
+            , map (const ' ') (show fa) ++ " --> " ++ show fb ++ " --> " ++ show gb
             ]
 
     in QC.counterexample msg $ gb' QC.=== gb

@@ -57,7 +57,7 @@ countStream = go Map.empty where
 testUniformityRaw :: forall a. (Ord a, Show a) => Int -> Stream a -> Either String Double
 testUniformityRaw k s
     | Map.size m > k = Left $ "Got more elements (" ++ show (Map.size m, take 5 $ Map.keys m) ++ " than expected (" ++ show k ++ ")"
-    | p > 0.99999    = Left $
+    | p > 0.999999   = Left $
         "Too impropabable p-value: " ++ show p ++ "\n" ++ table
         [ [ show x, showFFloat (Just 3) (fromIntegral y / fromIntegral n :: Double) "" ]
         | (x, y) <- take 10 $ Map.toList m

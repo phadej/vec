@@ -67,7 +67,7 @@ import Data.Monoid         (Monoid (..))
 import Data.Nat            (Nat (..))
 import Data.Semigroup      (Semigroup (..))
 import Data.Typeable       (Typeable)
-import Data.Fiw            (Fiw (..))
+import Data.Wrd            (Wrd (..))
 
 import qualified Data.Type.Nat as N
 
@@ -109,10 +109,10 @@ data Tree (n :: Nat) a where
 -- Helpers
 -------------------------------------------------------------------------------
 
-goLeft :: (Fiw ('S n) -> a) -> Fiw n -> a
+goLeft :: (Wrd ('S n) -> a) -> Wrd n -> a
 goLeft f xs = f (W0 xs)
 
-goRight :: (Fiw ('S n) -> a) -> Fiw n -> a
+goRight :: (Wrd ('S n) -> a) -> Wrd n -> a
 goRight f xs = f (W1 xs)
 
 -------------------------------------------------------------------------------
@@ -173,7 +173,7 @@ instance N.SNatI n => I.Distributive (Tree n) where
 
 #ifdef MIN_VERSION_adjunctions
 instance N.SNatI n => I.Representable (Tree n) where
-    type Rep (Tree n) = Fiw n
+    type Rep (Tree n) = Wrd n
 
     tabulate = tabulate
     index    = (!)
@@ -222,12 +222,12 @@ toList t = go t [] where
 -------------------------------------------------------------------------------
 
 -- | Indexing.
-(!) :: Tree n a -> Fiw n -> a
+(!) :: Tree n a -> Wrd n -> a
 (!) (Leaf x)   WE      = x
 (!) (Node x _) (W0 is) = x ! is
 (!) (Node _ y) (W1 is) = y ! is
 
-tabulate :: forall n a. N.SNatI n => (Fiw n -> a) -> Tree n a
+tabulate :: forall n a. N.SNatI n => (Wrd n -> a) -> Tree n a
 tabulate f = case N.snat :: N.SNat n of
     N.SZ -> Leaf (f WE)
     N.SS -> Node (tabulate (goLeft f)) (tabulate (goRight f))
@@ -248,7 +248,7 @@ foldMap :: Monoid m => (a -> m) -> Tree n a -> m
 foldMap f (Leaf x)   = f x
 foldMap f (Node x y) = mappend (foldMap f x) (foldMap f y)
 
-ifoldMap :: Monoid m => (Fiw n -> a -> m) -> Tree n a -> m
+ifoldMap :: Monoid m => (Wrd n -> a -> m) -> Tree n a -> m
 ifoldMap f (Leaf x)   = f WE x
 ifoldMap f (Node x y) = mappend (ifoldMap (goLeft f) x) (ifoldMap (goRight f) y)
 
@@ -256,7 +256,7 @@ foldMap1 :: Semigroup s => (a -> s) -> Tree n a -> s
 foldMap1 f (Leaf x)   = f x
 foldMap1 f (Node x y) = foldMap1 f x <> foldMap1 f y
 
-ifoldMap1 :: Semigroup s => (Fiw n -> a -> s) -> Tree n a -> s
+ifoldMap1 :: Semigroup s => (Wrd n -> a -> s) -> Tree n a -> s
 ifoldMap1 f (Leaf x)   = f WE x
 ifoldMap1 f (Node x y) = ifoldMap1 (goLeft f) x <> ifoldMap1 (goRight f) y
 
@@ -266,7 +266,7 @@ foldr :: (a -> b -> b) -> b -> Tree n a -> b
 foldr f z (Leaf x)   = f x z
 foldr f z (Node x y) = foldr f (foldr f z y) x
 
-ifoldr :: (Fiw n -> a -> b -> b) -> b -> Tree n a -> b
+ifoldr :: (Wrd n -> a -> b -> b) -> b -> Tree n a -> b
 ifoldr f z (Leaf x)   = f WE x z
 ifoldr f z (Node x y) = ifoldr (goLeft f) (ifoldr (goRight f) z y) x
 
@@ -276,13 +276,13 @@ foldl :: (b -> a -> b) -> b -> Tree n a -> b
 foldl f z (Leaf x) = f z x
 foldl f z (Node x y) = foldl f (foldl f z x) y
 
-ifoldl :: (Fiw n -> b -> a -> b) -> b -> Tree n a -> b
+ifoldl :: (Wrd n -> b -> a -> b) -> b -> Tree n a -> b
 ifoldl f z (Leaf x)   = f WE z x
 ifoldl f z (Node x y) = ifoldl (goLeft f) (ifoldl (goRight f) z x) y
 
 -- TODO: foldl
 
--- | >>> length (universe :: Tree N.Nat3 (Fiw N.Nat3))
+-- | >>> length (universe :: Tree N.Nat3 (Wrd N.Nat3))
 -- 8
 --
 length :: Tree n a -> Int
@@ -303,7 +303,7 @@ map f (Node x y) = Node (map f x) (map f y)
 
 -- | >>> imap (,) $ Node (Leaf True) (Leaf False)
 -- Node (Leaf (0b0,True)) (Leaf (0b1,False))
-imap :: (Fiw n -> a -> b) -> Tree n a -> Tree n b
+imap :: (Wrd n -> a -> b) -> Tree n a -> Tree n b
 imap f (Leaf x) = Leaf (f WE x)
 imap f (Node x y) = Node (imap (goLeft f) x) (imap (goRight f) y)
 
@@ -311,7 +311,7 @@ traverse :: Applicative f => (a -> f b) -> Tree n a -> f (Tree n b)
 traverse f (Leaf x)   = Leaf <$> f x
 traverse f (Node x y) = Node <$> traverse f x <*> traverse f y
 
-itraverse :: Applicative f => (Fiw n -> a -> f b) -> Tree n a -> f (Tree n b)
+itraverse :: Applicative f => (Wrd n -> a -> f b) -> Tree n a -> f (Tree n b)
 itraverse f (Leaf x)   = Leaf <$> f WE x
 itraverse f (Node x y) = Node <$> itraverse (goLeft f) x <*> itraverse (goRight f) y
 
@@ -320,7 +320,7 @@ traverse1 :: Apply f => (a -> f b) -> Tree n a -> f (Tree n b)
 traverse1 f (Leaf x)   = Leaf <$> f x
 traverse1 f (Node x y) = Node <$> traverse1 f x <.> traverse1 f y
 
-itraverse1 :: Apply f => (Fiw n -> a -> f b) -> Tree n a -> f (Tree n b)
+itraverse1 :: Apply f => (Wrd n -> a -> f b) -> Tree n a -> f (Tree n b)
 itraverse1 f (Leaf x)   = Leaf <$> f WE x
 itraverse1 f (Node x y) = Node <$> itraverse1 (goLeft f) x <.> itraverse1 (goRight f) y
 #endif
@@ -335,7 +335,7 @@ zipWith f (Leaf x)   (Leaf y)   = Leaf (f x y)
 zipWith f (Node x y) (Node u v) = Node (zipWith f x u) (zipWith f y v)
 
 -- | Zip two 'Tree's. with a function that also takes the elements' indices.
-izipWith :: (Fiw n -> a -> b -> c) -> Tree n a -> Tree n b -> Tree n c
+izipWith :: (Wrd n -> a -> b -> c) -> Tree n a -> Tree n b -> Tree n c
 izipWith f (Leaf x)   (Leaf y)   = Leaf (f WE x y)
 izipWith f (Node x y) (Node u v) = Node (izipWith (goLeft f) x u) (izipWith (goRight f) y v)
 
@@ -353,8 +353,8 @@ repeat x = N.induction1 (Leaf x) (\t -> Node t t)
 
 -- | Get all @'Vec' n 'Bool'@ indices in @'Tree' n@.
 --
--- >>> universe :: Tree N.Nat2 (Fiw N.Nat2)
+-- >>> universe :: Tree N.Nat2 (Wrd N.Nat2)
 -- Node (Node (Leaf 0b00) (Leaf 0b01)) (Node (Leaf 0b10) (Leaf 0b11))
 --
-universe :: N.SNatI n => Tree n (Fiw n)
+universe :: N.SNatI n => Tree n (Wrd n)
 universe = tabulate id
