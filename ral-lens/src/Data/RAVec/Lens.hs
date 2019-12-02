@@ -3,22 +3,24 @@
 {-# LANGUAGE RankNTypes            #-}
 {-# LANGUAGE TypeFamilies          #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
-module Data.RAL.Tree.Lens (
+module Data.RAVec.Lens (
     -- * Indexing
     ix,
     ) where
 
-import Prelude ()
 import Control.Applicative ((<$>))
-import Data.Wrd (Wrd (..))
+import Data.Bin.Pos        (Pos (..))
+import Prelude ()
 
-import qualified Control.Lens as L
+import qualified Control.Lens             as L
+import qualified Data.RAVec.NonEmpty.Lens as NE
 
-import Data.RAL.Tree
+import Data.RAVec
 
 -- $setup
 -- >>> import Control.Lens ((^.), (&), (.~), (^?), (#))
 -- >>> import Prelude
+-- >>> import qualified Data.Type.Bin as B
 
 -------------------------------------------------------------------------------
 -- Indexing
@@ -26,35 +28,31 @@ import Data.RAL.Tree
 
 -- | Index lens.
 --
--- >>> let tree = Node (Node (Leaf 'a') (Leaf 'b')) (Node (Leaf 'c') (Leaf 'd'))
--- >>> tree & ix (W1 $ W0 WE) .~ 'z'
--- Node (Node (Leaf 'a') (Leaf 'b')) (Node (Leaf 'z') (Leaf 'd'))
---
-ix :: Wrd n -> L.Lens' (Tree n a) a
-ix WE      f (Leaf x)   = Leaf <$> f x
-ix (W0 is) f (Node x y) = (`Node` y) <$> ix is f x
-ix (W1 is) f (Node x y) = (x `Node`) <$> ix is f y
+-- >>> let Just ral = fromList "xyz" :: Maybe (RAVec B.Bin3 Char)
+-- >>> ral & ix maxBound .~ 'Z'
+-- NonEmpty (NE (Cons1 (Leaf 'x') (Last (Node (Leaf 'y') (Leaf 'Z')))))
+ix :: Pos b -> L.Lens' (RAVec b a) a
+ix (Pos n) f (NonEmpty x) = NonEmpty <$> NE.ix n f x
 
 -------------------------------------------------------------------------------
 -- Instances
 -------------------------------------------------------------------------------
 
-instance L.FunctorWithIndex (Wrd n) (Tree n) where
+instance L.FunctorWithIndex (Pos b) (RAVec b) where
     imap = imap
 
-instance L.FoldableWithIndex (Wrd n) (Tree n) where
+instance L.FoldableWithIndex (Pos b) (RAVec b) where
     ifoldMap = ifoldMap
     ifoldr   = ifoldr
-    ifoldl   = ifoldl
 
-instance L.TraversableWithIndex (Wrd n) (Tree n) where
+instance L.TraversableWithIndex (Pos b) (RAVec b) where
     itraverse = itraverse
 
-instance L.Each (Tree n a) (Tree n b) a b where
+instance L.Each (RAVec n a) (RAVec n b) a b where
     each = traverse
 
-type instance L.Index (Tree n a)   = Wrd n
-type instance L.IxValue (Tree n a) = a
+type instance L.Index   (RAVec n a) = Pos n
+type instance L.IxValue (RAVec n a) = a
 
-instance L.Ixed (Tree n a) where
+instance L.Ixed (RAVec b a) where
     ix = ix

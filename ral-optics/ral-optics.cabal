@@ -7,7 +7,7 @@ description:
   This package provides optics and instances for type-classes in @optics@
   package.
   .
-  "Data.RAL.Optics" re-exports all orphan instances defined in this package.
+  "Data.RAVec.Optics" re-exports all orphan instances defined in this package.
 
 homepage:           https://github.com/phadej/vec
 bug-reports:        https://github.com/phadej/vec/issues
@@ -35,8 +35,9 @@ library
   hs-source-dirs:   src
   ghc-options:      -Wall -fprint-explicit-kinds
   exposed-modules:
-    Data.RAL.Optics
-    Data.RAL.Tree.Optics
+    Data.RAVec.Optics
+    Data.RAVec.NonEmpty.Optics
+    Data.RAVec.Tree.Optics
 
   build-depends:
     , base         >=4.9   && <4.14

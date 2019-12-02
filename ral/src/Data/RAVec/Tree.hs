@@ -10,7 +10,7 @@
 {-# LANGUAGE StandaloneDeriving     #-}
 {-# LANGUAGE TypeFamilies           #-}
 -- | Depth indexed perfect binary tree.
-module Data.RAL.Tree (
+module Data.RAVec.Tree (
     Tree (..),
 
     -- * Construction
@@ -32,6 +32,8 @@ module Data.RAL.Tree (
     ifoldMap1,
     foldr,
     ifoldr,
+    foldr1Map,
+    ifoldr1Map,
     foldl,
     ifoldl,
     length,
@@ -269,6 +271,14 @@ foldr f z (Node x y) = foldr f (foldr f z y) x
 ifoldr :: (Wrd n -> a -> b -> b) -> b -> Tree n a -> b
 ifoldr f z (Leaf x)   = f WE x z
 ifoldr f z (Node x y) = ifoldr (goLeft f) (ifoldr (goRight f) z y) x
+
+foldr1Map :: (a -> b -> b) -> (a -> b) -> Tree n a -> b
+foldr1Map _ z (Leaf x)   = z x
+foldr1Map f z (Node x y) = foldr f (foldr1Map f z y) x
+
+ifoldr1Map :: (Wrd n -> a -> b -> b) -> (Wrd n -> a -> b) -> Tree n a -> b
+ifoldr1Map _ z (Leaf x) = z WE x
+ifoldr1Map f z (Node x y) = ifoldr (goLeft f) (ifoldr1Map (goRight f) (goRight z) y) x
 
 -- | >>> foldl (flip (:)) [] $ Node (Leaf True) (Leaf False)
 -- [False,True]
