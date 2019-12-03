@@ -518,6 +518,6 @@ universe = coerce (universe' :: NERAVec' 'Z b (PosP' 'Z b))
 
 universe' :: forall n b. (N.SNatI n, SBinPI b) => NERAVec' n b (PosP' n b)
 universe' = case sbinp :: SBinP b of
-    SBE -> Last   (fmap AtEnd Tree.universe)
+    SBE -> Last  (fmap AtEnd Tree.universe)
     SB0 -> Cons0 (fmap There0 universe')
     SB1 -> Cons1 (fmap Here Tree.universe) (fmap There1 universe')

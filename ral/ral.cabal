@@ -55,6 +55,9 @@ library
   hs-source-dirs:   src
   ghc-options:      -Wall -fprint-explicit-kinds
   exposed-modules:
+    Data.RAList
+    Data.RAList.NonEmpty
+    Data.RAList.Tree
     Data.RAVec
     Data.RAVec.NonEmpty
     Data.RAVec.Tree
