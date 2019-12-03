@@ -62,6 +62,7 @@ library
     Data.RAVec.NonEmpty
     Data.RAVec.Tree
 
+
   -- GHC boot libs
   build-depends:
     , base     >=4.7     && <4.14
@@ -88,6 +89,10 @@ library
 
   if flag(semigroupoids)
     build-depends: semigroupoids >=5.2.2 && <5.4
+
+  -- heterogenous RAList
+  if impl(ghc >= 8.0)
+    exposed-modules: Data.HRAList
 
 -- dump-core
 -- if impl(ghc >= 8.0)
