@@ -170,7 +170,12 @@ instance Hashable Bin where
 predP :: BinP -> Bin
 predP BE     = BZ
 predP (B1 n) = BP (B0 n)
-predP (B0 n) = BP (mult2Plus1 (predP n))
+predP (B0 n) = BP (go n) where
+    go :: BinP -- @00001xyz@
+       -> BinP -- @11110xyz@
+    go BE     = BE
+    go (B1 m) = B1 (B0 m)
+    go (B0 m) = B1 (go m)
 
 mult2 :: Bin -> Bin
 mult2 BZ     = BZ
