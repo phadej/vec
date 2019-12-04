@@ -28,6 +28,8 @@ module Data.Type.Bin (
     -- ** Successor
     Succ, Succ', Succ'',
     withSucc,
+    -- ** Predecessor
+    Pred,
     -- ** Addition
     Plus,
     -- ** Extras
@@ -307,6 +309,38 @@ withSucc p k = case sbin :: SBin b of
 
 withSucc' :: forall b r. SBinPI b => Proxy ('BP b) -> (SBinPI (BP.Succ b) => r) -> r
 withSucc' _ k = BP.withSucc (Proxy :: Proxy b) k
+
+-------------------------------------------------------------------------------
+-- Predecessor
+-------------------------------------------------------------------------------
+
+-- | Predecessor type family..
+--
+-- >>> :kind! Pred BP.BinP1
+-- Pred BP.BinP1 :: Bin
+-- = 'BZ
+--
+-- >>> :kind! Pred BP.BinP5
+-- Pred BP.BinP5 :: Bin
+-- = 'BP ('B0 ('B0 BP.BinP1))
+--
+-- >>> :kind! Pred BP.BinP8
+-- Pred BP.BinP8 :: Bin
+-- = 'BP ('B1 ('B1 'BE))
+--
+-- >>> :kind! Pred BP.BinP6
+-- Pred BP.BinP6 :: Bin
+-- = 'BP ('B1 ('B0 'BE))
+--
+type family Pred (b :: BinP) :: Bin where
+    Pred 'BE     = 'BZ
+    Pred ('B1 n) = 'BP ('B0 n)
+    Pred ('B0 n) = 'BP (Pred' n)
+
+type family Pred' (b :: BinP) :: BinP where
+    Pred' 'BE     = 'BE
+    Pred' ('B1 m) = 'B1 ('B0 m)
+    Pred' ('B0 m) = 'B1 (Pred' m)
 
 -------------------------------------------------------------------------------
 -- Arithmetic: Plus
