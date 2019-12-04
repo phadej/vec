@@ -19,6 +19,7 @@ module Data.RAVec (
     RAVec (..),
 
     -- * Construction
+    empty,
     singleton,
     cons,
     withCons,
