@@ -12,6 +12,8 @@
 module Data.BinP.PosP (
     PosP (..),
     PosP' (..),
+    -- * Top & Pop
+    top, pop,
     -- * Showing
     explicitShow,
     explicitShow',
@@ -28,9 +30,9 @@ module Data.BinP.PosP (
     ) where
 
 import Prelude
-       (Bounded (..), Eq, Int, Integer, Num, Ord (..), Ordering (..),
-       Show (..), ShowS, String, Either (..), either, fmap, fromIntegral, map, showParen,
-       showString, ($), (*), (+), (++), (.))
+       (Bounded (..), Either (..), Eq, Int, Integer, Num, Ord (..),
+       Ordering (..), Show (..), ShowS, String, either, fmap, fromIntegral,
+       map, showParen, showString, ($), (*), (+), (++), (.))
 
 import Data.Bin        (BinP (..))
 import Data.Nat        (Nat (..))
@@ -39,8 +41,9 @@ import Data.Typeable   (Typeable)
 import Data.Wrd        (Wrd (..))
 import Numeric.Natural (Natural)
 
+import qualified Data.Bin        as B
 import qualified Data.Type.Bin   as B
-import qualified Data.Type.BinP   as BP
+import qualified Data.Type.BinP  as BP
 import qualified Data.Type.Nat   as N
 import qualified Data.Wrd        as W
 import qualified Test.QuickCheck as QC
@@ -204,6 +207,29 @@ exp2 = N.induction (KNat 1) (\(KNat n) -> KNat (n * 2))
 -- 0
 boring :: PosP 'BE
 boring = minBound
+
+-------------------------------------------------------------------------------
+-- top & pop
+-------------------------------------------------------------------------------
+
+-- | 'top' and 'pop' serve as 'FZ' and 'FS', with types specified so
+-- type-inference works backwards from the result.
+--
+-- >>> top :: PosP BinP4
+-- 0
+--
+-- >>> pop (pop top) :: PosP BinP4
+-- 2
+--
+-- >>> pop (pop top) :: PosP BinP9
+-- 2
+--
+top :: SBinPI b => PosP b
+top = minBound
+
+-- | See 'top'.
+pop :: (SBinPI a, B.Pred b ~ 'B.BP a, Succ a ~ b) => PosP a -> PosP b
+pop = weakenRight1
 
 -------------------------------------------------------------------------------
 -- Append and Split
