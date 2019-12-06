@@ -7,8 +7,8 @@ packages: vec
 packages: ral-lens
 packages: vec-lens
 
--- packages: ral-optics
--- packages: vec-optics
+packages: ral-optics
+packages: vec-optics
 
 packages: tests
 
