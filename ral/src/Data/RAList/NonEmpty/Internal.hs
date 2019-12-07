@@ -23,6 +23,7 @@ module Data.RAList.NonEmpty.Internal (
     last,
     -- * Conversions
     toNonEmpty,
+    toList,
     fromNonEmpty,
     -- * Folding
     foldMap1,
@@ -53,11 +54,10 @@ import Data.Maybe          (fromMaybe)
 import Data.Monoid         (Monoid (..))
 import Data.Semigroup      (Semigroup (..))
 
+import qualified Data.Foldable      as I (Foldable (..))
 import qualified Data.List.NonEmpty as NEList
-import qualified Data.RAList.Tree   as Tr
-
-import qualified Data.Foldable    as I (Foldable (..))
-import qualified Data.Traversable as I (Traversable (..))
+import qualified Data.Traversable   as I (Traversable (..))
+import qualified Test.QuickCheck    as QC
 
 #ifdef MIN_VERSION_semigroupoids
 import Data.Functor.Apply (Apply (..))
@@ -69,6 +69,8 @@ import qualified Data.Semigroup.Traversable as I (Traversable1 (..))
 #if !MIN_VERSION_base(4,11,0)
 import Data.Semigroup (WrappedMonoid (..))
 #endif
+
+import qualified Data.RAList.Tree as Tr
 
 import Data.RAList.Tree (Leaf (..), Node (..))
 
@@ -206,6 +208,9 @@ consTree x (Cons1 t r) = Cons0 (consTree (Nd x t) r)
 
 toNonEmpty :: NERAList a -> NonEmpty a
 toNonEmpty = foldr1Map NEList.cons (:|[])
+
+toList :: NERAList a -> [a]
+toList = I.foldr (:) []
 
 -- |
 --
@@ -403,6 +408,34 @@ adjust i f (NE xs) = NE (go 0 1 xs) where
     go  o  s (Cons1 t r)
         | i - o < s = Cons1 (Tr.adjust s (i - o) f t) r
         | otherwise = Cons1 t (go (o + s) (s + s) r)
+
+-------------------------------------------------------------------------------
+-- QuickCheck
+-------------------------------------------------------------------------------
+
+instance QC.Arbitrary1 NERAList where
+    liftArbitrary arb = do
+        x  <- arb
+        xs <- QC.liftArbitrary arb
+        pure (fromNonEmpty (x :| xs))
+
+    liftShrink shr
+        = fmap (\(x,xs) -> fromNonEmpty (x:|xs))
+        . QC.liftShrink2 shr (QC.liftShrink shr)
+        . (\(x:|xs) -> (x,xs)) . toNonEmpty
+
+instance QC.Arbitrary a => QC.Arbitrary (NERAList a) where
+    arbitrary = QC.arbitrary1
+    shrink    = QC.shrink1
+
+instance QC.CoArbitrary a => QC.CoArbitrary (NERAList a) where
+    coarbitrary xs = QC.coarbitrary (y, ys) where
+        (y:|ys) = toNonEmpty xs
+
+instance QC.Function a => QC.Function (NERAList a) where
+    function = QC.functionMap (fwd . toNonEmpty) (fromNonEmpty . bwd) where
+        fwd (x :| xs) = (x, xs)
+        bwd (x, xs) = x :| xs
 
 -------------------------------------------------------------------------------
 -- Utilities
