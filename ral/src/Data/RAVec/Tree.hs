@@ -56,11 +56,16 @@ module Data.RAVec.Tree (
 
     -- * Universe
     universe,
+
+    -- * QuickCheck
+    liftArbitrary,
+    liftShrink,
+
     ) where
 
 import Prelude
-       (Bool (..), Eq (..), Functor (..), Int, Ord (..), Show, id, seq, ($),
-       (*), (.))
+       (Bool (..), Eq (..), Functor (..), Int, Ord (..), Show, id, seq,
+       uncurry, ($), (*), (.))
 
 import Control.Applicative (Applicative (..), (<$>))
 import Control.DeepSeq     (NFData (..))
@@ -76,6 +81,7 @@ import qualified Data.Type.Nat as N
 -- instances
 import qualified Data.Foldable    as I (Foldable (..))
 import qualified Data.Traversable as I (Traversable (..))
+import qualified Test.QuickCheck  as QC
 
 #ifdef MIN_VERSION_distributive
 import qualified Data.Distributive as I (Distributive (..))
@@ -368,3 +374,36 @@ repeat x = N.induction1 (Leaf x) (\t -> Node t t)
 --
 universe :: N.SNatI n => Tree n (Wrd n)
 universe = tabulate id
+
+-------------------------------------------------------------------------------
+-- QuickCheck
+-------------------------------------------------------------------------------
+
+instance N.SNatI n => QC.Arbitrary1 (Tree n) where
+    liftArbitrary = liftArbitrary
+    liftShrink    = liftShrink
+
+liftArbitrary :: forall n a. N.SNatI n => QC.Gen a -> QC.Gen (Tree n a)
+liftArbitrary arb = getArb $ N.induction1 (Arb (fmap Leaf arb)) step where
+    step :: Arb m a -> Arb ('S m) a
+    step (Arb rec) = Arb $ Node <$> rec <*> rec
+
+newtype Arb n a = Arb { getArb :: QC.Gen (Tree n a) }
+
+liftShrink :: forall n a. (a -> [a]) -> Tree n a -> [Tree n a]
+liftShrink shr (Leaf x)   = Leaf <$> shr x
+liftShrink shr (Node l r) = uncurry Node <$> QC.liftShrink2 rec rec (l, r) where
+    rec = liftShrink shr
+
+instance (N.SNatI n, QC.Arbitrary a) => QC.Arbitrary (Tree n a) where
+    arbitrary = QC.arbitrary1
+    shrink    = QC.shrink1
+
+instance QC.CoArbitrary a => QC.CoArbitrary (Tree n a) where
+    coarbitrary (Leaf x)   = QC.variant (0 :: Int) . QC.coarbitrary x
+    coarbitrary (Node l r) = QC.variant (1 :: Int) . QC.coarbitrary (l, r)
+
+instance (N.SNatI n, QC.Function a) => QC.Function (Tree n a) where
+    function = case N.snat :: N.SNat n of
+        N.SZ -> QC.functionMap (\(Leaf x) -> x)         Leaf
+        N.SS -> QC.functionMap (\(Node l r ) -> (l, r)) (uncurry Node)

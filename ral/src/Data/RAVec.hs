@@ -61,11 +61,14 @@ module Data.RAVec (
     -- * Universe
     universe,
     repeat,
+
+    -- * QuickCheck
+    liftArbitrary,
+    liftShrink,
     )  where
 
 import Prelude
-       (Bool (..), Eq (..), Functor (..), Maybe (..), Ord (..), Show, ($),
-       (.))
+       (Bool (..), Eq (..), Functor (..), Int, Maybe (..), Ord (..), Show, ($), (.))
 
 import Control.Applicative (Applicative (..), (<$>))
 import Control.DeepSeq     (NFData (..))
@@ -84,6 +87,7 @@ import qualified Data.Type.Bin       as B
 
 import qualified Data.Foldable    as I (Foldable (..))
 import qualified Data.Traversable as I (Traversable (..))
+import qualified Test.QuickCheck  as QC
 
 #ifdef MIN_VERSION_distributive
 import qualified Data.Distributive as I (Distributive (..))
@@ -427,3 +431,31 @@ universe :: forall b. SBinI b => RAVec b (Pos b)
 universe = case sbin :: SBin b of
     SBZ -> Empty
     SBP -> NonEmpty (fmap Pos NE.universe)
+
+-------------------------------------------------------------------------------
+-- QuickCheck
+-------------------------------------------------------------------------------
+
+liftArbitrary :: B.SBinI b => QC.Gen a -> QC.Gen (RAVec b a)
+liftArbitrary = liftArbitrary
+
+liftShrink :: (a -> [a]) -> RAVec b a -> [RAVec b a]
+liftShrink _   Empty        = []
+liftShrink shr (NonEmpty r) = NonEmpty <$> NE.liftShrink shr r
+
+instance B.SBinI b => QC.Arbitrary1 (RAVec b) where
+    liftArbitrary = liftArbitrary
+    liftShrink    = liftShrink
+
+instance (B.SBinI b, QC.Arbitrary a) => QC.Arbitrary (RAVec b a) where
+    arbitrary = QC.arbitrary1
+    shrink    = QC.shrink1
+
+instance QC.CoArbitrary a => QC.CoArbitrary (RAVec b a) where
+    coarbitrary Empty        = QC.variant (0 :: Int)
+    coarbitrary (NonEmpty r) = QC.variant (1 :: Int) . QC.coarbitrary r
+
+instance (B.SBinI b, QC.Function a) => QC.Function (RAVec b a) where
+    function = case B.sbin :: B.SBin b of
+        SBZ -> QC.functionMap (\Empty -> ())       (\() -> Empty) 
+        SBP -> QC.functionMap (\(NonEmpty r) -> r) NonEmpty
