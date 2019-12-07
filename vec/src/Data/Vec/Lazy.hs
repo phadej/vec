@@ -77,7 +77,7 @@ module Data.Vec.Lazy (
 
 import Prelude
        (Bool (..), Eq (..), Functor (..), Int, Maybe (..), Monad (..),
-       Num (..), Ord (..), Show (..), id, seq, showParen, showString, ($), (.))
+       Num (..), Ord (..), Show (..), id, seq, uncurry, showParen, showString, ($), (.))
 
 import Control.Applicative (Applicative (..), (<$>))
 import Control.DeepSeq     (NFData (..))
@@ -90,19 +90,20 @@ import Data.Semigroup      (Semigroup (..))
 import Data.Typeable       (Typeable)
 
 --- Instances
-import qualified Data.Foldable              as I (Foldable (..))
-import qualified Data.Traversable           as I (Traversable (..))
+import qualified Data.Foldable    as I (Foldable (..))
+import qualified Data.Traversable as I (Traversable (..))
+import qualified Test.QuickCheck  as QC
 
 #ifdef MIN_VERSION_adjunctions
 import qualified Data.Functor.Rep as I (Representable (..))
 #endif
 
 #ifdef MIN_VERSION_distributive
-import Data.Distributive   (Distributive (..))
+import Data.Distributive (Distributive (..))
 #endif
 
 #ifdef MIN_VERSION_semigroupoids
-import Data.Functor.Apply  (Apply (..))
+import Data.Functor.Apply (Apply (..))
 
 import qualified Data.Functor.Bind          as I (Bind (..))
 import qualified Data.Semigroup.Foldable    as I (Foldable1 (..))
@@ -685,3 +686,40 @@ instance (a ~ a2, a ~ a3, a ~ a4, b ~ b2, b ~ b3, b ~ b4) => VecEach (a, a2, a3,
 
     traverseWithVec f ~(x, y, z, u) = f (x ::: y ::: z ::: u ::: VNil) <&> \res -> case res of
         x' ::: y' ::: z' ::: u' ::: VNil -> (x', y', z', u')
+
+-------------------------------------------------------------------------------
+-- QuickCheck
+-------------------------------------------------------------------------------
+
+instance N.SNatI n => QC.Arbitrary1 (Vec n) where
+    liftArbitrary = liftArbitrary
+    liftShrink    = liftShrink
+
+liftArbitrary :: forall n a. N.SNatI n => QC.Gen a -> QC.Gen (Vec n a)
+liftArbitrary arb = getArb $ N.induction1 (Arb (return VNil)) step where
+    step :: Arb m a -> Arb ('S m) a
+    step (Arb rec) = Arb $ (:::) <$> arb <*> rec
+
+newtype Arb n a = Arb { getArb :: QC.Gen (Vec n a) }
+
+liftShrink :: forall n a. N.SNatI n => (a -> [a]) -> Vec n a -> [Vec n a]
+liftShrink shr = getShr $ N.induction1 (Shr $ \VNil -> []) step where
+    step :: Shr m a -> Shr ('S m) a
+    step (Shr rec) = Shr $ \(x ::: xs) ->
+        uncurry (:::) <$> QC.liftShrink2 shr rec (x, xs)
+
+newtype Shr n a = Shr { getShr :: Vec n a -> [Vec n a] }
+
+instance (N.SNatI n, QC.Arbitrary a) => QC.Arbitrary (Vec n a) where
+    arbitrary = QC.arbitrary1
+    shrink    = QC.shrink1
+
+instance (N.SNatI n, QC.CoArbitrary a) => QC.CoArbitrary (Vec n a) where
+    coarbitrary v = case N.snat :: N.SNat n of
+        N.SZ -> QC.variant (0 :: Int)
+        N.SS -> QC.variant (1 :: Int) . (case v of (x ::: xs) -> QC.coarbitrary (x, xs))
+
+instance (N.SNatI n, QC.Function a) => QC.Function (Vec n a) where
+    function = case N.snat :: N.SNat n of
+        N.SZ -> QC.functionMap (\VNil -> ()) (\() -> VNil)
+        N.SS -> QC.functionMap (\(x ::: xs) -> (x, xs)) (\(x,xs) -> x ::: xs)
