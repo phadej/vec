@@ -116,7 +116,7 @@ module Data.Vec.DataFamily.SpineStrict (
 import Prelude
        (Bool (..), Eq (..), Functor (..), Int, Maybe (..), Monad (..),
        Num (..), Ord (..), Ordering (EQ), Show (..), ShowS, const, flip, id,
-       seq, showParen, showString, ($), (&&), (.))
+       seq, showParen, showString, uncurry, ($), (&&), (.))
 
 import Control.Applicative (Applicative (..), liftA2, (<$>))
 import Control.DeepSeq     (NFData (..))
@@ -129,13 +129,14 @@ import Data.Semigroup      (Semigroup (..))
 --- Instances
 import qualified Data.Foldable    as I (Foldable (..))
 import qualified Data.Traversable as I (Traversable (..))
+import qualified Test.QuickCheck  as QC
 
 #ifdef MIN_VERSION_adjunctions
 import qualified Data.Functor.Rep as I (Representable (..))
 #endif
 
 #ifdef MIN_VERSION_distributive
-import Data.Distributive   (Distributive (..))
+import Data.Distributive (Distributive (..))
 #endif
 
 #ifdef MIN_VERSION_semigroupoids
@@ -866,3 +867,40 @@ ensureSpine = getEnsureSpine (N.inlineInduction1 first step) where
     step (EnsureSpine go) = EnsureSpine $ \ ~(x ::: xs) -> x ::: go xs
 
 newtype EnsureSpine n a = EnsureSpine { getEnsureSpine :: Vec n a -> Vec n a }
+
+-------------------------------------------------------------------------------
+-- QuickCheck
+-------------------------------------------------------------------------------
+
+instance N.SNatI n => QC.Arbitrary1 (Vec n) where
+    liftArbitrary = liftArbitrary
+    liftShrink    = liftShrink
+
+liftArbitrary :: forall n a. N.SNatI n => QC.Gen a -> QC.Gen (Vec n a)
+liftArbitrary arb = getArb $ N.induction1 (Arb (return VNil)) step where
+    step :: Arb m a -> Arb ('S m) a
+    step (Arb rec) = Arb $ (:::) <$> arb <*> rec
+
+newtype Arb n a = Arb { getArb :: QC.Gen (Vec n a) }
+
+liftShrink :: forall n a. N.SNatI n => (a -> [a]) -> Vec n a -> [Vec n a]
+liftShrink shr = getShr $ N.induction1 (Shr $ \VNil -> []) step where
+    step :: Shr m a -> Shr ('S m) a
+    step (Shr rec) = Shr $ \(x ::: xs) ->
+        uncurry (:::) <$> QC.liftShrink2 shr rec (x, xs)
+
+newtype Shr n a = Shr { getShr :: Vec n a -> [Vec n a] }
+
+instance (N.SNatI n, QC.Arbitrary a) => QC.Arbitrary (Vec n a) where
+    arbitrary = QC.arbitrary1
+    shrink    = QC.shrink1
+
+instance (N.SNatI n, QC.CoArbitrary a) => QC.CoArbitrary (Vec n a) where
+    coarbitrary v = case N.snat :: N.SNat n of
+        N.SZ -> QC.variant (0 :: Int)
+        N.SS -> QC.variant (1 :: Int) . (case v of (x ::: xs) -> QC.coarbitrary (x, xs))
+
+instance (N.SNatI n, QC.Function a) => QC.Function (Vec n a) where
+    function = case N.snat :: N.SNat n of
+        N.SZ -> QC.functionMap (\VNil -> ()) (\() -> VNil)
+        N.SS -> QC.functionMap (\(x ::: xs) -> (x, xs)) (\(x,xs) -> x ::: xs)
