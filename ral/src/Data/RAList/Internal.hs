@@ -44,6 +44,7 @@ import Data.Semigroup      (Semigroup (..))
 
 import qualified Data.Foldable    as I (Foldable (..))
 import qualified Data.Traversable as I (Traversable (..))
+import qualified Test.QuickCheck  as QC
 
 import qualified Data.RAList.NonEmpty.Internal as NE
 
@@ -242,6 +243,24 @@ itraverse f (NonEmpty xs) = NonEmpty <$> NE.itraverse f xs
 adjust :: forall a. Int -> (a -> a) -> RAList a -> RAList a
 adjust _ _ Empty         = Empty
 adjust i f (NonEmpty xs) = NonEmpty (NE.adjust i f xs)
+
+-------------------------------------------------------------------------------
+-- QuickCheck
+-------------------------------------------------------------------------------
+
+instance QC.Arbitrary1 RAList where
+    liftArbitrary = fmap fromList . QC.liftArbitrary
+    liftShrink shr = fmap fromList . QC.liftShrink shr . toList
+
+instance QC.Arbitrary a => QC.Arbitrary (RAList a) where
+    arbitrary = QC.arbitrary1
+    shrink    = QC.shrink1
+
+instance QC.CoArbitrary a => QC.CoArbitrary (RAList a) where
+    coarbitrary = QC.coarbitrary . toList
+
+instance QC.Function a => QC.Function (RAList a) where
+    function = QC.functionMap toList fromList
 
 -------------------------------------------------------------------------------
 -- Utilities
