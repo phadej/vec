@@ -1,7 +1,6 @@
 {-# LANGUAGE CPP                   #-}
 {-# LANGUAGE DataKinds             #-}
 {-# LANGUAGE DeriveDataTypeable    #-}
-{-# LANGUAGE EmptyCase             #-}
 {-# LANGUAGE FlexibleContexts      #-}
 {-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE GADTs                 #-}
@@ -21,8 +20,6 @@ module Data.RAVec.NonEmpty (
     singleton, singleton',
     cons, consTree,
     withCons, withConsTree,
-    head, head',
-    last, last',
 
     -- * Conversion
     toList, toList',
@@ -32,6 +29,10 @@ module Data.RAVec.NonEmpty (
     -- * Indexing
     (!), index',
     tabulate, tabulate',
+
+    unsingleton,
+    head, head',
+    last, last',
 
     -- * Folds
     foldMap, foldMap',
@@ -60,9 +61,13 @@ module Data.RAVec.NonEmpty (
 
     -- * Universe
     universe, universe',
+
+    -- * QuickCheck
+    liftArbitrary, liftArbitrary',
+    liftShrink, liftShrink',
     ) where
 
-import Prelude (Bool (..), Eq (..), Functor (..), Ord (..), Show, seq, ($), (.))
+import Prelude (Bool (..), uncurry, Int, Eq (..), Functor (..), Ord (..), Show, seq, ($), (.))
 
 import Control.Applicative (Applicative (..), (<$>))
 import Control.DeepSeq     (NFData (..))
@@ -84,6 +89,7 @@ import qualified Data.Type.Nat      as N
 
 import qualified Data.Foldable    as I (Foldable (..))
 import qualified Data.Traversable as I (Traversable (..))
+import qualified Test.QuickCheck  as QC
 
 #ifdef MIN_VERSION_distributive
 import qualified Data.Distributive as I (Distributive (..))
@@ -286,6 +292,9 @@ withConsTree :: SBinP b -> Tree n a -> NERAVec' n b a -> (SBinPI (BP.Succ b) => 
 withConsTree SBE x (Last t)    k = k (Cons0 (Last (Node x t)))
 withConsTree SB0 x (Cons0 r)   k = k (Cons1 x r)
 withConsTree SB1 x (Cons1 t r) k = withConsTree sbinp (Node x t) r $ k . Cons0
+
+unsingleton :: NERAVec 'BE a -> a
+unsingleton (NE (Last (Tree.Leaf x))) = x
 
 head :: NERAVec b a -> a
 head (NE x) = head' x
@@ -521,3 +530,85 @@ universe' = case sbinp :: SBinP b of
     SBE -> Last  (fmap AtEnd Tree.universe)
     SB0 -> Cons0 (fmap There0 universe')
     SB1 -> Cons1 (fmap Here Tree.universe) (fmap There1 universe')
+
+-------------------------------------------------------------------------------
+-- Out-of-order combining
+-------------------------------------------------------------------------------
+
+{-
+appendB0 :: NERAVec b a -> NERAVec b a -> NERAVec ('B0 b) a
+appendB0 (NE xs) (NE ys) = NE (Cons0 (appendB' xs ys)) where
+
+appendB1 :: a -> NERAVec b a -> NERAVec b a -> NERAVec ('B1 b) a
+appendB1 x (NE ys) (NE zs) = NE (Cons1 (Tree.Leaf x) (appendB' ys zs))
+
+appendB' :: NERAVec' n b a -> NERAVec' n b a -> NERAVec' ('S n) b a
+appendB' (Last  t)   (Last  t')    = Last (Tree.Node t t')
+appendB' (Cons0   r) (Cons0    r') = Cons0 (appendB' r r')
+appendB' (Cons1 t r) (Cons1 t' r') = Cons1 (Tree.Node t t') (appendB' r r')
+
+splitB0 :: NERAVec ('B0 b) a -> (NERAVec b a, NERAVec b a)
+splitB0 (NE (Cons0 xs)) =
+    let (ys, zs) = splitB' xs in (NE ys, NE zs)
+
+splitB1 :: NERAVec ('B1 b) a -> (a, NERAVec b a, NERAVec b a)
+splitB1 (NE (Cons1 (Tree.Leaf x) xs)) =
+    let (ys, zs) = splitB' xs in (x, NE ys, NE zs)
+
+splitB' :: NERAVec' ('S n) b a -> (NERAVec' n b a, NERAVec' n b a)
+splitB' (Last (Tree.Node t t'))    = (Last t, Last t')
+splitB' (Cons0                  r) =
+    let (a, b) = splitB' r in (Cons0 a, Cons0 b)
+splitB' (Cons1 (Tree.Node t t') r) =
+    let (a, b) = splitB' r in (Cons1 t a, Cons1 t' b)
+-}
+
+-------------------------------------------------------------------------------
+-- QuickCheck
+-------------------------------------------------------------------------------
+
+instance BP.SBinPI b => QC.Arbitrary1 (NERAVec b) where
+    liftArbitrary = liftArbitrary
+    liftShrink    = liftShrink
+
+liftArbitrary :: BP.SBinPI b => QC.Gen a -> QC.Gen (NERAVec b a)
+liftArbitrary = fmap NE . liftArbitrary'
+
+liftShrink :: (a -> [a]) -> NERAVec b a -> [NERAVec b a]
+liftShrink shr (NE r) = fmap NE (liftShrink' shr r)
+
+instance (BP.SBinPI b, N.SNatI n) => QC.Arbitrary1 (NERAVec' n b) where
+    liftArbitrary = liftArbitrary'
+    liftShrink    = liftShrink'
+
+liftArbitrary' :: forall b n a. (BP.SBinPI b, N.SNatI n) => QC.Gen a -> QC.Gen (NERAVec' n b a)
+liftArbitrary' arb = case BP.sbinp :: BP.SBinP b of
+    BP.SBE -> Last  <$> QC.liftArbitrary arb
+    BP.SB0 -> Cons0 <$> liftArbitrary' arb
+    BP.SB1 -> Cons1 <$> QC.liftArbitrary arb <*> liftArbitrary' arb
+
+liftShrink' :: forall b n a. (a -> [a]) -> NERAVec' n b a -> [NERAVec' n b a]
+liftShrink' shr (Last  t)   = Last <$> Tree.liftShrink shr t
+liftShrink' shr (Cons0   r) = Cons0 <$> liftShrink' shr r
+liftShrink' shr (Cons1 t r) = uncurry Cons1 <$> QC.liftShrink2 (Tree.liftShrink shr) (liftShrink' shr) (t, r)
+
+instance (BP.SBinPI b, QC.Arbitrary a) => QC.Arbitrary (NERAVec b a) where
+    arbitrary = QC.arbitrary1
+    shrink    = QC.shrink1
+
+instance QC.CoArbitrary a => QC.CoArbitrary (NERAVec b a) where
+    coarbitrary (NE r) = QC.coarbitrary r
+
+instance QC.CoArbitrary a => QC.CoArbitrary (NERAVec' n b a) where
+    coarbitrary (Last  t)   = QC.variant (0 :: Int) . QC.coarbitrary t
+    coarbitrary (Cons0   r) = QC.variant (1 :: Int) . QC.coarbitrary r
+    coarbitrary (Cons1 t r) = QC.variant (2 :: Int) . QC.coarbitrary (t, r)
+
+instance (BP.SBinPI b, QC.Function a) => QC.Function (NERAVec b a) where
+    function = QC.functionMap (\(NE r) -> r) NE
+
+instance (N.SNatI n, BP.SBinPI b, QC.Function a) => QC.Function (NERAVec' n b a) where
+    function = case BP.sbinp :: BP.SBinP b of
+        SBE -> QC.functionMap (\(Last t) -> t)         Last
+        SB0 -> QC.functionMap (\(Cons0 r) -> r)        Cons0
+        SB1 -> QC.functionMap (\(Cons1 t r) -> (t, r)) (uncurry Cons1)
