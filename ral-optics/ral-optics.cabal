@@ -18,12 +18,7 @@ maintainer:         Oleg.Grenrus <oleg.grenrus@iki.fi>
 copyright:          (c) 2019 Oleg Grenrus
 build-type:         Simple
 extra-source-files: ChangeLog.md
-tested-with:
-  GHC ==8.0.2
-   || ==8.2.2
-   || ==8.4.4
-   || ==8.6.5
-   || ==8.8.1
+tested-with:        GHC ==8.0.2 || ==8.2.2 || ==8.4.4 || ==8.6.5 || ==8.8.1
 
 source-repository head
   type:     git
@@ -35,9 +30,15 @@ library
   hs-source-dirs:   src
   ghc-options:      -Wall -fprint-explicit-kinds
   exposed-modules:
-    Data.RAVec.Optics
+    Data.RAList.NonEmpty.Optics
+    Data.RAList.Optics
     Data.RAVec.NonEmpty.Optics
+    Data.RAVec.Optics
     Data.RAVec.Tree.Optics
+
+  other-modules:
+    Data.RAList.NonEmpty.Optics.Internal
+    Data.RAVec.NonEmpty.Optics.Internal
 
   build-depends:
     , base         >=4.9   && <4.14

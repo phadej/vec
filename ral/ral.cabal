@@ -65,6 +65,7 @@ library
   other-modules:
     Data.RAList.Internal
     Data.RAList.NonEmpty.Internal
+    Data.RAList.Tree.Internal
 
   -- GHC boot libs
   build-depends:
