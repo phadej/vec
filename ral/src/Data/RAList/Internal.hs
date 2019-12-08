@@ -18,6 +18,8 @@ module Data.RAList.Internal (
     -- * Indexing
     (!),
     (!?),
+    length,
+    null,
     -- * Conversions
     toList,
     fromList,
@@ -75,11 +77,8 @@ instance I.Foldable RAList where
     foldMap f (NonEmpty xs) = I.foldMap f xs
 
 #if MIN_VERSION_base(4,8,0)
-    length Empty = 0
-    length (NonEmpty xs) = I.length xs
-
-    null Empty        = True
-    null (NonEmpty _) = False
+    length = length
+    null   = null
 #endif
 
 instance NFData a => NFData (RAList a) where
@@ -196,6 +195,14 @@ fromList (x:xs) = NonEmpty (NE.fromNonEmpty (x :| xs))
 (!?) :: RAList a -> Int -> Maybe a
 Empty       !? _ = Nothing
 NonEmpty xs !? i = xs NE.!? i
+
+length :: RAList a -> Int
+length Empty         = 0
+length (NonEmpty xs) = NE.length xs
+
+null :: RAList a -> Bool
+null Empty        = True
+null (NonEmpty _) = False
 
 -------------------------------------------------------------------------------
 -- Folds

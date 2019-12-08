@@ -15,6 +15,8 @@ module Data.RAList (
     (!),
     (!?),
     uncons,
+    length,
+    null,
     -- * Conversions
     toList,
     fromList,

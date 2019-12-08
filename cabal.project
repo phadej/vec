@@ -12,7 +12,8 @@ packages: vec-optics
 
 packages: tests
 
-tests: true
+tests:      True
+benchmarks; True
 
 package dec
   ghc-options: -Wall
