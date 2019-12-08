@@ -21,6 +21,8 @@ module Data.RAList.NonEmpty.Internal (
     (!?),
     head,
     last,
+    length,
+    null,
     -- * Conversions
     toNonEmpty,
     toList,
@@ -112,13 +114,8 @@ instance I.Foldable NERAList where
     foldMap f (NE xs) = I.foldMap f xs
 
 #if MIN_VERSION_base(4,8,0)
-    length (NE xs) = go 0 1 xs where
-        go :: Int -> Int -> NERAList' n a -> Int
-        go !acc s (Last  _)   = acc + s
-        go  acc s (Cons0   r) = go acc       (s + s) r
-        go  acc s (Cons1 _ r) = go (acc + s) (s + s) r
-
-    null _ = False
+    length = length
+    null   = null
 #endif
 
 #ifdef MIN_VERSION_semigroupoids
@@ -291,6 +288,16 @@ last' :: Tr.IsTree f => NERAList' f a -> a
 last' (Last t)    = Tr.last t
 last' (Cons0 r)   = last' r
 last' (Cons1 _ r) = last' r
+
+length :: NERAList a -> Int
+length (NE xs) = go 0 1 xs where
+    go :: Int -> Int -> NERAList' n a -> Int
+    go !acc s (Last  _)   = acc + s
+    go  acc s (Cons0   r) = go acc       (s + s) r
+    go  acc s (Cons1 _ r) = go (acc + s) (s + s) r
+
+null :: NERAList a -> Bool
+null _ = False
 
 -------------------------------------------------------------------------------
 -- Folds

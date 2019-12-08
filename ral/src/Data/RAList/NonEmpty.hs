@@ -19,6 +19,8 @@ module Data.RAList.NonEmpty (
     last,
     uncons,
     tail,
+    length,
+    null,
     -- * Conversions
     toNonEmpty,
     fromNonEmpty,
