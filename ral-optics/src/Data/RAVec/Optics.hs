@@ -9,14 +9,10 @@ module Data.RAVec.Optics (
 
 import Control.Applicative        ((<$>))
 import Data.Bin.Pos               (Pos (..))
-import Data.BinP.PosP             (PosP (..), PosP' (..))
-import Data.RAVec.NonEmpty        (NERAVec (..), NERAVec' (..))
 import Data.RAVec.NonEmpty.Optics ()
-import Data.RAVec.Tree            (Tree (..))
-import Data.Wrd                   (Wrd (..))
-import Prelude                    (Functor, (.))
 
-import qualified Optics.Core as L
+import qualified Data.RAVec.NonEmpty.Optics.Internal as NE
+import qualified Optics.Core                         as L
 
 import Data.RAVec
 
@@ -24,9 +20,6 @@ import Data.RAVec
 -- >>> import Optics.Core (set)
 -- >>> import Prelude
 -- >>> import qualified Data.Type.Bin as B
-
-type LensLikeVL f s t a b = (a -> f b) -> s -> f t
-type LensLikeVL' f s a = LensLikeVL f s s a a
 
 -------------------------------------------------------------------------------
 -- Indexing
@@ -40,19 +33,8 @@ type LensLikeVL' f s a = LensLikeVL f s s a a
 ix :: Pos b -> L.Lens' (RAVec b a) a
 ix i = L.lensVL (ixVL i)
 
-ixVL :: Functor f => Pos b -> LensLikeVL' f (RAVec b a) a
-ixVL (Pos (PosP n)) f (NonEmpty (NE x)) = NonEmpty . NE <$> ixNEVL n f x
-
-ixNEVL :: Functor f => PosP' n b -> LensLikeVL' f (NERAVec' n b a) a
-ixNEVL (AtEnd i)  f (Last  t)   = Last <$> treeIxVL i f t
-ixNEVL (There0 i) f (Cons0   r) = Cons0 <$> ixNEVL i f r
-ixNEVL (There1 i) f (Cons1 t r) = (t `Cons1`) <$> ixNEVL i f r
-ixNEVL (Here i)   f (Cons1 t r) = (`Cons1` r) <$> treeIxVL i f t
-
-treeIxVL :: Functor f => Wrd n -> LensLikeVL' f (Tree n a) a
-treeIxVL WE      f (Leaf x)   = Leaf <$> f x
-treeIxVL (W0 is) f (Node x y) = (`Node` y) <$> treeIxVL is f x
-treeIxVL (W1 is) f (Node x y) = (x `Node`) <$> treeIxVL is f y
+ixVL :: Functor f => Pos b -> NE.LensLikeVL' f (RAVec b a) a
+ixVL (Pos n) f (NonEmpty x) = NonEmpty <$> NE.ixVL n f x
 
 -------------------------------------------------------------------------------
 -- Instances

@@ -70,7 +70,7 @@ import qualified Data.Semigroup.Traversable as I (Traversable1 (..))
 import Data.Semigroup (WrappedMonoid (..))
 #endif
 
-import qualified Data.RAList.Tree as Tr
+import qualified Data.RAList.Tree.Internal as Tr
 
 import Data.RAList.Tree (Leaf (..), Node (..))
 
@@ -362,10 +362,7 @@ imap f xs = unI (itraverse (\i x -> I (f i x)) xs)
 
 itraverse :: forall f a b. Applicative f => (Int -> a -> f b) -> NERAList a -> f (NERAList b)
 itraverse f (NE xs) = NE <$> go 0 1 xs where
-    go :: Tr.IsTree t
-      => Tr.Size -- offset
-      -> Tr.Size -- size
-      -> NERAList' t a -> f (NERAList' t b)
+    go :: Tr.IsTree t => Tr.Offset -> Tr.Size -> NERAList' t a -> f (NERAList' t b)
     go !o !s (Last  t)   = Last <$> Tr.itraverse o s f t
     go  o  s (Cons0   r) = Cons0 <$> go o (2 * s) r
     go  o  s (Cons1 t r) = Cons1
@@ -375,10 +372,7 @@ itraverse f (NE xs) = NE <$> go 0 1 xs where
 #ifdef MIN_VERSION_semigroupoids
 itraverse1 :: forall f a b. Apply f => (Int -> a -> f b) -> NERAList a -> f (NERAList b)
 itraverse1 f (NE xs) = NE <$> go 0 1 xs where
-    go :: Tr.IsTree t
-      => Tr.Size -- offset
-      -> Tr.Size -- size
-      -> NERAList' t a -> f (NERAList' t b)
+    go :: Tr.IsTree t => Tr.Offset -> Tr.Size -> NERAList' t a -> f (NERAList' t b)
     go !o !s (Last  t)   = Last <$> Tr.itraverse1 o s f t
     go  o  s (Cons0   r) = Cons0 <$> go o (2 * s) r
     go  o  s (Cons1 t r) = Cons1

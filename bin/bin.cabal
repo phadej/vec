@@ -56,9 +56,9 @@ library
     Data.Bin.Pos
     Data.BinP
     Data.BinP.PosP
-    Data.Wrd
     Data.Type.Bin
     Data.Type.BinP
+    Data.Wrd
 
   build-depends:
     , base        >=4.7     && <4.14

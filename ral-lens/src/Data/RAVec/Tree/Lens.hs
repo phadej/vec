@@ -50,8 +50,7 @@ instance L.FoldableWithIndex (Wrd n) (Tree n) where
 instance L.TraversableWithIndex (Wrd n) (Tree n) where
     itraverse = itraverse
 
-instance L.Each (Tree n a) (Tree n b) a b where
-    each = traverse
+instance L.Each (Tree n a) (Tree n b) a b
 
 type instance L.Index (Tree n a)   = Wrd n
 type instance L.IxValue (Tree n a) = a
