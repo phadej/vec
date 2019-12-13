@@ -3,10 +3,11 @@
 ## 0.1.1
 
 - Add `isMin` and `isMax`
-- Add `mirror`, `weakenRight1` and `weakenLeft1`.
+- Add `mirror`, `weakenRight1` and `weakenLeft1`
 - Add `Mult2` and `DivMod2`
-- Explicitly derive `Typeable SNat` and `Typeable LEProof`.
-- Derive 'Typeable' for 'Z' and 'S' on GHC-7.8 explicitly.
+- Explicitly derive `Typeable SNat` and `Typeable LEProof`
+- Derive `Typeable` for `Z` and `S` on GHC-7.8 explicitly
+- Add `QuickCheck` instances for `Nat` and `Fin`
 
 ## 0.1
 
