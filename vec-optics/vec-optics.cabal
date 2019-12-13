@@ -4,8 +4,8 @@ version:            0.3
 synopsis:           Vec: length-indexed (sized) list: optics support
 category:           Data, Dependent Types, Optics
 description:
-  This package provides optics and instances for type-classes in @optics@
-  package.
+  This package provides [optics](https://hackage.haskell.org/package/optics) and instances
+  for data types in [vec](https://hackage.haskell.org/package/vec) package.
   .
   "Data.Vec.Optics.Instances" provides all the instances.
   the other modules provide some named optics too.

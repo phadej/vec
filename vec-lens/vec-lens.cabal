@@ -4,8 +4,8 @@ version:            0.3
 synopsis:           Vec: length-indexed (sized) list: lens support
 category:           Data, Dependent Types, Lens
 description:
-  This package provides lenses and instances for type-classes in @lens@
-  package.
+  This package provides [lenses](https://hackage.haskell.org/package/lens) and instances
+  for data types in [vec](https://hackage.haskell.org/package/vec) package.
   .
   "Data.Vec.Lens.Instances" provides all the instances.
   the other modules provide some named lenses too.
