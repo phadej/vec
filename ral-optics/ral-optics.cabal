@@ -4,10 +4,8 @@ version:            0.1
 synopsis:           Length-indexed random access lists: optics utilities.
 category:           Data, Dependent Types, Singletons, Optics
 description:
-  This package provides optics and instances for type-classes in @optics@
-  package.
-  .
-  "Data.RAVec.Optics" re-exports all orphan instances defined in this package.
+  This package provides [optics](https://hackage.haskell.org/package/optics) and instances
+  for data types in [ral](https://hackage.haskell.org/package/ral) package.
 
 homepage:           https://github.com/phadej/vec
 bug-reports:        https://github.com/phadej/vec/issues

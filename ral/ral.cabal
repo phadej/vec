@@ -1,12 +1,23 @@
 cabal-version:      2.2
 name:               ral
 version:            0.1
-synopsis:           Length-indexed random access lists.
+synopsis:           Random access lists
 category:           Data, Dependent Types, Singletons
 description:
-  Length indexed random access lists.
+  This package provides ordinary random access list, 'RAList', and also 
+  a length indexed variant, 'RAVec'.
   .
-  See <http://www.staff.science.uu.nl/~swier004/publications/2019-jfp-submission.pdf>
+  The data structure allows fast cons-operation (like ordinary list) but also fast random access (like non-functional arrays).
+  .
+  For @lens@ or @optics@ support see [ral-lens](https://hackage.haskell.org/package/ral-lens) and [ral-optics](https://hackage.haskell.org/package/ral-optics) packages respectively.
+  .
+  === Similar packages
+  .
+  This packages don't provide length-indexed variant, and their 'RAList' has
+  opaque structure.
+  .
+  * https://hackage.haskell.org/package/ralist
+  * https://hackage.haskell.org/package/random-access-list
 
 homepage:           https://github.com/phadej/vec
 bug-reports:        https://github.com/phadej/vec/issues

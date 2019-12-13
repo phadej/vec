@@ -4,10 +4,8 @@ version:            0.1
 synopsis:           Length-indexed random access lists: lens utilities.
 category:           Data, Dependent Types, Singletons, Lens
 description:
-  This package provides lenses and instances for type-classes in @lens@
-  package.
-  .
-  "Data.RAVec.Lens" re-exports all orphan instances defined in this package.
+  This package provides [lenses](https://hackage.haskell.org/package/lens) and instances
+  for data types in [ral](https://hackage.haskell.org/package/ral) package.
 
 homepage:           https://github.com/phadej/vec
 bug-reports:        https://github.com/phadej/vec/issues
