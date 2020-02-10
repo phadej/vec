@@ -1,6 +1,7 @@
 {-# LANGUAGE ConstraintKinds       #-}
 {-# LANGUAGE DataKinds             #-}
 {-# LANGUAGE DefaultSignatures     #-}
+{-# LANGUAGE EmptyCase             #-}
 {-# LANGUAGE FlexibleContexts      #-}
 {-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
@@ -115,17 +116,19 @@ type family EnumSizeRep (a :: * -> *) (n :: Nat) :: Nat where
 
 -- | Generic version of 'from'.
 gfrom :: (G.Generic a, GFrom a) => a -> Fin (GEnumSize a)
-gfrom = \x -> gfromRep (G.from x) (error "gfrom: internal error" :: Fin N.Nat0)
+gfrom = \x -> gfromRep (G.from x) (Proxy :: Proxy N.Nat0)
 
 -- | Constraint for the class that computes 'gfrom'.
 type GFrom a = GFromRep (G.Rep a)
 
 class GFromRep (a :: * -> *)  where
-    gfromRep  :: a x     -> Fin n -> Fin (EnumSizeRep a n)
-    gfromSkip :: Proxy a -> Fin n -> Fin (EnumSizeRep a n)
+    gfromRep  :: a x     -> Proxy n -> Fin (EnumSizeRep a n)
+    gfromSkip :: Proxy a -> Fin n   -> Fin (EnumSizeRep a n)
 
 instance (GFromRep a, GFromRep b) => GFromRep (a :+: b) where
-    gfromRep (L1 a) n = gfromRep a (gfromSkip (Proxy :: Proxy b) n)
+    gfromRep (L1 a) n = gfromRep a (prSkip n) where
+        prSkip :: Proxy n -> Proxy (EnumSizeRep b n)
+        prSkip  _ = Proxy
     gfromRep (R1 b) n = gfromSkip (Proxy :: Proxy a) (gfromRep b n)
 
     gfromSkip _ n = gfromSkip (Proxy :: Proxy a) (gfromSkip (Proxy :: Proxy b) n)
@@ -135,7 +138,7 @@ instance GFromRep a => GFromRep (M1 d c a) where
     gfromSkip _     n = gfromSkip (Proxy :: Proxy a) n
 
 instance GFromRep V1 where
-    gfromRep  _ n = n
+    gfromRep  v _ = case v of {}
     gfromSkip _ n = n
 
 instance GFromRep U1 where
