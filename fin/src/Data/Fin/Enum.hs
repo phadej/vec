@@ -117,6 +117,7 @@ type family EnumSizeRep (a :: * -> *) (n :: Nat) :: Nat where
 -- | Generic version of 'from'.
 gfrom :: (G.Generic a, GFrom a) => a -> Fin (GEnumSize a)
 gfrom = \x -> gfromRep (G.from x) (Proxy :: Proxy N.Nat0)
+{-# INLINE gfrom #-}
 
 -- | Constraint for the class that computes 'gfrom'.
 type GFrom a = GFromRep (G.Rep a)
@@ -132,18 +133,26 @@ instance (GFromRep a, GFromRep b) => GFromRep (a :+: b) where
     gfromRep (R1 b) n = gfromSkip (Proxy :: Proxy a) (gfromRep b n)
 
     gfromSkip _ n = gfromSkip (Proxy :: Proxy a) (gfromSkip (Proxy :: Proxy b) n)
+    {-# INLINE gfromRep #-}
+    {-# INLINE gfromSkip #-}
 
 instance GFromRep a => GFromRep (M1 d c a) where
     gfromRep (M1 a) n = gfromRep a n
     gfromSkip _     n = gfromSkip (Proxy :: Proxy a) n
+    {-# INLINE gfromRep #-}
+    {-# INLINE gfromSkip #-}
 
 instance GFromRep V1 where
     gfromRep  v _ = case v of {}
     gfromSkip _ n = n
+    {-# INLINE gfromRep #-}
+    {-# INLINE gfromSkip #-}
 
 instance GFromRep U1 where
     gfromRep U1 _ = FZ
     gfromSkip _ n = FS n
+    {-# INLINE gfromRep #-}
+    {-# INLINE gfromSkip #-}
 
 -------------------------------------------------------------------------------
 -- To
@@ -152,6 +161,7 @@ instance GFromRep U1 where
 -- | Generic version of 'to'.
 gto :: (G.Generic a, GTo a) => Fin (GEnumSize a) -> a
 gto = \x -> G.to $ gtoRep x id F.absurd
+{-# INLINE gto #-}
 
 -- | Constraint for the class that computes 'gto'.
 type GTo a = GToRep (G.Rep a)
@@ -161,13 +171,17 @@ class GToRep (a :: * -> *) where
 
 instance (GToRep a, GToRep b) => GToRep (a :+: b) where
     gtoRep n s k = gtoRep n (s . L1) $ \r -> gtoRep r (s . R1) k
+    {-# INLINE gtoRep #-}
 
 instance GToRep a => GToRep (M1 d c a) where
     gtoRep n s = gtoRep n (s . M1)
+    {-# INLINE gtoRep #-}
 
 instance GToRep V1 where
     gtoRep n _ k = k n
+    {-# INLINE gtoRep #-}
 
 instance GToRep U1 where
     gtoRep FZ     s _ = s U1
     gtoRep (FS n) _ k = k n
+    {-# INLINE gtoRep #-}

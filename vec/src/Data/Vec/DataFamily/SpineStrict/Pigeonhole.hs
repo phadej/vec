@@ -122,6 +122,7 @@ gindex
        )
      => f a -> i -> a
 gindex fa i = gfrom fa V.! F.gfrom i
+{-# INLINE gindex #-}
 
 -- | Tabulate.
 --
@@ -140,6 +141,7 @@ gtabulate
        )
      => (i -> a) -> f a
 gtabulate idx = gto $ tabulate (idx . F.gto)
+{-# INLINE gtabulate #-}
 
 -- | A lens. @i -> Lens' (t a) a@
 --
@@ -155,6 +157,7 @@ gix :: ( G.Generic i, F.GFrom i, G.Generic1 t, GTo t, GFrom t
        )
     => i -> (a -> f a) -> t a -> f (t a)
 gix i = fusing $ \ab ta -> gto <$> ix (F.gfrom i) ab (gfrom ta)
+{-# INLINE gix #-}
 
 -------------------------------------------------------------------------------
 -- Vendored in ix
@@ -243,6 +246,7 @@ type family PigeonholeSizeRep (c :: * -> *) (n :: Nat) :: Nat where
 -- | Generic version of 'from'.
 gfrom :: (G.Generic1 c, GFrom c) => c a -> Vec (GPigeonholeSize c) a
 gfrom = \x -> gfromRep1 (G.from1 x) VNil
+{-# INLINE gfrom #-}
 
 -- | Constraint for the class that computes 'gfrom'.
 type GFrom c = GFromRep1 (G.Rep1 c)
@@ -252,15 +256,19 @@ class GFromRep1 (c :: * -> *)  where
 
 instance (GFromRep1 a, GFromRep1 b) => GFromRep1 (a :*: b) where
     gfromRep1 (x :*: y) z = gfromRep1 x (gfromRep1 y z)
+    {-# INLINE gfromRep1 #-}
 
 instance GFromRep1 a => GFromRep1 (M1 d c a) where
     gfromRep1 (M1 a) z = gfromRep1 a z
+    {-# INLINE gfromRep1 #-}
 
 instance GFromRep1 Par1 where
     gfromRep1 (Par1 x) z = x ::: z
+    {-# INLINE gfromRep1 #-}
 
 instance GFromRep1 U1 where
     gfromRep1 _U1 z = z
+    {-# INLINE gfromRep1 #-}
 
 -------------------------------------------------------------------------------
 -- To
@@ -269,6 +277,7 @@ instance GFromRep1 U1 where
 -- | Generic version of 'to'.
 gto :: forall c a. (G.Generic1 c, GTo c) => Vec (GPigeonholeSize c) a -> c a
 gto = \xs -> G.to1 $ fst (gtoRep1 xs :: (G.Rep1 c a, Vec 'N.Z a))
+{-# INLINE gto #-}
 
 -- | Constraint for the class that computes 'gto'.
 type GTo c = GToRep1 (G.Rep1 c)
@@ -278,15 +287,19 @@ class GToRep1 (c :: * -> *) where
 
 instance GToRep1 a => GToRep1 (M1 d c a) where
     gtoRep1 = first M1 . gtoRep1
+    {-# INLINE gtoRep1 #-}
 
 instance (GToRep1 a, GToRep1 b) => GToRep1 (a :*: b) where
     gtoRep1 xs =
         let (a, ys) = gtoRep1 xs
             (b, zs) = gtoRep1 ys
         in (a :*: b, zs)
+    {-# INLINE gtoRep1 #-}
 
 instance GToRep1 Par1 where
     gtoRep1 (x ::: xs) = (Par1 x, xs)
+    {-# INLINE gtoRep1 #-}
 
 instance GToRep1 U1 where
     gtoRep1 xs = (U1, xs)
+    {-# INLINE gtoRep1 #-}
