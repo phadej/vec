@@ -31,3 +31,5 @@ package vec
 -- constraints: ral -distributive
 -- constraints: ral -semigroupoids
 -- constraints: ral -adjunctions
+
+allow-newer: parallel-3.2.2.0:base
