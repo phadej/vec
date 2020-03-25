@@ -1,6 +1,7 @@
 cabal-version:      2.2
 name:               ral-lens
 version:            0.1
+x-revision:         1
 synopsis:           Length-indexed random access lists: lens utilities.
 category:           Data, Dependent Types, Singletons, Lens
 description:
@@ -23,7 +24,8 @@ tested-with:
    || ==8.2.2
    || ==8.4.4
    || ==8.6.5
-   || ==8.8.1
+   || ==8.8.3
+   || ==8.10.1
 
 source-repository head
   type:     git
@@ -42,10 +44,10 @@ library
     Data.RAVec.Tree.Lens
 
   build-depends:
-    , base  >=4.7   && <4.14
+    , base  >=4.7   && <4.15
     , bin   ^>=0.1
     , fin   ^>=0.1.1
-    , lens  >=4.16  && <4.19
+    , lens  >=4.16  && <4.20
     , ral   ^>=0.1
 
 -- dump-core
