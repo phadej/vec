@@ -60,7 +60,7 @@ module Data.Vec.Pull (
 
 import Prelude
        (Bool (..), Eq (..), Functor (..), Int, Maybe (..), Monad (..),
-       Num (..), all, const, id, ($), (.))
+       Num (..), all, const, id, maybe, ($), (.))
 
 import Control.Applicative (Applicative (..), (<$>))
 import Data.Fin            (Fin (..))
@@ -79,7 +79,7 @@ import qualified Data.Functor.Rep as I (Representable (..))
 #endif
 
 #ifdef MIN_VERSION_distributive
-import Data.Distributive   (Distributive (..))
+import Data.Distributive (Distributive (..))
 #endif
 
 #ifdef MIN_VERSION_semigroupoids
@@ -271,9 +271,7 @@ cons x (Vec v) = Vec $ \i -> case i of
 --
 -- @since 0.2.1
 snoc :: forall a n. N.InlineInduction n => Vec n a -> a -> Vec ('S n) a
-snoc (Vec xs) x = Vec $ \i -> case F.isMax i of
-    Nothing -> x
-    Just i' -> xs i'
+snoc (Vec xs) x = Vec $ \i -> maybe x xs (F.isMax i)
 
 -- | The first element of a 'Vec'.
 head :: Vec ('S n) a -> a
