@@ -1,6 +1,7 @@
 cabal-version:      2.2
 name:               ral-optics
 version:            0.1
+x-revision:         1
 synopsis:           Length-indexed random access lists: optics utilities.
 category:           Data, Dependent Types, Singletons, Optics
 description:
@@ -17,7 +18,7 @@ copyright:          (c) 2019 Oleg Grenrus
 build-type:         Simple
 extra-source-files: ChangeLog.md
 tested-with:
-  GHC ==8.0.2 || ==8.2.2 || ==8.4.4 || ==8.6.5 || ==8.8.3
+  GHC ==8.0.2 || ==8.2.2 || ==8.4.4 || ==8.6.5 || ==8.8.3 || ==8.10.1
 
 source-repository head
   type:     git
@@ -40,10 +41,10 @@ library
     Data.RAVec.NonEmpty.Optics.Internal
 
   build-depends:
-    , base         >=4.9   && <4.14
+    , base         >=4.9   && <4.15
     , bin          ^>=0.1
     , fin          ^>=0.1.1
-    , optics-core  ^>=0.2
+    , optics-core  >=0.2   && <0.4
     , ral          ^>=0.1
 
 -- dump-core

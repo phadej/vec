@@ -88,7 +88,7 @@ import Data.Vec.Lazy
 --- Instances
 
 #ifdef MIN_VERSION_semigroupoids
-import Data.Functor.Apply  (Apply, liftF2)
+import Data.Functor.Apply (Apply, liftF2)
 #endif
 
 -- vec siblings
