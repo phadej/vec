@@ -18,6 +18,7 @@ module Data.RAVec.Tree (
 
     -- * Conversions
     toList,
+    reverse,
 
     -- * Indexing
     (!),
@@ -36,7 +37,12 @@ module Data.RAVec.Tree (
     ifoldr1Map,
     foldl,
     ifoldl,
+
+    -- * Special folds
     length,
+    null,
+    sum,
+    product,
 
     -- * Mapping
     map,
@@ -47,7 +53,7 @@ module Data.RAVec.Tree (
     traverse1,
     itraverse1,
 #endif
-    -- TODO: itraverse_,
+    itraverse_,
 
     -- * Zipping
     zipWith,
@@ -60,15 +66,15 @@ module Data.RAVec.Tree (
     -- * QuickCheck
     liftArbitrary,
     liftShrink,
-
     ) where
 
 import Prelude
        (Bool (..), Eq (..), Functor (..), Int, Ord (..), Show, id, seq,
-       uncurry, ($), (*), (.))
+       uncurry, ($), (+), Num, (*), (.))
 
 import Control.Applicative (Applicative (..), (<$>))
 import Control.DeepSeq     (NFData (..))
+import Control.Monad       (void)
 import Data.Hashable       (Hashable (..))
 import Data.Monoid         (Monoid (..))
 import Data.Nat            (Nat (..))
@@ -139,7 +145,7 @@ instance I.Foldable (Tree n) where
     foldr   = foldr
     foldl   = foldl
 #if MIN_VERSION_base(4,8,0)
-    null _ = False
+    null   = null
     toList = toList
     length = length
 #endif
@@ -174,6 +180,8 @@ instance N.SNatI n => Applicative (Tree n) where
 #if MIN_VERSION_base(4,10,0)
     liftA2 = zipWith
 #endif
+
+-- TODO: Monad
 
 #ifdef MIN_VERSION_distributive
 instance N.SNatI n => I.Distributive (Tree n) where
@@ -249,6 +257,21 @@ rightmost (Leaf a)   = a
 rightmost (Node _ y) = rightmost y
 
 -------------------------------------------------------------------------------
+-- Reverse
+-------------------------------------------------------------------------------
+
+-- | Reverse 'Tree'.
+--
+-- >>> let t = Node (Node (Leaf 'a') (Leaf 'b')) (Node (Leaf 'c') (Leaf 'd'))
+-- >>> reverse t
+-- Node (Node (Leaf 'd') (Leaf 'c')) (Node (Leaf 'b') (Leaf 'a'))
+--
+-- @since 0.1.1
+reverse :: Tree n a -> Tree n a
+reverse t@(Leaf _) = t
+reverse (Node x y) = Node (reverse y) (reverse x)
+
+-------------------------------------------------------------------------------
 -- Folds
 -------------------------------------------------------------------------------
 
@@ -296,7 +319,13 @@ ifoldl :: (Wrd n -> b -> a -> b) -> b -> Tree n a -> b
 ifoldl f z (Leaf x)   = f WE z x
 ifoldl f z (Node x y) = ifoldl (goLeft f) (ifoldl (goRight f) z x) y
 
--- TODO: foldl
+-------------------------------------------------------------------------------
+-- Special folds
+-------------------------------------------------------------------------------
+
+-- | @since 0.1.1
+null :: Tree n a -> Bool
+null _ = False
 
 -- | >>> length (universe :: Tree N.Nat3 (Wrd N.Nat3))
 -- 8
@@ -306,6 +335,20 @@ length = go 1 where
     go :: Int -> Tree n a -> Int
     go !acc (Leaf _)   = acc
     go  acc (Node x _) = go (2 * acc) x
+
+-- | Non-strict 'sum'.
+--
+-- @since 0.1.1
+sum :: Num a => Tree n a -> a
+sum (Leaf a)   = a
+sum (Node x y) = sum x + sum y
+
+-- | Non-strict 'product'.
+--
+-- @since 0.1.1
+product :: Num a => Tree n a -> a
+product (Leaf a)   = a
+product (Node x y) = product x * product y
 
 -------------------------------------------------------------------------------
 -- Mapping
@@ -340,6 +383,12 @@ itraverse1 :: Apply f => (Wrd n -> a -> f b) -> Tree n a -> f (Tree n b)
 itraverse1 f (Leaf x)   = Leaf <$> f WE x
 itraverse1 f (Node x y) = Node <$> itraverse1 (goLeft f) x <.> itraverse1 (goRight f) y
 #endif
+
+-- |
+-- @since 0.1.1
+itraverse_ :: forall n f a b. Applicative f => (Wrd n -> a -> f b) -> Tree n a -> f ()
+itraverse_ f (Leaf x)   = void (f WE x)
+itraverse_ f (Node x y) = itraverse_ (f . W0) x *> itraverse_ (f . W1) y
 
 -------------------------------------------------------------------------------
 -- Zipping

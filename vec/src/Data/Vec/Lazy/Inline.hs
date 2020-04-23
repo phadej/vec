@@ -502,10 +502,10 @@ sum = getFold $ N.inlineInduction1 start step where
 product :: (Num a, N.InlineInduction n) => Vec n a -> a
 product = getFold $ N.inlineInduction1 start step where
     start :: Num a => Fold a 'Z a
-    start = Fold $ \_ -> 0
+    start = Fold $ \_ -> 1
 
     step :: Num a => Fold a m a -> Fold a ('S m) a
-    step (Fold f) = Fold $ \(x ::: xs) -> x + f xs
+    step (Fold f) = Fold $ \(x ::: xs) -> x * f xs
 
 -------------------------------------------------------------------------------
 -- Zipping
