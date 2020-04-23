@@ -41,6 +41,7 @@ library
     Data.RAList.NonEmpty.Lens
     Data.RAVec.Lens
     Data.RAVec.NonEmpty.Lens
+    Data.RAVec.Tree.DF.Lens
     Data.RAVec.Tree.Lens
 
   build-depends:

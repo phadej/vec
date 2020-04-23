@@ -10,6 +10,7 @@ module Data.RAVec.Optics (
 import Control.Applicative        ((<$>))
 import Data.Bin.Pos               (Pos (..))
 import Data.RAVec.NonEmpty.Optics ()
+import Prelude                    (Functor)
 
 import qualified Data.RAVec.NonEmpty.Optics.Internal as NE
 import qualified Optics.Core                         as L

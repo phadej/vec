@@ -34,6 +34,7 @@ library
     Data.RAList.Optics
     Data.RAVec.NonEmpty.Optics
     Data.RAVec.Optics
+    Data.RAVec.Tree.DF.Optics
     Data.RAVec.Tree.Optics
 
   other-modules:
