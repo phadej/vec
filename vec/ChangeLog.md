@@ -1,5 +1,9 @@
 # Revision history for vec
 
+## 0.3.0.1
+
+- Fix `product`
+
 ## 0.3
 
 - Split `lens` utilities into [`vec-lens`](https://hackage.haskell.org/package/vec-lens) package.

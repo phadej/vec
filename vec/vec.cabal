@@ -1,7 +1,6 @@
 cabal-version:      2.2
 name:               vec
-version:            0.3
-x-revision:         2
+version:            0.3.0.1
 synopsis:           Vec: length-indexed (sized) list
 category:           Data, Dependent Types
 description:

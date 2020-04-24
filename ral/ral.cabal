@@ -1,7 +1,6 @@
 cabal-version:      2.2
 name:               ral
-version:            0.1
-x-revision:         2
+version:            0.1.1
 synopsis:           Random access lists
 category:           Data, Dependent Types, Singletons
 description:
@@ -74,6 +73,7 @@ library
     Data.RAVec
     Data.RAVec.NonEmpty
     Data.RAVec.Tree
+    Data.RAVec.Tree.DF
 
   other-modules:
     Data.RAList.Internal
