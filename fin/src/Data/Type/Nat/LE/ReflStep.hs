@@ -40,7 +40,9 @@ import Data.Type.Equality ((:~:) (..))
 import Data.Typeable      (Typeable)
 import Data.Void          (absurd)
 
-import Data.Type.Nat
+import qualified Control.Category as C
+
+import           Data.Type.Nat
 import qualified Data.Type.Nat.LE as ZeroSucc
 
 -------------------------------------------------------------------------------
@@ -61,6 +63,12 @@ instance Eq (LEProof n m) where
 
 instance Ord (LEProof n m) where
     compare _ _ = EQ
+
+-- | The other variant ('Data.Type.Nat.LE.LEPRoof') isn't 'C.Category',
+-- because 'Data.Type.Nat.LE.leRefl` requires 'SNat' evidence.
+instance C.Category LEProof where
+    id  = leRefl
+    (.) = flip leTrans
 
 -------------------------------------------------------------------------------
 -- Conversion

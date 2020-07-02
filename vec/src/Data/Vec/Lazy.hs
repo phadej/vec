@@ -40,6 +40,9 @@ module Data.Vec.Lazy (
     concatMap,
     concat,
     chunks,
+    -- * Take and drop
+    take,
+    drop,
     -- * Folds
     foldMap,
     foldMap1,
@@ -115,6 +118,9 @@ import qualified Data.Semigroup.Traversable as I (Traversable1 (..))
 import qualified Data.Fin      as F
 import qualified Data.Type.Nat as N
 import qualified Data.Vec.Pull as P
+
+import qualified Data.Type.Nat.LE          as LE.ZS
+import qualified Data.Type.Nat.LE.ReflStep as LE.RS
 
 -- $setup
 -- >>> :set -XScopedTypeVariables
@@ -465,6 +471,34 @@ chunks = getChunks $ N.induction1 start step where
         in ys ::: go zs
 
 newtype Chunks  m n a = Chunks  { getChunks  :: Vec (N.Mult n m) a -> Vec n (Vec m a) }
+
+-------------------------------------------------------------------------------
+-- take and drop
+-------------------------------------------------------------------------------
+
+-- |
+--
+-- >>> let xs = 'a' ::: 'b' ::: 'c' ::: 'd' ::: 'e' ::: VNil
+-- >>> take xs :: Vec N.Nat3 Char
+-- 'a' ::: 'b' ::: 'c' ::: VNil
+--
+take :: forall n m a. (LE.ZS.LE n m) => Vec m a -> Vec n a
+take = go LE.ZS.leProof where
+    go :: LE.ZS.LEProof n' m' -> Vec m' a -> Vec n' a
+    go LE.ZS.LEZero _              = VNil
+    go (LE.ZS.LESucc p) (x ::: xs) = x ::: go p xs
+
+-- | 
+--
+-- >>> let xs = 'a' ::: 'b' ::: 'c' ::: 'd' ::: 'e' ::: VNil
+-- >>> drop xs :: Vec N.Nat3 Char
+-- 'c' ::: 'd' ::: 'e' ::: VNil
+--
+drop :: forall n m a. (LE.ZS.LE n m, N.SNatI m) => Vec m a -> Vec n a
+drop = go (LE.RS.fromZeroSucc LE.ZS.leProof) where
+    go :: LE.RS.LEProof n' m' -> Vec m' a -> Vec n' a
+    go LE.RS.LERefl xs             = xs
+    go (LE.RS.LEStep p) (_ ::: xs) = go p xs
 
 -------------------------------------------------------------------------------
 -- Mapping
