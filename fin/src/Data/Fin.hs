@@ -60,9 +60,14 @@ import Data.Typeable      (Typeable)
 import GHC.Exception      (ArithException (..), throw)
 import Numeric.Natural    (Natural)
 
-import qualified Data.List.NonEmpty as NE
-import qualified Data.Type.Nat      as N
-import qualified Test.QuickCheck    as QC
+import qualified Data.List.NonEmpty    as NE
+import qualified Data.Type.Nat         as N
+import qualified Data.Universe.Class   as U
+import qualified Data.Universe.Helpers as U
+import qualified Test.QuickCheck       as QC
+
+-- $setup
+-- >>> import Data.List (genericLength)
 
 -------------------------------------------------------------------------------
 -- Type
@@ -233,6 +238,25 @@ instance (n ~ 'S m, N.SNatI m) => QC.Function (Fin n) where
 
 -- TODO: https://github.com/nick8325/quickcheck/pull/283
 -- newtype Fun b m = Fun { getFun :: (Fin ('S m) -> b) -> Fin ('S m) QC.:-> b }
+
+-------------------------------------------------------------------------------
+-- universe-base
+-------------------------------------------------------------------------------
+
+-- | @since 0.1.2
+instance N.SNatI n => U.Universe (Fin n) where
+    universe = universe
+
+-- | 
+--
+-- >>> (U.cardinality :: U.Tagged (Fin N.Nat3) Natural) == U.Tagged (genericLength (U.universeF :: [Fin N.Nat3]))
+-- True
+--
+-- @since 0.1.2
+--
+instance N.SNatI n => U.Finite   (Fin n) where
+    universeF   = U.universe
+    cardinality = U.Tagged $ N.reflectToNum (Proxy :: Proxy n)
 
 -------------------------------------------------------------------------------
 -- Showing

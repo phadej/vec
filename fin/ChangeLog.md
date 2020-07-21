@@ -1,5 +1,9 @@
 # Revision history for fin
 
+## 0.1.2
+
+- Add `universe-base` `Universe` and `Finite` instances
+
 ## 0.1.1
 
 - Add `isMin` and `isMax`
