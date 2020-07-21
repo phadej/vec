@@ -29,7 +29,8 @@ import Data.Typeable   (Typeable)
 import GHC.Exception   (ArithException (..), throw)
 import Numeric.Natural (Natural)
 
-import qualified Test.QuickCheck as QC
+import qualified Data.Universe.Class as U
+import qualified Test.QuickCheck     as QC
 
 -------------------------------------------------------------------------------
 -- Nat
@@ -114,11 +115,25 @@ instance QC.Arbitrary Nat where
     shrink (S n) = n : QC.shrink n
 
 instance QC.CoArbitrary Nat where
-    coarbitrary Z     = QC.variant (0 :: Int) 
+    coarbitrary Z     = QC.variant (0 :: Int)
     coarbitrary (S n) = QC.variant (1 :: Int) . QC.coarbitrary n
 
 instance QC.Function Nat where
     function = QC.functionIntegral
+
+-------------------------------------------------------------------------------
+-- universe-base
+-------------------------------------------------------------------------------
+
+-- |
+--
+-- >>> take 10 (U.universe :: [Nat])
+-- [0,1,2,3,4,5,6,7,8,9]
+--
+-- @since 0.1.2
+instance U.Universe Nat where
+    universe = go Z where
+        go n = n : go (S n)
 
 -------------------------------------------------------------------------------
 -- Showing
