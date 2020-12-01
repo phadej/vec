@@ -611,7 +611,7 @@ sum (x ::: xs) = x + sum xs
 -- | Non-strict 'product'.
 product :: Num a => Vec n a -> a
 product VNil       = 1
-product (x ::: xs) = x * sum xs
+product (x ::: xs) = x * product xs
 
 -------------------------------------------------------------------------------
 -- Zipping
