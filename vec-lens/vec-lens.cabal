@@ -1,0 +1,63 @@
+cabal-version:      2.2
+name:               vec-lens
+version:            0.3
+x-revision:         1
+synopsis:           Vec: length-indexed (sized) list: lens support
+category:           Data, Dependent Types, Lens
+description:
+  This package provides [lenses](https://hackage.haskell.org/package/lens) and instances
+  for data types in [vec](https://hackage.haskell.org/package/vec) package.
+  .
+  "Data.Vec.Lens.Instances" provides all the instances.
+  the other modules provide some named lenses too.
+
+homepage:           https://github.com/phadej/vec
+bug-reports:        https://github.com/phadej/vec/issues
+license:            BSD-3-Clause
+license-file:       LICENSE
+author:             Oleg Grenrus <oleg.grenrus@iki.fi>
+maintainer:         Oleg.Grenrus <oleg.grenrus@iki.fi>
+copyright:          (c) 2017-2019 Oleg Grenrus
+build-type:         Simple
+extra-source-files: ChangeLog.md
+tested-with:
+  GHC ==7.8.4
+   || ==7.10.3
+   || ==8.0.2
+   || ==8.2.2
+   || ==8.4.4
+   || ==8.6.5
+   || ==8.8.3
+   || ==8.10.1
+
+source-repository head
+  type:     git
+  location: https://github.com/phadej/vec.git
+  subdir:   vec-lens
+
+library
+  default-language: Haskell2010
+  ghc-options:      -Wall -fprint-explicit-kinds
+  hs-source-dirs:   src
+  exposed-modules:
+    Data.Vec.DataFamily.SpineStrict.Lens
+    Data.Vec.Lazy.Inline.Lens
+    Data.Vec.Lazy.Lens
+    Data.Vec.Lens.Instances
+    Data.Vec.Pull.Lens
+
+  -- GHC boot libs
+  build-depends:    base >=4.7 && <4.15
+
+  -- siblings
+  build-depends:
+    , fin  ^>=0.1.1
+    , vec  ^>=0.3
+
+  -- other dependencies
+  build-depends:    lens ^>=4.18.1 || ^>=4.19.1
+  other-extensions:
+    CPP
+    FlexibleContexts
+    GADTs
+    TypeOperators

@@ -32,17 +32,17 @@ ys = 6 ::: 7 ::: 8 ::: 9 ::: 0 ::: VNil
 
 xsp, ysp :: P.Vec Nat5 Int
 xsp = P.Vec $ \i -> case i of
-    Z               -> 1
-    S Z             -> 2
-    S (S Z)         -> 3
-    S (S (S Z))     -> 4
-    S (S (S (S Z))) -> 5
+    FZ                   -> 1
+    FS FZ                -> 2
+    FS (FS FZ)           -> 3
+    FS (FS (FS FZ))      -> 4
+    FS (FS (FS (FS FZ))) -> 5
 ysp = P.Vec $ \i -> case i of
-    Z               -> 6
-    S Z             -> 7
-    S (S Z)         -> 8
-    S (S (S Z))     -> 9
-    S (S (S (S Z))) -> 0
+    FZ                   -> 6
+    FS FZ                -> 7
+    FS (FS FZ)           -> 8
+    FS (FS (FS FZ))      -> 9
+    FS (FS (FS (FS FZ))) -> 0
 
 main :: IO ()
 main = defaultMain

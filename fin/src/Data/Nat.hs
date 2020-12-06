@@ -1,4 +1,10 @@
+{-# LANGUAGE CPP                #-}
 {-# LANGUAGE DeriveDataTypeable #-}
+
+#if __GLASGOW_HASKELL__ < 710
+{-# LANGUAGE DataKinds          #-}
+{-# LANGUAGE StandaloneDeriving #-}
+#endif
 -- | 'Nat' numbers.
 --
 -- This module is designed to be imported qualified.
@@ -23,6 +29,9 @@ import Data.Typeable   (Typeable)
 import GHC.Exception   (ArithException (..), throw)
 import Numeric.Natural (Natural)
 
+import qualified Data.Universe.Class as U
+import qualified Test.QuickCheck     as QC
+
 -------------------------------------------------------------------------------
 -- Nat
 -------------------------------------------------------------------------------
@@ -32,6 +41,11 @@ import Numeric.Natural (Natural)
 -- Better than GHC's built-in 'GHC.TypeLits.Nat' for some use cases.
 --
 data Nat = Z | S Nat deriving (Eq, Ord, Typeable, Data)
+
+#if __GLASGOW_HASKELL__ < 710
+deriving instance Typeable 'Z
+deriving instance Typeable 'S
+#endif
 
 -- | 'Nat' is printed as 'Natural'.
 --
@@ -63,7 +77,7 @@ instance Integral Nat where
     toInteger = cata 0 succ
 
     quotRem _ Z = throw DivideByZero
-    quotRem _ _ = error "un-implemented"
+    quotRem _ _ = error "quotRam @Nat un-implemented"
 
 {- TODO: make <= with witness
 instance Ix Nat where
@@ -89,6 +103,37 @@ instance NFData Nat where
 
 instance Hashable Nat where
     hashWithSalt salt = hashWithSalt salt . toInteger
+
+-------------------------------------------------------------------------------
+-- QuickCheck
+-------------------------------------------------------------------------------
+
+instance QC.Arbitrary Nat where
+    arbitrary = fmap fromNatural QC.arbitrarySizedNatural
+
+    shrink Z     = []
+    shrink (S n) = n : QC.shrink n
+
+instance QC.CoArbitrary Nat where
+    coarbitrary Z     = QC.variant (0 :: Int)
+    coarbitrary (S n) = QC.variant (1 :: Int) . QC.coarbitrary n
+
+instance QC.Function Nat where
+    function = QC.functionIntegral
+
+-------------------------------------------------------------------------------
+-- universe-base
+-------------------------------------------------------------------------------
+
+-- |
+--
+-- >>> take 10 (U.universe :: [Nat])
+-- [0,1,2,3,4,5,6,7,8,9]
+--
+-- @since 0.1.2
+instance U.Universe Nat where
+    universe = go Z where
+        go n = n : go (S n)
 
 -------------------------------------------------------------------------------
 -- Showing

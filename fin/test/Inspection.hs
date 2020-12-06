@@ -6,6 +6,7 @@
 {-# OPTIONS_GHC -O -fplugin Test.Inspection.Plugin #-}
 module Main (main) where
 
+import Data.Fin           (Fin (..))
 import Data.Function      (fix)
 import Data.Proxy         (Proxy (..))
 import Data.Tagged        (Tagged (..), retag)
@@ -51,9 +52,9 @@ lhsEnum :: Ordering' -> F.Fin N.Nat3
 lhsEnum = E.gfrom
 
 rhsEnum :: Ordering' -> F.Fin N.Nat3
-rhsEnum LT' = F.Z
-rhsEnum EQ' = F.S F.Z
-rhsEnum GT' = F.S (F.S F.Z)
+rhsEnum LT' = FZ
+rhsEnum EQ' = FS FZ
+rhsEnum GT' = FS (FS FZ)
 
 inspect $ 'lhsEnum ==- 'rhsEnum
 
@@ -104,6 +105,23 @@ rhsUnfold :: (a -> a) -> a
 rhsUnfold f = f (f (f (fix f)))
 
 inspect $  'lhsUnfold === 'rhsUnfold
+
+-------------------------------------------------------------------------------
+-- Power
+-------------------------------------------------------------------------------
+
+power :: forall n. N.InlineInduction n => Proxy n -> Int -> Int
+power _ k = unTagged impl where
+    impl :: Tagged n Int
+    impl = N.inlineInduction1 (Tagged 1) $ \(Tagged rec') -> Tagged (rec' * k)
+
+lhsPower5 :: Int -> Int
+lhsPower5 = power (Proxy :: Proxy N.Nat5)
+
+rhsPower5 :: Int -> Int
+rhsPower5 k = k * k * k * k * k
+
+inspect $ 'lhsPower5 === 'rhsPower5
 
 -------------------------------------------------------------------------------
 -- Main to make GHC happy

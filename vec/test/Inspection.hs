@@ -1,10 +1,11 @@
 {-# LANGUAGE GADTs           #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# OPTIONS_GHC -O -fplugin Test.Inspection.Plugin #-}
-module Main (main) where
+module Inspection where
 
 import Prelude hiding (zipWith)
 
+import Data.Fin        (Fin (..))
 import Data.Vec.Lazy   (Vec (..))
 import Test.Inspection
 
@@ -48,7 +49,7 @@ lhsIMap' :: Vec N.Nat2 (F.Fin N.Nat2, Char)
 lhsIMap' = L.imap (,) $ 'a' ::: 'b' ::: VNil
 
 rhsIMap :: Vec N.Nat2 (F.Fin N.Nat2, Char)
-rhsIMap = (F.Z,'a') ::: (F.S F.Z,'b') ::: VNil
+rhsIMap = (FZ,'a') ::: (FS FZ,'b') ::: VNil
 
 inspect $ 'lhsIMap  === 'rhsIMap
 inspect $ 'lhsIMap' =/= 'rhsIMap
@@ -62,7 +63,7 @@ inspect $ 'lhsIMap' =/= 'rhsIMap
  -- though, inlining isn't done if element is Num a => a
  --
 lhsDotProduct :: Vec N.Nat2 Int -> Vec N.Nat2 Int -> Int
-lhsDotProduct xs ys = I.sum (I.zipWith (+) xs ys)
+lhsDotProduct xs ys = I.sum (I.zipWith (*) xs ys)
 
 rhsDotProduct :: Vec N.Nat2 Int -> Vec N.Nat2 Int -> Int
 rhsDotProduct (x0 ::: x1 ::: _) (y0 ::: y1 ::: _) =
@@ -88,8 +89,33 @@ inspect $ 'lhsJoin  === 'rhsJoin
 inspect $ 'lhsJoin' =/= 'rhsJoin
 
 -------------------------------------------------------------------------------
--- Main to make GHC happy
+-- snoc
 -------------------------------------------------------------------------------
 
-main :: IO ()
-main = return ()
+lhsSnoc :: Vec N.Nat3 Char
+lhsSnoc = I.snoc ('a' ::: 'b' ::: VNil) 'c'
+
+lhsSnoc' :: Vec N.Nat3 Char
+lhsSnoc' = L.snoc ('a' ::: 'b' ::: VNil) 'c'
+
+rhsSnoc :: Vec N.Nat3 Char
+rhsSnoc = 'a' ::: 'b' ::: 'c' ::: VNil
+
+inspect $ 'lhsSnoc  === 'rhsSnoc
+inspect $ 'lhsSnoc' =/= 'rhsSnoc
+
+-------------------------------------------------------------------------------
+-- reverse
+-------------------------------------------------------------------------------
+
+lhsReverse :: Vec N.Nat3 Char
+lhsReverse = I.reverse $ 'c' ::: 'b' ::: 'a' ::: VNil
+
+lhsReverse' :: Vec N.Nat3 Char
+lhsReverse' = L.reverse $ 'c' ::: 'b' ::: 'a' ::: VNil
+
+rhsReverse :: Vec N.Nat3 Char
+rhsReverse = 'a' ::: 'b' ::: 'c' ::: VNil
+
+inspect $ 'lhsReverse  === 'rhsReverse
+inspect $ 'lhsReverse' =/= 'rhsReverse

@@ -1,0 +1,54 @@
+cabal-version:      2.2
+name:               ral-optics
+version:            0.1
+x-revision:         1
+synopsis:           Length-indexed random access lists: optics utilities.
+category:           Data, Dependent Types, Singletons, Optics
+description:
+  This package provides [optics](https://hackage.haskell.org/package/optics) and instances
+  for data types in [ral](https://hackage.haskell.org/package/ral) package.
+
+homepage:           https://github.com/phadej/vec
+bug-reports:        https://github.com/phadej/vec/issues
+license:            GPL-2.0-or-later
+license-file:       LICENSE
+author:             Oleg Grenrus <oleg.grenrus@iki.fi>
+maintainer:         Oleg.Grenrus <oleg.grenrus@iki.fi>
+copyright:          (c) 2019 Oleg Grenrus
+build-type:         Simple
+extra-source-files: ChangeLog.md
+tested-with:
+  GHC ==8.0.2 || ==8.2.2 || ==8.4.4 || ==8.6.5 || ==8.8.3 || ==8.10.1
+
+source-repository head
+  type:     git
+  location: https://github.com/phadej/vec.git
+  subdir:   ral-optics
+
+library
+  default-language: Haskell2010
+  hs-source-dirs:   src
+  ghc-options:      -Wall -fprint-explicit-kinds
+  exposed-modules:
+    Data.RAList.NonEmpty.Optics
+    Data.RAList.Optics
+    Data.RAVec.NonEmpty.Optics
+    Data.RAVec.Optics
+    Data.RAVec.Tree.DF.Optics
+    Data.RAVec.Tree.Optics
+
+  other-modules:
+    Data.RAList.NonEmpty.Optics.Internal
+    Data.RAVec.NonEmpty.Optics.Internal
+
+  build-depends:
+    , base         >=4.9   && <4.15
+    , bin          ^>=0.1
+    , fin          ^>=0.1.1
+    , optics-core  >=0.2   && <0.4
+    , ral          ^>=0.1
+
+-- dump-core
+-- if impl(ghc >= 8.0)
+--  build-depends: dump-core
+--  ghc-options: -fplugin=DumpCore -fplugin-opt DumpCore:core-html

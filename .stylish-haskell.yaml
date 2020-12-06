@@ -11,6 +11,8 @@ steps:
   - trailing_whitespace: {}
 columns: 80
 language_extensions:
-  - MultiParamTypeClasses
-  - FlexibleContexts
+  - DataKinds
+  - EmptyCase
   - ExplicitForAll
+  - FlexibleContexts
+  - MultiParamTypeClasses

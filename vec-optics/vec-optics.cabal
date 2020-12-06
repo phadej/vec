@@ -1,0 +1,56 @@
+cabal-version:      2.2
+name:               vec-optics
+version:            0.3
+x-revision:         1
+synopsis:           Vec: length-indexed (sized) list: optics support
+category:           Data, Dependent Types, Optics
+description:
+  This package provides [optics](https://hackage.haskell.org/package/optics) and instances
+  for data types in [vec](https://hackage.haskell.org/package/vec) package.
+  .
+  "Data.Vec.Optics.Instances" provides all the instances.
+  the other modules provide some named optics too.
+
+homepage:           https://github.com/phadej/vec
+bug-reports:        https://github.com/phadej/vec/issues
+license:            BSD-3-Clause
+license-file:       LICENSE
+author:             Oleg Grenrus <oleg.grenrus@iki.fi>
+maintainer:         Oleg.Grenrus <oleg.grenrus@iki.fi>
+copyright:          (c) 2017-2019 Oleg Grenrus
+build-type:         Simple
+extra-source-files: ChangeLog.md
+tested-with:
+  GHC ==8.0.2 || ==8.2.2 || ==8.4.4 || ==8.6.5 || ==8.8.3 || ==8.10.1
+
+source-repository head
+  type:     git
+  location: https://github.com/phadej/vec.git
+  subdir:   vec-optics
+
+library
+  default-language: Haskell2010
+  ghc-options:      -Wall -fprint-explicit-kinds
+  hs-source-dirs:   src
+  exposed-modules:
+    Data.Vec.DataFamily.SpineStrict.Optics
+    Data.Vec.Lazy.Inline.Optics
+    Data.Vec.Lazy.Optics
+    Data.Vec.Optics.Instances
+    Data.Vec.Pull.Optics
+
+  -- GHC boot libs
+  build-depends:    base >=4.9 && <4.15
+
+  -- siblings
+  build-depends:
+    , fin  ^>=0.1.1
+    , vec  ^>=0.3
+
+  -- other dependencies
+  build-depends:    optics-core >=0.2 && <0.4
+  other-extensions:
+    CPP
+    FlexibleContexts
+    GADTs
+    TypeOperators

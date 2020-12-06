@@ -1,7 +1,35 @@
-packages: fin vec
+packages: bin
+packages: dec
+packages: fin
+packages: ral
+packages: vec
+
+packages: ral-lens
+packages: vec-lens
+
+packages: ral-optics
+packages: vec-optics
+
+packages: tests
+
+tests:      True
+benchmarks: True
+
+package dec
+  ghc-options: -Wall
 
 package fin
   ghc-options: -Wall
 
 package vec
   ghc-options: -Wall
+
+-- constraints: vec -distributive
+-- constraints: vec -semigroupoids
+-- constraints: vec -adjunctions
+
+-- constraints: ral -distributive
+-- constraints: ral -semigroupoids
+-- constraints: ral -adjunctions
+
+allow-newer: parallel-3.2.2.0:base

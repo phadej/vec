@@ -1,4 +1,7 @@
+{-# LANGUAGE CPP                  #-}
 {-# LANGUAGE DataKinds            #-}
+{-# LANGUAGE DeriveDataTypeable   #-}
+{-# LANGUAGE EmptyCase            #-}
 {-# LANGUAGE GADTs                #-}
 {-# LANGUAGE KindSignatures       #-}
 {-# LANGUAGE RankNTypes           #-}
@@ -25,12 +28,14 @@ module Data.Type.Nat (
     snatToNatural,
     -- * Implicit
     SNatI(..),
+    withSNat,
     reify,
     reflect,
     reflectToNum,
     -- * Equality
     eqNat,
     EqNat,
+    discreteNat,
     -- * Induction
     induction,
     induction1,
@@ -41,6 +46,8 @@ module Data.Type.Nat (
     -- * Arithmetic
     Plus,
     Mult,
+    Mult2,
+    DivMod2,
     -- * Conversion to GHC Nat
     ToGHC,
     FromGHC,
@@ -59,14 +66,25 @@ module Data.Type.Nat (
     )  where
 
 import Data.Function      (fix)
-import Data.Nat
 import Data.Proxy         (Proxy (..))
-import Data.Type.Equality
+import Data.Type.Dec      (Dec (..))
+import Data.Type.Equality ((:~:) (..), TestEquality (..))
+import Data.Typeable      (Typeable)
 import Numeric.Natural    (Natural)
 
 import qualified GHC.TypeLits as GHC
 
 import Unsafe.Coerce (unsafeCoerce)
+
+#if !MIN_VERSION_base(4,11,0)
+import Data.Type.Equality (type (==))
+#endif
+
+import Data.Nat
+
+-- $setup
+-- >>> :set -XTypeOperators -XDataKinds
+-- >>> import Data.Type.Dec (decShow)
 
 -------------------------------------------------------------------------------
 -- SNat
@@ -76,6 +94,7 @@ import Unsafe.Coerce (unsafeCoerce)
 data SNat (n :: Nat) where
     SZ :: SNat 'Z
     SS :: SNatI n => SNat ('S n)
+  deriving (Typeable)
 
 deriving instance Show (SNat p)
 
@@ -83,6 +102,13 @@ deriving instance Show (SNat p)
 class               SNatI (n :: Nat) where snat :: SNat n
 instance            SNatI 'Z         where snat = SZ
 instance SNatI n => SNatI ('S n)     where snat = SS
+
+-- | Constructor 'SNatI' dictionary from 'SNat'.
+--
+-- @since 0.0.3
+withSNat :: SNat n -> (SNatI n => r) -> r
+withSNat SZ k = k
+withSNat SS k = k
 
 -- | Reflect type-level 'Nat' to the term level.
 reflect :: forall n proxy. SNatI n => proxy n -> Nat
@@ -152,6 +178,32 @@ eqNat = getNatEq $ induction (NatEq start) (\p -> NatEq (step p)) where
 
 newtype NatEq n = NatEq { getNatEq :: forall m. SNatI m => Maybe (n :~: m) }
 
+-- | Decide equality of type-level numbers.
+--
+-- >>> decShow (discreteNat :: Dec (Nat3 :~: Plus Nat1 Nat2))
+-- "Yes Refl"
+--
+-- @since 0.0.3
+discreteNat :: forall n m. (SNatI n, SNatI m) => Dec (n :~: m)
+discreteNat = getDiscreteNat $ induction (DiscreteNat start) (\p -> DiscreteNat (step p))
+  where
+    start :: forall p. SNatI p => Dec ('Z :~: p)
+    start = case snat :: SNat p of
+        SZ -> Yes Refl
+        SS -> No $ \p -> case p of {}
+
+    step :: forall p q. SNatI q => DiscreteNat p -> Dec ('S p :~: q)
+    step rec = case snat :: SNat q of
+        SZ -> No $ \p -> case p of {}
+        SS -> step' rec
+
+    step' :: forall p q. SNatI q => DiscreteNat p -> Dec ('S p :~: 'S q)
+    step' (DiscreteNat rec) = case rec :: Dec (p :~: q) of
+        Yes Refl -> Yes Refl
+        No np    -> No $ \Refl -> np Refl
+
+newtype DiscreteNat n = DiscreteNat { getDiscreteNat :: forall m. SNatI m => Dec (n :~: m) }
+
 instance TestEquality SNat where
     testEquality SZ SZ = Just Refl
     testEquality SZ SS = Nothing
@@ -164,7 +216,9 @@ type family EqNat (n :: Nat) (m :: Nat) where
     EqNat ('S n) ('S m) = EqNat n m
     EqNat n      m      = 'False
 
+#if !MIN_VERSION_base(4,11,0)
 type instance n == m = EqNat n m
+#endif
 
 -------------------------------------------------------------------------------
 -- Induction
@@ -298,6 +352,33 @@ type family Mult (n :: Nat) (m :: Nat) :: Nat where
     Mult 'Z     m = 'Z
     Mult ('S n) m = Plus m (Mult n m)
 
+-- | Multiplication by two. Doubling.
+--
+-- >>> reflect (snat :: SNat (Mult2 Nat4))
+-- 8
+--
+type family Mult2 (n :: Nat) :: Nat where
+    Mult2 'Z     = 'Z
+    Mult2 ('S n) = 'S ('S (Mult2 n))
+
+-- | Division by two. 'False' is 0 and 'True' is 1 as a remainder.
+--
+-- >>> :kind! DivMod2 Nat7
+-- DivMod2 Nat7 :: (Nat, Bool)
+-- = '( 'S ('S ('S 'Z)), 'True)
+--
+-- >>> :kind! DivMod2 Nat4
+-- DivMod2 Nat4 :: (Nat, Bool)
+-- = '( 'S ('S 'Z), 'False)
+--
+type family DivMod2 (n :: Nat) :: (Nat, Bool) where
+    DivMod2 'Z          = '( 'Z, 'False)
+    DivMod2 ('S 'Z)     = '( 'Z, 'True)
+    DivMod2 ('S ('S n)) = DivMod2' (DivMod2 n)
+
+type family DivMod2' (p :: (Nat, Bool)) :: (Nat, Bool) where
+    DivMod2' '(n, b) = '( 'S n, b)
+
 -------------------------------------------------------------------------------
 -- Aliases
 -------------------------------------------------------------------------------
@@ -338,7 +419,7 @@ newtype ProofPlusNZero n = ProofPlusNZero { getProofPlusNZero :: Plus n Nat0 :~:
 proofMultZeroN :: Mult Nat0 n :~: Nat0
 proofMultZeroN = Refl
 
--- | @n * 0 = n@
+-- | @n * 0 = 0@
 proofMultNZero :: forall n proxy. SNatI n => proxy n -> Mult n Nat0 :~: Nat0
 proofMultNZero _ =
     getProofMultNZero (induction (ProofMultNZero Refl) step :: ProofMultNZero n)
@@ -385,6 +466,3 @@ unTagged (Tagged a) = a
 
 retagMap :: (a -> b) -> Tagged n a -> Tagged m b
 retagMap f = Tagged . f . unTagged
-
--- $setup
--- >>> :set -XTypeOperators -XDataKinds

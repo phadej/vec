@@ -1,14 +1,15 @@
-{-# LANGUAGE ConstraintKinds        #-}
-{-# LANGUAGE DataKinds              #-}
-{-# LANGUAGE DefaultSignatures      #-}
-{-# LANGUAGE FlexibleContexts       #-}
-{-# LANGUAGE FlexibleInstances      #-}
-{-# LANGUAGE FunctionalDependencies #-}
-{-# LANGUAGE PolyKinds              #-}
-{-# LANGUAGE ScopedTypeVariables    #-}
-{-# LANGUAGE TypeFamilies           #-}
-{-# LANGUAGE TypeOperators          #-}
-{-# LANGUAGE UndecidableInstances   #-}
+{-# LANGUAGE ConstraintKinds       #-}
+{-# LANGUAGE DataKinds             #-}
+{-# LANGUAGE DefaultSignatures     #-}
+{-# LANGUAGE EmptyCase             #-}
+{-# LANGUAGE FlexibleContexts      #-}
+{-# LANGUAGE FlexibleInstances     #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE PolyKinds             #-}
+{-# LANGUAGE ScopedTypeVariables   #-}
+{-# LANGUAGE TypeFamilies          #-}
+{-# LANGUAGE TypeOperators         #-}
+{-# LANGUAGE UndecidableInstances  #-}
 -- |
 --
 -- This module is designed to be imported qualified:
@@ -27,10 +28,11 @@ module Data.Fin.Enum (
 
 import Prelude hiding (Enum (..))
 
-import Data.Fin     (Fin)
-import Data.Nat     (Nat)
-import Data.Proxy   (Proxy (..))
-import GHC.Generics ((:+:) (..), M1 (..), U1 (..), V1)
+import Data.Bifunctor (bimap)
+import Data.Fin       (Fin (..))
+import Data.Nat       (Nat (..))
+import Data.Proxy     (Proxy (..))
+import GHC.Generics   ((:+:) (..), M1 (..), U1 (..), V1)
 
 import qualified Data.Fin      as F
 import qualified Data.Type.Nat as N
@@ -87,6 +89,13 @@ instance Enum Bool
 -- | 'Ordering' ~ 3
 instance Enum Ordering
 
+-- | 'Either' ~ @+@
+instance (Enum a, Enum b, N.InlineInduction (EnumSize a)) => Enum (Either a b) where
+    type EnumSize (Either a b) = N.Plus (EnumSize a) (EnumSize b)
+
+    to   = bimap to to . F.split
+    from = F.append . bimap from from
+
 -------------------------------------------------------------------------------
 -- EnumSize
 -------------------------------------------------------------------------------
@@ -98,7 +107,7 @@ type family EnumSizeRep (a :: * -> *) (n :: Nat) :: Nat where
     EnumSizeRep (a :+: b )   n = EnumSizeRep a (EnumSizeRep b n)
     EnumSizeRep V1           n = n
     EnumSizeRep (M1 _d _c a) n = EnumSizeRep a n
-    EnumSizeRep U1           n = 'N.S n
+    EnumSizeRep U1           n = 'S n
     -- No instance for K1 or :*:
 
 -------------------------------------------------------------------------------
@@ -107,17 +116,19 @@ type family EnumSizeRep (a :: * -> *) (n :: Nat) :: Nat where
 
 -- | Generic version of 'from'.
 gfrom :: (G.Generic a, GFrom a) => a -> Fin (GEnumSize a)
-gfrom = \x -> gfromRep (G.from x) (error "gfrom: internal error" :: Fin N.Nat0)
+gfrom = \x -> gfromRep (G.from x) (Proxy :: Proxy N.Nat0)
 
 -- | Constraint for the class that computes 'gfrom'.
 type GFrom a = GFromRep (G.Rep a)
 
 class GFromRep (a :: * -> *)  where
-    gfromRep  :: a x     -> Fin n -> Fin (EnumSizeRep a n)
-    gfromSkip :: Proxy a -> Fin n -> Fin (EnumSizeRep a n)
+    gfromRep  :: a x     -> Proxy n -> Fin (EnumSizeRep a n)
+    gfromSkip :: Proxy a -> Fin n   -> Fin (EnumSizeRep a n)
 
 instance (GFromRep a, GFromRep b) => GFromRep (a :+: b) where
-    gfromRep (L1 a) n = gfromRep a (gfromSkip (Proxy :: Proxy b) n)
+    gfromRep (L1 a) n = gfromRep a (prSkip n) where
+        prSkip :: Proxy n -> Proxy (EnumSizeRep b n)
+        prSkip  _ = Proxy
     gfromRep (R1 b) n = gfromSkip (Proxy :: Proxy a) (gfromRep b n)
 
     gfromSkip _ n = gfromSkip (Proxy :: Proxy a) (gfromSkip (Proxy :: Proxy b) n)
@@ -127,12 +138,12 @@ instance GFromRep a => GFromRep (M1 d c a) where
     gfromSkip _     n = gfromSkip (Proxy :: Proxy a) n
 
 instance GFromRep V1 where
-    gfromRep  _ n = n
+    gfromRep  v _ = case v of {}
     gfromSkip _ n = n
 
 instance GFromRep U1 where
-    gfromRep U1 _ = F.Z
-    gfromSkip _ n = F.S n
+    gfromRep U1 _ = FZ
+    gfromSkip _ n = FS n
 
 -------------------------------------------------------------------------------
 -- To
@@ -140,7 +151,7 @@ instance GFromRep U1 where
 
 -- | Generic version of 'to'.
 gto :: (G.Generic a, GTo a) => Fin (GEnumSize a) -> a
-gto = \x -> G.to $ gtoRep x id $ F.absurd
+gto = \x -> G.to $ gtoRep x id F.absurd
 
 -- | Constraint for the class that computes 'gto'.
 type GTo a = GToRep (G.Rep a)
@@ -158,5 +169,5 @@ instance GToRep V1 where
     gtoRep n _ k = k n
 
 instance GToRep U1 where
-    gtoRep F.Z     s _ = s U1
-    gtoRep (F.S n) _ k = k n
+    gtoRep FZ     s _ = s U1
+    gtoRep (FS n) _ k = k n
