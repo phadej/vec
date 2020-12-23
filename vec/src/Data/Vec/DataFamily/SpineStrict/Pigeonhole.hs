@@ -92,7 +92,10 @@ class Pigeonhole f where
 instance Pigeonhole Identity
 --
 -- | @'Proxy' x@ ~ @x ^ 0@
-instance Pigeonhole Proxy
+instance Pigeonhole Proxy where
+    type PigeonholeSize Proxy = 'Z
+    from _ = VNil
+    to _   = Proxy
 
 -- | @'Product' f g x@ ~ @x ^ (size f + size g)@
 instance (Pigeonhole f, Pigeonhole g, N.InlineInduction (PigeonholeSize f)) => Pigeonhole (Product f g) where
