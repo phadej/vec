@@ -21,6 +21,10 @@ ordTests
     -> TestTree
 ordTests a2b = testGroup ("Ord: " ++ nameA ++ " compared to " ++ nameB)
     [ modelTest a2b constraint "compare" (mapAAX compare)
+    , modelTest a2b constraint "<"       (mapAAX (<))
+    , modelTest a2b constraint "<="      (mapAAX (<=))
+    , modelTest a2b constraint "max"     (mapAAA max)
+    , modelTest a2b constraint "min"     (mapAAA min)
     ]
   where
     nameA      = show $ typeRep (Proxy :: Proxy a)

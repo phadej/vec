@@ -40,7 +40,7 @@ import qualified Test.QuickCheck     as QC
 --
 -- Better than GHC's built-in 'GHC.TypeLits.Nat' for some use cases.
 --
-data Nat = Z | S Nat deriving (Eq, Ord, Typeable, Data)
+data Nat = Z | S Nat deriving (Eq, Typeable, Data)
 
 #if __GLASGOW_HASKELL__ < 710
 deriving instance Typeable 'Z
@@ -53,6 +53,32 @@ deriving instance Typeable 'S
 --
 instance Show Nat where
     showsPrec d = showsPrec d . toNatural
+
+instance Ord Nat where
+    compare Z     Z     = EQ
+    compare Z     (S _) = LT
+    compare (S _) Z     = GT
+    compare (S n) (S m) = compare n m
+
+    Z   < Z   = False
+    Z   < S _ = True
+    S _ < Z   = False
+    S n < S m = n < m
+
+    Z   <= Z   = True
+    Z   <= S _ = True
+    S _ <= Z   = False
+    S n <= S m = n <= m
+
+    min Z     Z     = Z
+    min Z     (S _) = Z
+    min (S _) Z     = Z
+    min (S n) (S m) = S (min n m)
+
+    max Z       Z       = Z
+    max Z       m@(S _) = m
+    max n@(S _) Z       = n
+    max (S n)   (S m)   = S (max n m)
 
 instance Num Nat where
     fromInteger = fromNatural . fromInteger
