@@ -1,7 +1,8 @@
 branches: master
-tests:    >=8.0 && <8.10
-benchmarks:        <8.10
-doctest:  >=8.6 && <8.10
+tests:    >=8.0
+benchmarks:
+doctest:  >=8.6
+docspec:  True
 haddock:  >=8.6
 
 jobs-selection: any

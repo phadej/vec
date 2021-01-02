@@ -29,6 +29,8 @@ import Data.Vec.Lazy
 
 -- $setup
 -- >>> :set -XScopedTypeVariables
+-- >>> import Data.Vec.Lazy
+-- >>> import Data.Fin (Fin (..))
 -- >>> import Prelude (Maybe (..), Char, Bool (..))
 -- >>> import Control.Lens ((^.), (&), (.~), over, (^?), (#))
 

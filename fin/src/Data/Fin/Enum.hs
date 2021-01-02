@@ -39,6 +39,9 @@ import qualified Data.Type.Nat as N
 import qualified Data.Void     as V
 import qualified GHC.Generics  as G
 
+-- $setup
+-- >>> import qualified Data.Fin as F
+
 -- | Generic enumerations.
 --
 -- /Examples:/

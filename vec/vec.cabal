@@ -153,6 +153,8 @@ library
     GADTs
     TypeOperators
 
+  x-docspec-extra-packages: void
+
 test-suite inspection
   type:             exitcode-stdio-1.0
   main-is:          Main.hs

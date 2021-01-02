@@ -32,6 +32,8 @@ import Numeric.Natural (Natural)
 import qualified Data.Universe.Class as U
 import qualified Test.QuickCheck     as QC
 
+-- $setup
+
 -------------------------------------------------------------------------------
 -- Nat
 -------------------------------------------------------------------------------
@@ -153,6 +155,7 @@ instance QC.Function Nat where
 
 -- |
 --
+-- >>> import qualified Data.Universe.Class as U
 -- >>> take 10 (U.universe :: [Nat])
 -- [0,1,2,3,4,5,6,7,8,9]
 --

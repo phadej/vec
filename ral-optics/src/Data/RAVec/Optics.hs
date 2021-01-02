@@ -21,6 +21,7 @@ import Data.RAVec
 -- >>> import Optics.Core (set)
 -- >>> import Prelude
 -- >>> import qualified Data.Type.Bin as B
+-- >>> import Data.RAVec
 
 -------------------------------------------------------------------------------
 -- Indexing

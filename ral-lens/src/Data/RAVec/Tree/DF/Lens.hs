@@ -20,6 +20,8 @@ import Data.RAVec.Tree.DF
 -- $setup
 -- >>> import Control.Lens ((^.), (&), (.~), (^?), (#))
 -- >>> import Prelude
+-- >>> import Data.RAVec.Tree.DF
+-- >>> import Data.Wrd (Wrd (..))
 
 -------------------------------------------------------------------------------
 -- Indexing
