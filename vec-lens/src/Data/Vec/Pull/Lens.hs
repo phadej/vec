@@ -24,6 +24,8 @@ import Data.Vec.Pull
 
 -- $setup
 -- >>> :set -XScopedTypeVariables
+-- >>> import Data.Vec.Pull
+-- >>> import Data.Fin (Fin (..))
 -- >>> import Control.Lens ((^.), (&), (.~), over)
 -- >>> import qualified Data.Vec.Lazy as L
 -- >>> import qualified Data.Vec.Lazy.Lens as L

@@ -24,6 +24,8 @@ import Data.Vec.Pull
 
 -- $setup
 -- >>> :set -XScopedTypeVariables
+-- >>> import Data.Fin (Fin (..))
+-- >>> import Data.Vec.Pull
 -- >>> import Optics.Core (over, view, set, (%))
 -- >>> import qualified Data.Vec.Lazy as L
 -- >>> import qualified Data.Vec.Lazy.Optics as L

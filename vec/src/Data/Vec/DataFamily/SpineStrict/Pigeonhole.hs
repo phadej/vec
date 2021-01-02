@@ -53,6 +53,7 @@ import Control.Monad.Trans.Instances ()
 -- >>> :set -XDeriveGeneric
 -- >>> import Control.Applicative (Const (..))
 -- >>> import Data.Char (toUpper)
+-- >>> import Data.Functor.Identity (Identity (..))
 -- >>> import Data.Void (absurd)
 -- >>> import GHC.Generics (Generic, Generic1)
 -- >>> import Prelude (Int, Show, Char, Integer)

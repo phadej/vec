@@ -28,6 +28,8 @@ import Data.Vec.Lazy.Inline
 
 -- $setup
 -- >>> :set -XScopedTypeVariables
+-- >>> import Data.Fin (Fin (..))
+-- >>> import Data.Vec.Lazy.Inline
 -- >>> import Prelude (Maybe (..), Char, Bool (..))
 -- >>> import Optics.Core (over, view, set, (%), review, preview)
 

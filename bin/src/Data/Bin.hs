@@ -36,6 +36,7 @@ module Data.Bin (
     ) where
 
 import Control.DeepSeq (NFData (..))
+import Data.BinP       (BinP (..))
 import Data.Bits       (Bits (..))
 import Data.Data       (Data)
 import Data.Hashable   (Hashable (..))
@@ -43,11 +44,13 @@ import Data.Nat        (Nat (..))
 import Data.Typeable   (Typeable)
 import GHC.Exception   (ArithException (..), throw)
 import Numeric.Natural (Natural)
-import Data.BinP (BinP (..))
 
+import qualified Data.BinP       as BP
 import qualified Data.Nat        as N
 import qualified Test.QuickCheck as QC
-import qualified Data.BinP as BP
+
+-- $setup
+-- >>> import qualified Data.Nat as N
 
 -------------------------------------------------------------------------------
 -- Bin

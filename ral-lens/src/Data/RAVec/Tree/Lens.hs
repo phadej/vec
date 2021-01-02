@@ -18,6 +18,8 @@ import Data.RAVec.Tree
 
 -- $setup
 -- >>> import Control.Lens ((^.), (&), (.~), (^?), (#))
+-- >>> import Data.RAVec.Tree
+-- >>> import Data.Wrd (Wrd (..))
 -- >>> import Prelude
 
 -------------------------------------------------------------------------------

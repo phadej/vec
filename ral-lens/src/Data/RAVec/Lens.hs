@@ -20,6 +20,7 @@ import Data.RAVec
 -- $setup
 -- >>> import Control.Lens ((^.), (&), (.~), (^?), (#))
 -- >>> import Prelude
+-- >>> import Data.RAVec
 -- >>> import qualified Data.Type.Bin as B
 
 -------------------------------------------------------------------------------
