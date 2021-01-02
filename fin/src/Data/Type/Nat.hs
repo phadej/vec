@@ -28,6 +28,7 @@ module Data.Type.Nat (
     snatToNatural,
     -- * Implicit
     SNatI(..),
+    snat,
     withSNat,
     reify,
     reflect,
@@ -37,10 +38,7 @@ module Data.Type.Nat (
     EqNat,
     discreteNat,
     -- * Induction
-    induction,
     induction1,
-    InlineInduction (..),
-    inlineInduction,
     -- ** Example: unfoldedFix
     unfoldedFix,
     -- * Arithmetic
@@ -75,6 +73,7 @@ import Numeric.Natural    (Natural)
 import qualified GHC.TypeLits as GHC
 
 import Unsafe.Coerce (unsafeCoerce)
+import Data.Coerce (coerce)
 
 #if !MIN_VERSION_base(4,11,0)
 import Data.Type.Equality (type (==))
@@ -98,10 +97,33 @@ data SNat (n :: Nat) where
 
 deriving instance Show (SNat p)
 
--- | Convenience class to get 'SNat'.
-class               SNatI (n :: Nat) where snat :: SNat n
-instance            SNatI 'Z         where snat = SZ
-instance SNatI n => SNatI ('S n)     where snat = SS
+-- | Implicit 'SNat'.
+--
+-- In an unorthodox singleton way, it actually provides an induction function.
+--
+-- The induction should often be fully inlined.
+-- See @test/Inspection.hs@.
+--
+-- >>> :set -XPolyKinds
+-- >>> newtype Const a b = Const a deriving (Show)
+-- >>> induction (Const 0) (coerce ((+2) :: Int -> Int)) :: Const Int Nat3
+-- Const 6
+--
+class SNatI (n :: Nat) where
+    induction
+        :: f 'Z                                    -- ^ zero case
+        -> (forall m. SNatI m => f m -> f ('S m))  -- ^ induction step
+        -> f n
+
+instance SNatI 'Z where
+    induction n _c = n
+
+instance SNatI n => SNatI ('S n) where
+    induction n c = c (induction n c)
+
+-- | Construct explicit 'SNat' value.
+snat :: SNatI n => SNat n
+snat = induction SZ (\_ -> SS)
 
 -- | Constructor 'SNatI' dictionary from 'SNat'.
 --
@@ -112,11 +134,11 @@ withSNat SS k = k
 
 -- | Reflect type-level 'Nat' to the term level.
 reflect :: forall n proxy. SNatI n => proxy n -> Nat
-reflect _ = unTagged (induction1 (Tagged Z) (retagMap S) :: Tagged n Nat)
+reflect _ = unKonst (induction (Konst Z) (kmap S) :: Konst Nat n)
 
 -- | As 'reflect' but with any 'Num'.
 reflectToNum :: forall n m proxy. (SNatI n, Num m) => proxy n -> m
-reflectToNum _ = unTagged (induction1 (Tagged 0) (retagMap (1+)) :: Tagged n m)
+reflectToNum _ = unKonst (induction (Konst 0) (kmap (1+)) :: Konst m n)
 
 -- | Reify 'Nat'.
 --
@@ -133,7 +155,7 @@ reify (S n) f =  reify n (\(_p :: Proxy n) -> f (Proxy :: Proxy ('S n)))
 --
 snatToNat :: forall n. SNat n -> Nat
 snatToNat SZ = Z
-snatToNat SS = unTagged (induction1 (Tagged Z) (retagMap S) :: Tagged n Nat)
+snatToNat SS = unKonst (induction (Konst Z) (kmap S) :: Konst Nat n)
 
 -- | Convert 'SNat' to 'Natural'
 --
@@ -145,7 +167,7 @@ snatToNat SS = unTagged (induction1 (Tagged Z) (retagMap S) :: Tagged n Nat)
 --
 snatToNatural :: forall n. SNat n -> Natural
 snatToNatural SZ = 0
-snatToNatural SS = unTagged (induction1 (Tagged 0) (retagMap succ) :: Tagged n Natural)
+snatToNatural SS = unKonst (induction (Konst 0) (kmap succ) :: Konst Natural n)
 
 -------------------------------------------------------------------------------
 -- Equality
@@ -224,68 +246,22 @@ type instance n == m = EqNat n m
 -- Induction
 -------------------------------------------------------------------------------
 
+newtype Konst a (n :: Nat) = Konst { unKonst :: a }
+
+kmap :: (a -> b) -> Konst a n -> Konst b m
+kmap = coerce
+
+newtype Flipped f a (b :: Nat) = Flip { unflip :: f b a }
+
 -- | Induction on 'Nat', functor form. Useful for computation.
---
--- >>> induction1 (Tagged 0) $ retagMap (+2) :: Tagged Nat3 Int
--- Tagged 6
 --
 induction1
     :: forall n f a. SNatI n
     => f 'Z a                                      -- ^ zero case
     -> (forall m. SNatI m => f m a -> f ('S m) a)  -- ^ induction step
     -> f n a
-induction1 z f = go where
-    go :: forall m. SNatI m => f m a
-    go = case snat :: SNat m of
-        SZ -> z
-        SS -> f go
-
--- | Induction on 'Nat'.
---
--- Useful in proofs or with GADTs, see source of 'proofPlusNZero'.
-induction
-    :: forall n f. SNatI n
-    => f 'Z                                    -- ^ zero case
-    -> (forall m. SNatI m => f m -> f ('S m))  -- ^ induction step
-    -> f n
-induction z f = go where
-    go :: forall m. SNatI m => f m
-    go = case snat :: SNat m of
-        SZ -> z
-        SS -> f go
-
--- | The induction will be fully inlined.
---
--- See @test/Inspection.hs@.
-class SNatI n => InlineInduction (n :: Nat) where
-    inlineInduction1 :: f 'Z a -> (forall m. InlineInduction m => f m a -> f ('S m) a) -> f n a
-
-instance InlineInduction 'Z where
-    inlineInduction1 z _ = z
-
-instance InlineInduction n => InlineInduction ('S n) where
-    inlineInduction1 z f = f (inlineInduction1 z f)
-
-    -- Specialise this to few first numerals.
-    {-# SPECIALIZE instance InlineInduction ('S 'Z) #-}
-    {-# SPECIALIZE instance InlineInduction ('S ('S 'Z)) #-}
-    {-# SPECIALIZE instance InlineInduction ('S ('S ('S 'Z))) #-}
-    {-# SPECIALIZE instance InlineInduction ('S ('S ('S ('S 'Z)))) #-}
-    {-# SPECIALIZE instance InlineInduction ('S ('S ('S ('S ('S 'Z))))) #-}
-    {-# SPECIALIZE instance InlineInduction ('S ('S ('S ('S ('S ('S 'Z)))))) #-}
-    {-# SPECIALIZE instance InlineInduction ('S ('S ('S ('S ('S ('S ('S 'Z))))))) #-}
-    {-# SPECIALIZE instance InlineInduction ('S ('S ('S ('S ('S ('S ('S ('S 'Z)))))))) #-}
-    {-# SPECIALIZE instance InlineInduction ('S ('S ('S ('S ('S ('S ('S ('S ('S 'Z))))))))) #-}
-
--- | See 'InlineInduction'.
-inlineInduction
-    :: forall n f. InlineInduction n
-    => f 'Z                                              -- ^ zero case
-    -> (forall m. InlineInduction m => f m -> f ('S m))  -- ^ induction step
-    -> f n
-inlineInduction z f = unConst' $ inlineInduction1 (Const' z) (Const' . f . unConst')
-
-newtype Const' (f :: Nat -> *) (n :: Nat) a = Const' { unConst' :: f n }
+induction1 z f = unflip (induction (Flip z) (\(Flip x) -> Flip (f x)))
+{-# INLINE induction1 #-}
 
 -- | Unfold @n@ steps of a general recursion.
 --
@@ -298,15 +274,15 @@ newtype Const' (f :: Nat -> *) (n :: Nat) a = Const' { unConst' :: f n }
 -- 'unfoldedFix' ('Proxy' :: 'Proxy' 'Nat3') f = f (f (f (fix f)))
 -- @
 --
-unfoldedFix :: forall n a proxy. InlineInduction n => proxy n -> (a -> a) -> a
-unfoldedFix _ = getFix (inlineInduction1 start step :: Fix n a) where
-    start :: Fix 'Z a
+unfoldedFix :: forall n a proxy. SNatI n => proxy n -> (a -> a) -> a
+unfoldedFix _ = getFix (induction start step :: Fix a n) where
+    start :: Fix a 'Z
     start = Fix fix
 
-    step :: Fix m a -> Fix ('S m) a
+    step :: Fix a m -> Fix a ('S m)
     step (Fix go) = Fix $ \f -> f (go f)
 
-newtype Fix (n :: Nat) a = Fix { getFix :: (a -> a) -> a }
+newtype Fix a (n :: Nat) = Fix { getFix :: (a -> a) -> a }
 
 -------------------------------------------------------------------------------
 -- Conversion to GHC Nat
@@ -451,18 +427,3 @@ proofMultNOne = getProofMultNOne $ induction (ProofMultNOne Refl) step where
 newtype ProofMultNOne n = ProofMultNOne { getProofMultNOne :: Mult n Nat1 :~: n }
 
 -- TODO: multAssoc
-
--------------------------------------------------------------------------------
--- Tagged
--------------------------------------------------------------------------------
-
--- Own 'Tagged', to not depend on @tagged@
---
--- We shouldn't export this in public interface.
-newtype Tagged (n :: Nat) a = Tagged a deriving Show
-
-unTagged :: Tagged n a -> a
-unTagged (Tagged a) = a
-
-retagMap :: (a -> b) -> Tagged n a -> Tagged m b
-retagMap f = Tagged . f . unTagged

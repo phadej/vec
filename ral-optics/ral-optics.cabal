@@ -1,7 +1,6 @@
 cabal-version:      2.2
 name:               ral-optics
-version:            0.1
-x-revision:         1
+version:            0.2
 synopsis:           Length-indexed random access lists: optics utilities.
 category:           Data, Dependent Types, Singletons, Optics
 description:
@@ -14,7 +13,7 @@ license:            GPL-2.0-or-later
 license-file:       LICENSE
 author:             Oleg Grenrus <oleg.grenrus@iki.fi>
 maintainer:         Oleg.Grenrus <oleg.grenrus@iki.fi>
-copyright:          (c) 2019 Oleg Grenrus
+copyright:          (c) 2019-2021 Oleg Grenrus
 build-type:         Simple
 extra-source-files: ChangeLog.md
 tested-with:
@@ -44,9 +43,9 @@ library
   build-depends:
     , base         >=4.9   && <4.15
     , bin          ^>=0.1
-    , fin          ^>=0.1.1
+    , fin          ^>=0.2
     , optics-core  >=0.2   && <0.4
-    , ral          ^>=0.1
+    , ral          ^>=0.2
 
 -- dump-core
 -- if impl(ghc >= 8.0)

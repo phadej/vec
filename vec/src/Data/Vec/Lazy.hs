@@ -251,7 +251,7 @@ empty = VNil
 singleton :: a -> Vec ('S 'Z) a
 singleton x = x ::: VNil
 
--- | /O(n)/. Recover 'N.InlineInduction' (and 'N.SNatI') dictionary from a 'Vec' value.
+-- | /O(n)/. Recover 'N.SNatI' (and 'N.SNatI') dictionary from a 'Vec' value.
 --
 -- Example: 'N.reflect' is constrained with @'N.SNatI' n@, but if we have a
 -- @'Vec' n a@, we can recover that dictionary:
@@ -259,11 +259,11 @@ singleton x = x ::: VNil
 -- >>> let f :: forall n a. Vec n a -> N.Nat; f v = withDict v (N.reflect (Proxy :: Proxy n)) in f (True ::: VNil)
 -- 1
 --
--- /Note:/ using 'N.InlineInduction' will be suboptimal, as if GHC has no
+-- /Note:/ using 'N.SNatI' will be suboptimal, as if GHC has no
 -- opportunity to optimise the code, the recusion won't be unfold.
 -- How bad such code will perform? I don't know, we'll need benchmarks.
 --
-withDict :: Vec n a -> (N.InlineInduction n => r) -> r
+withDict :: Vec n a -> (N.SNatI n => r) -> r
 withDict VNil       r = r
 withDict (_ ::: xs) r = withDict xs r
 
@@ -344,7 +344,7 @@ fromListPrefix = getFromList (N.induction1 start step) where
 --
 -- >>> reifyList "foo" length
 -- 3
-reifyList :: [a] -> (forall n. N.InlineInduction n => Vec n a -> r) -> r
+reifyList :: [a] -> (forall n. N.SNatI n => Vec n a -> r) -> r
 reifyList []       f = f VNil
 reifyList (x : xs) f = reifyList xs $ \xs' -> f (x ::: xs')
 
@@ -698,8 +698,8 @@ newtype Universe n = Universe { getUniverse :: Vec n (Fin n) }
 -- there's no strict need for it.
 --
 class VecEach s t a b | s -> a, t -> b, s b -> t, t a -> s where
-    mapWithVec :: (forall n. N.InlineInduction n => Vec n a -> Vec n b) -> s -> t
-    traverseWithVec :: Applicative f => (forall n. N.InlineInduction n => Vec n a -> f (Vec n b)) -> s -> f t
+    mapWithVec :: (forall n. N.SNatI n => Vec n a -> Vec n b) -> s -> t
+    traverseWithVec :: Applicative f => (forall n. N.SNatI n => Vec n a -> f (Vec n b)) -> s -> f t
 
 instance (a ~ a', b ~ b') => VecEach (a, a') (b, b') a b where
     mapWithVec f ~(x, y) = case f (x ::: y ::: VNil) of

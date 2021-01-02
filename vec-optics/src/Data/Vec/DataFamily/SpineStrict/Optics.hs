@@ -74,7 +74,7 @@ tailVL f (x ::: xs) = (x :::) <$> f xs
 {-# INLINE tailVL #-}
 
 -- | An 'I.Iso' from 'toPull' and 'fromPull'.
-_Pull :: N.InlineInduction n => L.Iso (Vec n a) (Vec n b) (P.Vec n a) (P.Vec n b)
+_Pull :: N.SNatI n => L.Iso (Vec n a) (Vec n b) (P.Vec n a) (P.Vec n b)
 _Pull = L.iso toPull fromPull
 
 -- | Prism from list.
@@ -88,7 +88,7 @@ _Pull = L.iso toPull fromPull
 -- >>> review _Vec (True ::: False ::: VNil)
 -- [True,False]
 --
-_Vec :: N.InlineInduction n => L.Prism' [a] (Vec n a)
+_Vec :: N.SNatI n => L.Prism' [a] (Vec n a)
 _Vec = L.prism' toList fromList
 
 -- | Index lens.
@@ -99,12 +99,12 @@ _Vec = L.prism' toList fromList
 -- >>> set (ix (FS FZ)) 'x' ('a' ::: 'b' ::: 'c' ::: VNil)
 -- 'a' ::: 'x' ::: 'c' ::: VNil
 --
-ix :: forall n a. N.InlineInduction n => Fin n -> L.Lens' (Vec n a) a
+ix :: forall n a. N.SNatI n => Fin n -> L.Lens' (Vec n a) a
 ix i = L.lensVL (ixVL i)
 {-# INLINE ix #-}
 
-ixVL :: forall n f a. (N.InlineInduction n, Functor f) => Fin n -> LensLikeVL' f (Vec n a) a
-ixVL = getIxLens $ N.inlineInduction1 start step where
+ixVL :: forall n f a. (N.SNatI n, Functor f) => Fin n -> LensLikeVL' f (Vec n a) a
+ixVL = getIxLens $ N.induction1 start step where
     start :: IxLens f 'Z a
     start = IxLens F.absurd
 
@@ -120,24 +120,24 @@ newtype IxLens f n a = IxLens { getIxLens :: Fin n -> LensLikeVL' f (Vec n a) a 
 -- Instances
 -------------------------------------------------------------------------------
 
-instance N.InlineInduction n => L.FunctorWithIndex (Fin n) (Vec n) where
+instance N.SNatI n => L.FunctorWithIndex (Fin n) (Vec n) where
     imap = imap
 
-instance N.InlineInduction n => L.FoldableWithIndex (Fin n) (Vec n) where
+instance N.SNatI n => L.FoldableWithIndex (Fin n) (Vec n) where
     ifoldMap = ifoldMap
     ifoldr   = ifoldr
 
-instance N.InlineInduction n => L.TraversableWithIndex (Fin n) (Vec n) where
+instance N.SNatI n => L.TraversableWithIndex (Fin n) (Vec n) where
     itraverse = itraverse
 
-instance N.InlineInduction n => L.Each (Fin n) (Vec n a) (Vec n b) a b where
+instance N.SNatI n => L.Each (Fin n) (Vec n a) (Vec n b) a b where
 
 type instance L.Index (Vec n a)   = Fin n
 type instance L.IxValue (Vec n a) = a
 
 -- | 'Vec' doesn't have 'L.At' instance, as we __cannot__ remove value from 'Vec'.
 -- See 'ix' in "Data.Vec.DataFamily.SpineStrict" module for an 'L.Lens' (not 'L.Traversal').
-instance N.InlineInduction n => L.Ixed (Vec n a) where
+instance N.SNatI n => L.Ixed (Vec n a) where
     type IxKind (Vec n a) = L.A_Lens
     ix = ix
 

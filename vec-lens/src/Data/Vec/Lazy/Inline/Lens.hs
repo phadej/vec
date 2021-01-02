@@ -42,8 +42,8 @@ import Data.Vec.Lazy.Inline
 -- >>> ('a' ::: 'b' ::: 'c' ::: VNil) & ix (FS FZ) .~ 'x'
 -- 'a' ::: 'x' ::: 'c' ::: VNil
 --
-ix :: forall n f a. (N.InlineInduction n, Functor f) => Fin n -> L.LensLike' f (Vec n a) a
-ix = getIxLens $ N.inlineInduction1 start step where
+ix :: forall n f a. (N.SNatI n, Functor f) => Fin n -> L.LensLike' f (Vec n a) a
+ix = getIxLens $ N.induction1 start step where
     start :: IxLens f 'Z a
     start = IxLens F.absurd
 
@@ -59,7 +59,7 @@ newtype IxLens f n a = IxLens { getIxLens :: Fin n -> L.LensLike' f (Vec n a) a 
 -------------------------------------------------------------------------------
 
 -- | An 'L.Iso' from 'toPull' and 'fromPull'.
-_Pull :: N.InlineInduction n => L.Iso (Vec n a) (Vec n b) (P.Vec n a) (P.Vec n b)
+_Pull :: N.SNatI n => L.Iso (Vec n a) (Vec n b) (P.Vec n a) (P.Vec n b)
 _Pull = L.iso toPull fromPull
 
 -- | Prism from list.
@@ -73,5 +73,5 @@ _Pull = L.iso toPull fromPull
 -- >>> _Vec # (True ::: False ::: VNil)
 -- [True,False]
 --
-_Vec :: N.InlineInduction n => L.Prism' [a] (Vec n a)
+_Vec :: N.SNatI n => L.Prism' [a] (Vec n a)
 _Vec = L.prism' toList fromList

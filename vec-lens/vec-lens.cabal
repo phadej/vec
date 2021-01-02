@@ -1,7 +1,6 @@
 cabal-version:      2.2
 name:               vec-lens
-version:            0.3
-x-revision:         1
+version:            0.4
 synopsis:           Vec: length-indexed (sized) list: lens support
 category:           Data, Dependent Types, Lens
 description:
@@ -17,7 +16,7 @@ license:            BSD-3-Clause
 license-file:       LICENSE
 author:             Oleg Grenrus <oleg.grenrus@iki.fi>
 maintainer:         Oleg.Grenrus <oleg.grenrus@iki.fi>
-copyright:          (c) 2017-2019 Oleg Grenrus
+copyright:          (c) 2017-2021 Oleg Grenrus
 build-type:         Simple
 extra-source-files: ChangeLog.md
 tested-with:
@@ -51,8 +50,8 @@ library
 
   -- siblings
   build-depends:
-    , fin  ^>=0.1.1
-    , vec  ^>=0.3
+    , fin  ^>=0.2
+    , vec  ^>=0.4
 
   -- other dependencies
   build-depends:    lens ^>=4.18.1 || ^>=4.19.1

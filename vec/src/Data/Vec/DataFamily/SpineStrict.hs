@@ -176,8 +176,8 @@ data instance Vec ('S n) a = a ::: !(Vec n a)
 --
 -- >>> 'a' ::: 'b' ::: VNil == 'a' ::: 'c' ::: VNil
 -- False
-instance (Eq a, N.InlineInduction n) => Eq (Vec n a) where
-    (==) = getEqual (N.inlineInduction1 start step) where
+instance (Eq a, N.SNatI n) => Eq (Vec n a) where
+    (==) = getEqual (N.induction1 start step) where
         start :: Equal 'Z a
         start = Equal $ \_ _ -> True
 
@@ -191,8 +191,8 @@ newtype Equal n a = Equal { getEqual :: Vec n a -> Vec n a -> Bool }
 --
 -- >>> compare ('a' ::: 'b' ::: VNil) ('a' ::: 'c' ::: VNil)
 -- LT
-instance (Ord a, N.InlineInduction n) => Ord (Vec n a) where
-    compare = getCompare (N.inlineInduction1 start step) where
+instance (Ord a, N.SNatI n) => Ord (Vec n a) where
+    compare = getCompare (N.induction1 start step) where
         start :: Compare 'Z a
         start = Compare $ \_ _ -> EQ
 
@@ -202,8 +202,8 @@ instance (Ord a, N.InlineInduction n) => Ord (Vec n a) where
 
 newtype Compare n a = Compare { getCompare :: Vec n a -> Vec n a -> Ordering }
 
-instance (Show a, N.InlineInduction n) => Show (Vec n a) where
-    showsPrec = getShowsPrec (N.inlineInduction1 start step) where
+instance (Show a, N.SNatI n) => Show (Vec n a) where
+    showsPrec = getShowsPrec (N.induction1 start step) where
         start :: ShowsPrec 'Z a
         start = ShowsPrec $ \_ _ -> showString "VNil"
 
@@ -215,10 +215,10 @@ instance (Show a, N.InlineInduction n) => Show (Vec n a) where
 
 newtype ShowsPrec n a = ShowsPrec { getShowsPrec :: Int -> Vec n a -> ShowS }
 
-instance N.InlineInduction n => Functor (Vec n) where
+instance N.SNatI n => Functor (Vec n) where
     fmap = map
 
-instance N.InlineInduction n => I.Foldable (Vec n) where
+instance N.SNatI n => I.Foldable (Vec n) where
     foldMap = foldMap
 
     foldr  = foldr
@@ -232,34 +232,34 @@ instance N.InlineInduction n => I.Foldable (Vec n) where
 #endif
 
 #ifdef MIN_VERSION_semigroupoids
-instance (N.InlineInduction m, n ~ 'S m) => I.Foldable1 (Vec n) where
+instance (N.SNatI m, n ~ 'S m) => I.Foldable1 (Vec n) where
     foldMap1 = foldMap1
 
-instance (N.InlineInduction m, n ~ 'S m) => I.Traversable1 (Vec n) where
+instance (N.SNatI m, n ~ 'S m) => I.Traversable1 (Vec n) where
     traverse1 = traverse1
 #endif
 
-instance N.InlineInduction n => I.Traversable (Vec n) where
+instance N.SNatI n => I.Traversable (Vec n) where
     traverse = traverse
 
 
-instance (NFData a, N.InlineInduction n) => NFData (Vec n a) where
-    rnf = getRnf (N.inlineInduction1 z s) where
+instance (NFData a, N.SNatI n) => NFData (Vec n a) where
+    rnf = getRnf (N.induction1 z s) where
         z           = Rnf $ \VNil -> ()
         s (Rnf rec) = Rnf $ \(x ::: xs) -> rnf x `seq` rec xs
 
 newtype Rnf n a = Rnf { getRnf :: Vec n a -> () }
 
-instance (Hashable a, N.InlineInduction n) => Hashable (Vec n a) where
-    hashWithSalt = getHashWithSalt (N.inlineInduction1 z s) where
+instance (Hashable a, N.SNatI n) => Hashable (Vec n a) where
+    hashWithSalt = getHashWithSalt (N.induction1 z s) where
         z = HashWithSalt $ \salt VNil -> salt `hashWithSalt` (0 :: Int)
         s (HashWithSalt rec) = HashWithSalt $ \salt (x ::: xs) -> rec (salt
             `hashWithSalt` x) xs
 
 newtype HashWithSalt n a = HashWithSalt { getHashWithSalt :: Int -> Vec n a -> Int }
 
-instance N.InlineInduction n => Applicative (Vec n) where
-    pure x = N.inlineInduction1 VNil (x :::)
+instance N.SNatI n => Applicative (Vec n) where
+    pure x = N.induction1 VNil (x :::)
     (<*>)  = zipWith ($)
     _ *> x = x
     x <* _ = x
@@ -267,38 +267,38 @@ instance N.InlineInduction n => Applicative (Vec n) where
     liftA2 = zipWith
 #endif
 
-instance N.InlineInduction n => Monad (Vec n) where
+instance N.SNatI n => Monad (Vec n) where
     return = pure
     (>>=)  = bind
     _ >> x = x
 
 #ifdef MIN_VERSION_distributive
-instance N.InlineInduction n => Distributive (Vec n) where
+instance N.SNatI n => Distributive (Vec n) where
     distribute f = tabulate (\k -> fmap (! k) f)
 
 #ifdef MIN_VERSION_adjunctions
-instance N.InlineInduction n => I.Representable (Vec n) where
+instance N.SNatI n => I.Representable (Vec n) where
     type Rep (Vec n) = Fin n
     tabulate = tabulate
     index    = (!)
 #endif
 #endif
 
-instance (Semigroup a, N.InlineInduction n) => Semigroup (Vec n a) where
+instance (Semigroup a, N.SNatI n) => Semigroup (Vec n a) where
     (<>) = zipWith (<>)
 
-instance (Monoid a, N.InlineInduction n) => Monoid (Vec n a) where
+instance (Monoid a, N.SNatI n) => Monoid (Vec n a) where
     mempty = pure mempty
     mappend = zipWith mappend
 
 #ifdef MIN_VERSION_semigroupoids
-instance N.InlineInduction n => Apply (Vec n) where
+instance N.SNatI n => Apply (Vec n) where
     (<.>) = zipWith ($)
     _ .> x = x
     x <. _ = x
     liftF2 = zipWith
 
-instance N.InlineInduction n => I.Bind (Vec n) where
+instance N.SNatI n => I.Bind (Vec n) where
     (>>-) = bind
     join  = join
 #endif
@@ -324,8 +324,8 @@ singleton x = x ::: VNil
 -------------------------------------------------------------------------------
 
 -- | Convert to pull 'P.Vec'.
-toPull :: forall n a. N.InlineInduction n => Vec n a -> P.Vec n a
-toPull = getToPull (N.inlineInduction1 start step) where
+toPull :: forall n a. N.SNatI n => Vec n a -> P.Vec n a
+toPull = getToPull (N.induction1 start step) where
     start :: ToPull 'Z a
     start = ToPull $ \_ -> P.Vec F.absurd
 
@@ -337,8 +337,8 @@ toPull = getToPull (N.inlineInduction1 start step) where
 newtype ToPull n a = ToPull { getToPull :: Vec n a -> P.Vec n a }
 
 -- | Convert from pull 'P.Vec'.
-fromPull :: forall n a. N.InlineInduction n => P.Vec n a -> Vec n a
-fromPull = getFromPull (N.inlineInduction1 start step) where
+fromPull :: forall n a. N.SNatI n => P.Vec n a -> Vec n a
+fromPull = getFromPull (N.induction1 start step) where
     start :: FromPull 'Z a
     start = FromPull $ const VNil
 
@@ -351,8 +351,8 @@ newtype FromPull n a = FromPull { getFromPull :: P.Vec n a -> Vec n a }
 --
 -- >>> toList $ 'f' ::: 'o' ::: 'o' ::: VNil
 -- "foo"
-toList :: forall n a. N.InlineInduction n => Vec n a -> [a]
-toList = getToList (N.inlineInduction1 start step) where
+toList :: forall n a. N.SNatI n => Vec n a -> [a]
+toList = getToList (N.induction1 start step) where
     start :: ToList 'Z a
     start = ToList (const [])
 
@@ -373,8 +373,8 @@ newtype ToList n a = ToList { getToList :: Vec n a -> [a] }
 -- >>> fromList "xy" :: Maybe (Vec N.Nat3 Char)
 -- Nothing
 --
-fromList :: N.InlineInduction n => [a] -> Maybe (Vec n a)
-fromList = getFromList (N.inlineInduction1 start step) where
+fromList :: N.SNatI n => [a] -> Maybe (Vec n a)
+fromList = getFromList (N.induction1 start step) where
     start :: FromList 'Z a
     start = FromList $ \xs -> case xs of
         []      -> Just VNil
@@ -399,8 +399,8 @@ newtype FromList n a = FromList { getFromList :: [a] -> Maybe (Vec n a) }
 -- >>> fromListPrefix "xy" :: Maybe (Vec N.Nat3 Char)
 -- Nothing
 --
-fromListPrefix :: N.InlineInduction n => [a] -> Maybe (Vec n a)
-fromListPrefix = getFromList (N.inlineInduction1 start step) where
+fromListPrefix :: N.SNatI n => [a] -> Maybe (Vec n a)
+fromListPrefix = getFromList (N.induction1 start step) where
     start :: FromList 'Z a
     start = FromList $ \_ -> Just VNil -- different than in fromList case
 
@@ -413,7 +413,7 @@ fromListPrefix = getFromList (N.inlineInduction1 start step) where
 --
 -- >>> reifyList "foo" length
 -- 3
-reifyList :: [a] -> (forall n. N.InlineInduction n => Vec n a -> r) -> r
+reifyList :: [a] -> (forall n. N.SNatI n => Vec n a -> r) -> r
 reifyList []       f = f VNil
 reifyList (x : xs) f = reifyList xs $ \xs' -> f (x ::: xs')
 
@@ -421,8 +421,8 @@ reifyList (x : xs) f = reifyList xs $ \xs' -> f (x ::: xs')
 -- Indexing
 -------------------------------------------------------------------------------
 
-flipIndex :: N.InlineInduction n => Fin n -> Vec n a -> a
-flipIndex = getIndex (N.inlineInduction1 start step) where
+flipIndex :: N.SNatI n => Fin n -> Vec n a -> a
+flipIndex = getIndex (N.induction1 start step) where
     start :: Index 'Z a
     start = Index F.absurd
 
@@ -438,14 +438,14 @@ newtype Index n a = Index { getIndex :: Fin n -> Vec n a -> a }
 -- >>> ('a' ::: 'b' ::: 'c' ::: VNil) ! FS FZ
 -- 'b'
 --
-(!) :: N.InlineInduction n => Vec n a -> Fin n -> a
+(!) :: N.SNatI n => Vec n a -> Fin n -> a
 (!) = flip flipIndex
 
 -- | Tabulating, inverse of '!'.
 --
 -- >>> tabulate id :: Vec N.Nat3 (Fin N.Nat3)
 -- 0 ::: 1 ::: 2 ::: VNil
-tabulate :: N.InlineInduction n => (Fin n -> a) -> Vec n a
+tabulate :: N.SNatI n => (Fin n -> a) -> Vec n a
 tabulate = fromPull . P.tabulate
 
 -- | Cons an element in front of a 'Vec'.
@@ -453,8 +453,8 @@ cons :: a -> Vec n a -> Vec ('S n) a
 cons = (:::)
 
 -- | Add a single element at the end of a 'Vec'.
-snoc :: forall n a. N.InlineInduction n => Vec n a -> a -> Vec ('S n) a
-snoc xs x = getSnoc (N.inlineInduction1 start step) xs where
+snoc :: forall n a. N.SNatI n => Vec n a -> a -> Vec ('S n) a
+snoc xs x = getSnoc (N.induction1 start step) xs where
     start :: Snoc 'Z a
     start = Snoc $ \ys -> x ::: ys
 
@@ -482,12 +482,12 @@ tail (_ ::: xs) = xs
 --
 -- @since 0.2.1
 --
-reverse :: forall n a. N.InlineInduction n => Vec n a -> Vec n a
-reverse = getReverse (N.inlineInduction1 start step) where
+reverse :: forall n a. N.SNatI n => Vec n a -> Vec n a
+reverse = getReverse (N.induction1 start step) where
     start :: Reverse 'Z a
     start = Reverse $ \_ -> VNil
 
-    step :: N.InlineInduction m => Reverse m a -> Reverse ('S m) a
+    step :: N.SNatI m => Reverse m a -> Reverse ('S m) a
     step (Reverse rec) = Reverse $ \(x ::: xs) -> snoc (rec xs) x
 
 newtype Reverse n a = Reverse { getReverse :: Vec n a -> Vec n a }
@@ -503,8 +503,8 @@ infixr 5 ++
 -- >>> ('a' ::: 'b' ::: VNil) ++ ('c' ::: 'd' ::: VNil)
 -- 'a' ::: 'b' ::: 'c' ::: 'd' ::: VNil
 --
-(++) :: forall n m a. N.InlineInduction n => Vec n a -> Vec m a -> Vec (N.Plus n m) a
-as ++ ys = getAppend (N.inlineInduction1 start step) as where
+(++) :: forall n m a. N.SNatI n => Vec n a -> Vec m a -> Vec (N.Plus n m) a
+as ++ ys = getAppend (N.induction1 start step) as where
     start :: Append m 'Z a
     start = Append $ \_ -> ys
 
@@ -521,8 +521,8 @@ newtype Append m n a = Append { getAppend :: Vec n a -> Vec (N.Plus n m) a }
 -- >>> uncurry (++) (split ('a' ::: 'b' ::: 'c' ::: VNil) :: (Vec N.Nat1 Char, Vec N.Nat2 Char))
 -- 'a' ::: 'b' ::: 'c' ::: VNil
 --
-split :: N.InlineInduction n => Vec (N.Plus n m) a -> (Vec n a, Vec m a)
-split = appSplit (N.inlineInduction1 start step) where
+split :: N.SNatI n => Vec (N.Plus n m) a -> (Vec n a, Vec m a)
+split = appSplit (N.induction1 start step) where
     start :: Split m 'Z a
     start = Split $ \xs -> (VNil, xs)
 
@@ -537,8 +537,8 @@ newtype Split m n a = Split { appSplit :: Vec (N.Plus n m) a -> (Vec n a, Vec m 
 -- >>> concatMap (\x -> x ::: x ::: VNil) ('a' ::: 'b' ::: VNil)
 -- 'a' ::: 'a' ::: 'b' ::: 'b' ::: VNil
 --
-concatMap :: forall a b n m. (N.InlineInduction m, N.InlineInduction n) => (a -> Vec m b) -> Vec n a -> Vec (N.Mult n m) b
-concatMap f = getConcatMap $ N.inlineInduction1 start step where
+concatMap :: forall a b n m. (N.SNatI m, N.SNatI n) => (a -> Vec m b) -> Vec n a -> Vec (N.Mult n m) b
+concatMap f = getConcatMap $ N.induction1 start step where
     start :: ConcatMap m a 'Z b
     start = ConcatMap $ \_ -> VNil
 
@@ -548,7 +548,7 @@ concatMap f = getConcatMap $ N.inlineInduction1 start step where
 newtype ConcatMap m a n b = ConcatMap { getConcatMap :: Vec n a -> Vec (N.Mult n m) b }
 
 -- | @'concatMap' 'id'@
-concat :: (N.InlineInduction m, N.InlineInduction n) => Vec n (Vec m a) -> Vec (N.Mult n m) a
+concat :: (N.SNatI m, N.SNatI n) => Vec n (Vec m a) -> Vec (N.Mult n m) a
 concat = concatMap id
 
 -- | Inverse of 'concat'.
@@ -560,12 +560,12 @@ concat = concatMap id
 -- >>> concat . idVec . chunks <$> fromListPrefix [1..]
 -- Just (1 ::: 2 ::: 3 ::: 4 ::: 5 ::: 6 ::: VNil)
 --
-chunks :: (N.InlineInduction n, N.InlineInduction m) => Vec (N.Mult n m) a -> Vec n (Vec m a)
+chunks :: (N.SNatI n, N.SNatI m) => Vec (N.Mult n m) a -> Vec n (Vec m a)
 chunks = getChunks $ N.induction1 start step where
     start :: Chunks m 'Z a
     start = Chunks $ \_ -> VNil
 
-    step :: forall m n a. N.InlineInduction m => Chunks m n a -> Chunks m ('S n) a
+    step :: forall m n a. N.SNatI m => Chunks m n a -> Chunks m ('S n) a
     step (Chunks go) = Chunks $ \xs ->
         let (ys, zs) = split xs :: (Vec m a, Vec (N.Mult n m) a)
         in ys ::: go zs
@@ -579,8 +579,8 @@ newtype Chunks  m n a = Chunks  { getChunks  :: Vec (N.Mult n m) a -> Vec n (Vec
 -- | >>> map not $ True ::: False ::: VNil
 -- False ::: True ::: VNil
 --
-map :: forall a b n. N.InlineInduction n => (a -> b) -> Vec n a -> Vec n b
-map f = getMap $ N.inlineInduction1 start step where
+map :: forall a b n. N.SNatI n => (a -> b) -> Vec n a -> Vec n b
+map f = getMap $ N.induction1 start step where
     start :: Map a 'Z b
     start = Map $ \_ -> VNil
 
@@ -592,8 +592,8 @@ newtype Map a n b = Map { getMap :: Vec n a -> Vec n b }
 -- | >>> imap (,) $ 'a' ::: 'b' ::: 'c' ::: VNil
 -- (0,'a') ::: (1,'b') ::: (2,'c') ::: VNil
 --
-imap :: N.InlineInduction n => (Fin n -> a -> b) -> Vec n a -> Vec n b
-imap = getIMap $ N.inlineInduction1 start step where
+imap :: N.SNatI n => (Fin n -> a -> b) -> Vec n a -> Vec n b
+imap = getIMap $ N.induction1 start step where
     start :: IMap a 'Z b
     start = IMap $ \_ _ -> VNil
 
@@ -603,8 +603,8 @@ imap = getIMap $ N.inlineInduction1 start step where
 newtype IMap a n b = IMap { getIMap :: (Fin n -> a -> b) -> Vec n a -> Vec n b }
 
 -- | Apply an action to every element of a 'Vec', yielding a 'Vec' of results.
-traverse :: forall n f a b. (Applicative f, N.InlineInduction n) => (a -> f b) -> Vec n a -> f (Vec n b)
-traverse f =  getTraverse $ N.inlineInduction1 start step where
+traverse :: forall n f a b. (Applicative f, N.SNatI n) => (a -> f b) -> Vec n a -> f (Vec n b)
+traverse f =  getTraverse $ N.induction1 start step where
     start :: Traverse f a 'Z b
     start = Traverse $ \_ -> pure VNil
 
@@ -616,8 +616,8 @@ newtype Traverse f a n b = Traverse { getTraverse :: Vec n a -> f (Vec n b) }
 
 #ifdef MIN_VERSION_semigroupoids
 -- | Apply an action to non-empty 'Vec', yielding a 'Vec' of results.
-traverse1 :: forall n f a b. (Apply f, N.InlineInduction n) => (a -> f b) -> Vec ('S n) a -> f (Vec ('S n) b)
-traverse1 f = getTraverse1 $ N.inlineInduction1 start step where
+traverse1 :: forall n f a b. (Apply f, N.SNatI n) => (a -> f b) -> Vec ('S n) a -> f (Vec ('S n) b)
+traverse1 f = getTraverse1 $ N.induction1 start step where
     start :: Traverse1 f a 'Z b
     start = Traverse1 $ \(x ::: _) -> (::: VNil) <$> f x
 
@@ -628,8 +628,8 @@ newtype Traverse1 f a n b = Traverse1 { getTraverse1 :: Vec ('S n) a -> f (Vec (
 #endif
 
 -- | Apply an action to every element of a 'Vec' and its index, yielding a 'Vec' of results.
-itraverse :: forall n f a b. (Applicative f, N.InlineInduction n) => (Fin n -> a -> f b) -> Vec n a -> f (Vec n b)
-itraverse = getITraverse $ N.inlineInduction1 start step where
+itraverse :: forall n f a b. (Applicative f, N.SNatI n) => (Fin n -> a -> f b) -> Vec n a -> f (Vec n b)
+itraverse = getITraverse $ N.induction1 start step where
     start :: ITraverse f a 'Z b
     start = ITraverse $ \_ _ -> pure VNil
 
@@ -640,8 +640,8 @@ itraverse = getITraverse $ N.inlineInduction1 start step where
 newtype ITraverse f a n b = ITraverse { getITraverse :: (Fin n -> a -> f b) -> Vec n a -> f (Vec n b) }
 
 -- | Apply an action to every element of a 'Vec' and its index, ignoring the results.
-itraverse_ :: forall n f a b. (Applicative f, N.InlineInduction n) => (Fin n -> a -> f b) -> Vec n a -> f ()
-itraverse_ = getITraverse_ $ N.inlineInduction1 start step where
+itraverse_ :: forall n f a b. (Applicative f, N.SNatI n) => (Fin n -> a -> f b) -> Vec n a -> f ()
+itraverse_ = getITraverse_ $ N.induction1 start step where
     start :: ITraverse_ f a 'Z b
     start = ITraverse_ $ \_ _ -> pure ()
 
@@ -655,15 +655,15 @@ newtype ITraverse_ f a n b = ITraverse_ { getITraverse_ :: (Fin n -> a -> f b) -
 -------------------------------------------------------------------------------
 
 -- | See 'I.Foldable'.
-foldMap :: (Monoid m, N.InlineInduction n) => (a -> m) -> Vec n a -> m
-foldMap f = getFold $ N.inlineInduction1 (Fold (const mempty)) $ \(Fold go) ->
+foldMap :: (Monoid m, N.SNatI n) => (a -> m) -> Vec n a -> m
+foldMap f = getFold $ N.induction1 (Fold (const mempty)) $ \(Fold go) ->
     Fold $ \(x ::: xs) -> f x `mappend` go xs
 
 newtype Fold  a n b = Fold  { getFold  :: Vec n a -> b }
 
 -- | See 'I.Foldable1'.
-foldMap1 :: forall s a n. (Semigroup s, N.InlineInduction n) => (a -> s) -> Vec ('S n) a -> s
-foldMap1 f = getFold1 $ N.inlineInduction1 start step where
+foldMap1 :: forall s a n. (Semigroup s, N.SNatI n) => (a -> s) -> Vec ('S n) a -> s
+foldMap1 f = getFold1 $ N.induction1 start step where
     start :: Fold1 a 'Z s
     start = Fold1 $ \(x ::: _) -> f x
 
@@ -673,8 +673,8 @@ foldMap1 f = getFold1 $ N.inlineInduction1 start step where
 newtype Fold1 a n b = Fold1 { getFold1 :: Vec ('S n) a -> b }
 
 -- | See 'I.FoldableWithIndex'.
-ifoldMap :: forall a n m. (Monoid m, N.InlineInduction n) => (Fin n -> a -> m) -> Vec n a -> m
-ifoldMap = getIFoldMap $ N.inlineInduction1 start step where
+ifoldMap :: forall a n m. (Monoid m, N.SNatI n) => (Fin n -> a -> m) -> Vec n a -> m
+ifoldMap = getIFoldMap $ N.induction1 start step where
     start :: IFoldMap a 'Z m
     start = IFoldMap $ \_ _ -> mempty
 
@@ -684,8 +684,8 @@ ifoldMap = getIFoldMap $ N.inlineInduction1 start step where
 newtype IFoldMap a n m = IFoldMap { getIFoldMap :: (Fin n -> a -> m) -> Vec n a -> m }
 
 -- | There is no type-class for this :(
-ifoldMap1 :: forall a n s. (Semigroup s, N.InlineInduction n) => (Fin ('S n) -> a -> s) -> Vec ('S n) a -> s
-ifoldMap1 = getIFoldMap1 $ N.inlineInduction1 start step where
+ifoldMap1 :: forall a n s. (Semigroup s, N.SNatI n) => (Fin ('S n) -> a -> s) -> Vec ('S n) a -> s
+ifoldMap1 = getIFoldMap1 $ N.induction1 start step where
     start :: IFoldMap1 a 'Z s
     start = IFoldMap1 $ \f (x ::: _) -> f FZ x
 
@@ -695,8 +695,8 @@ ifoldMap1 = getIFoldMap1 $ N.inlineInduction1 start step where
 newtype IFoldMap1 a n m = IFoldMap1 { getIFoldMap1 :: (Fin ('S n) -> a -> m) -> Vec ('S n) a -> m }
 
 -- | Right fold.
-foldr :: forall a b n. N.InlineInduction n => (a -> b -> b) -> b -> Vec n a -> b
-foldr f z = getFold $ N.inlineInduction1 start step where
+foldr :: forall a b n. N.SNatI n => (a -> b -> b) -> b -> Vec n a -> b
+foldr f z = getFold $ N.induction1 start step where
     start :: Fold a 'Z b
     start = Fold $ \_ -> z
 
@@ -704,8 +704,8 @@ foldr f z = getFold $ N.inlineInduction1 start step where
     step (Fold go) = Fold $ \(x ::: xs) -> f x (go xs)
 
 -- | Right fold with an index.
-ifoldr :: forall a b n. N.InlineInduction n => (Fin n -> a -> b -> b) -> b -> Vec n a -> b
-ifoldr = getIFoldr $ N.inlineInduction1 start step where
+ifoldr :: forall a b n. N.SNatI n => (Fin n -> a -> b -> b) -> b -> Vec n a -> b
+ifoldr = getIFoldr $ N.induction1 start step where
     start :: IFoldr a 'Z b
     start = IFoldr $ \_ z _ -> z
 
@@ -715,10 +715,10 @@ ifoldr = getIFoldr $ N.inlineInduction1 start step where
 newtype IFoldr a n b = IFoldr { getIFoldr :: (Fin n -> a -> b -> b) -> b -> Vec n a -> b }
 
 -- | Yield the length of a 'Vec'. /O(n)/
-length :: forall n a. N.InlineInduction n => Vec n a -> Int
+length :: forall n a. N.SNatI n => Vec n a -> Int
 length _ = getLength l where
     l :: Length n
-    l = N.inlineInduction (Length 0) $ \(Length n) -> Length (1 + n)
+    l = N.induction (Length 0) $ \(Length n) -> Length (1 + n)
 
 newtype Length (n :: Nat) = Length { getLength :: Int }
 
@@ -733,8 +733,8 @@ null _ = case N.snat :: N.SNat n of
 -------------------------------------------------------------------------------
 
 -- | Non-strict 'sum'.
-sum :: (Num a, N.InlineInduction n) => Vec n a -> a
-sum = getFold $ N.inlineInduction1 start step where
+sum :: (Num a, N.SNatI n) => Vec n a -> a
+sum = getFold $ N.induction1 start step where
     start :: Num a => Fold a 'Z a
     start = Fold $ \_ -> 0
 
@@ -742,8 +742,8 @@ sum = getFold $ N.inlineInduction1 start step where
     step (Fold f) = Fold $ \(x ::: xs) -> x + f xs
 
 -- | Non-strict 'product'.
-product :: (Num a, N.InlineInduction n) => Vec n a -> a
-product = getFold $ N.inlineInduction1 start step where
+product :: (Num a, N.SNatI n) => Vec n a -> a
+product = getFold $ N.induction1 start step where
     start :: Num a => Fold a 'Z a
     start = Fold $ \_ -> 1
 
@@ -756,8 +756,8 @@ product = getFold $ N.inlineInduction1 start step where
 -------------------------------------------------------------------------------
 
 -- | Zip two 'Vec's with a function.
-zipWith :: forall a b c n. N.InlineInduction n => (a -> b -> c) -> Vec n a -> Vec n b -> Vec n c
-zipWith f = getZipWith $ N.inlineInduction start step where
+zipWith :: forall a b c n. N.SNatI n => (a -> b -> c) -> Vec n a -> Vec n b -> Vec n c
+zipWith f = getZipWith $ N.induction start step where
     start :: ZipWith a b c 'Z
     start = ZipWith $ \_ _ -> VNil
 
@@ -767,8 +767,8 @@ zipWith f = getZipWith $ N.inlineInduction start step where
 newtype ZipWith a b c n = ZipWith { getZipWith :: Vec n a -> Vec n b -> Vec n c }
 
 -- | Zip two 'Vec's. with a function that also takes the elements' indices.
-izipWith :: N.InlineInduction n => (Fin n -> a -> b -> c) -> Vec n a -> Vec n b -> Vec n c
-izipWith = getIZipWith $ N.inlineInduction start step where
+izipWith :: N.SNatI n => (Fin n -> a -> b -> c) -> Vec n a -> Vec n b -> Vec n c
+izipWith = getIZipWith $ N.induction start step where
     start :: IZipWith a b c 'Z
     start = IZipWith $ \_ _ _ -> VNil
 
@@ -783,16 +783,16 @@ newtype IZipWith a b c n = IZipWith { getIZipWith :: (Fin n -> a -> b -> c) -> V
 -- 'x' ::: 'x' ::: 'x' ::: VNil
 --
 -- @since 0.2.1
-repeat :: N.InlineInduction n => x -> Vec n x
-repeat x = N.inlineInduction1 VNil (x :::)
+repeat :: N.SNatI n => x -> Vec n x
+repeat x = N.induction1 VNil (x :::)
 
 -------------------------------------------------------------------------------
 -- Monadic
 -------------------------------------------------------------------------------
 
 -- | Monadic bind.
-bind :: N.InlineInduction n => Vec n a -> (a -> Vec n b) -> Vec n b
-bind = getBind $ N.inlineInduction1 start step where
+bind :: N.SNatI n => Vec n a -> (a -> Vec n b) -> Vec n b
+bind = getBind $ N.induction1 start step where
     start :: Bind a 'Z b
     start = Bind $ \_ _ -> VNil
 
@@ -805,12 +805,12 @@ newtype Bind a n b = Bind { getBind :: Vec n a -> (a -> Vec n b) -> Vec n b }
 --
 -- >>> join $ ('a' ::: 'b' ::: VNil) ::: ('c' ::: 'd' ::: VNil) ::: VNil
 -- 'a' ::: 'd' ::: VNil
-join :: N.InlineInduction n => Vec n (Vec n a) -> Vec n a
-join = getJoin $ N.inlineInduction1 start step where
+join :: N.SNatI n => Vec n (Vec n a) -> Vec n a
+join = getJoin $ N.induction1 start step where
     start :: Join 'Z a
     start = Join $ \_ -> VNil
 
-    step :: N.InlineInduction m => Join m a -> Join ('S m) a
+    step :: N.SNatI m => Join m a -> Join ('S m) a
     step (Join go) = Join $ \(x ::: xs) -> head x ::: go (map tail xs)
 
 newtype Join n a = Join { getJoin :: Vec n (Vec n a) -> Vec n a }
@@ -823,12 +823,12 @@ newtype Join n a = Join { getJoin :: Vec n (Vec n a) -> Vec n a }
 --
 -- >>> universe :: Vec N.Nat3 (Fin N.Nat3)
 -- 0 ::: 1 ::: 2 ::: VNil
-universe :: N.InlineInduction n => Vec n (Fin n)
-universe = getUniverse (N.inlineInduction first step) where
+universe :: N.SNatI n => Vec n (Fin n)
+universe = getUniverse (N.induction first step) where
     first :: Universe 'Z
     first = Universe VNil
 
-    step :: N.InlineInduction m => Universe m -> Universe ('S m)
+    step :: N.SNatI m => Universe m -> Universe ('S m)
     step (Universe go) = Universe (FZ ::: map FS go)
 
 newtype Universe n = Universe { getUniverse :: Vec n (Fin n) }
@@ -858,8 +858,8 @@ newtype Universe n = Universe { getUniverse :: Vec n (Fin n) }
 -- >>> head $ setHead 'x' $ ensureSpine v
 -- 'x'
 --
-ensureSpine :: N.InlineInduction n => Vec n a -> Vec n a
-ensureSpine = getEnsureSpine (N.inlineInduction1 first step) where
+ensureSpine :: N.SNatI n => Vec n a -> Vec n a
+ensureSpine = getEnsureSpine (N.induction1 first step) where
     first :: EnsureSpine 'Z a
     first = EnsureSpine $ \_ -> VNil
 

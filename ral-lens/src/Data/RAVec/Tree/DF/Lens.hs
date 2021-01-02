@@ -40,18 +40,18 @@ ix (W1 is) f (Node x y) = (x `Node`) <$> ix is f y
 -- Instances
 -------------------------------------------------------------------------------
 
-instance N.InlineInduction n => L.FunctorWithIndex (Wrd n) (Tree n) where
+instance N.SNatI n => L.FunctorWithIndex (Wrd n) (Tree n) where
     imap = imap
 
-instance N.InlineInduction n => L.FoldableWithIndex (Wrd n) (Tree n) where
+instance N.SNatI n => L.FoldableWithIndex (Wrd n) (Tree n) where
     ifoldMap = ifoldMap
     ifoldr   = ifoldr
     ifoldl   = ifoldl
 
-instance N.InlineInduction n => L.TraversableWithIndex (Wrd n) (Tree n) where
+instance N.SNatI n => L.TraversableWithIndex (Wrd n) (Tree n) where
     itraverse = itraverse
 
-instance N.InlineInduction n => L.Each (Tree n a) (Tree n b) a b
+instance N.SNatI n => L.Each (Tree n a) (Tree n b) a b
 
 type instance L.Index (Tree n a)   = Wrd n
 type instance L.IxValue (Tree n a) = a

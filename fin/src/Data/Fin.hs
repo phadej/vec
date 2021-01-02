@@ -148,14 +148,14 @@ instance N.SNatI n => Integral (Fin n) where
 --
 -- @since 0.1.1
 --
-mirror :: forall n. N.InlineInduction n => Fin n -> Fin n
-mirror = getMirror (N.inlineInduction start step) where
+mirror :: forall n. N.SNatI n => Fin n -> Fin n
+mirror = getMirror (N.induction start step) where
     start :: Mirror 'Z
     start = Mirror id
 
-    step :: forall m. N.InlineInduction m => Mirror m -> Mirror ('S m)
+    step :: forall m. N.SNatI m => Mirror m -> Mirror ('S m)
     step (Mirror rec) = Mirror $ \n -> case n of
-        FZ   -> getMaxBound (N.inlineInduction (MaxBound FZ) (MaxBound . FS . getMaxBound))
+        FZ   -> getMaxBound (N.induction (MaxBound FZ) (MaxBound . FS . getMaxBound))
         FS m -> weakenLeft1 (rec m)
 
 newtype Mirror n = Mirror { getMirror :: Fin n -> Fin n }
@@ -362,15 +362,15 @@ universe1 = getUniverse1 $ N.induction (Universe1 (FZ :| [])) step where
 --
 -- >>> inlineUniverse :: [Fin N.Nat3]
 -- [0,1,2]
-inlineUniverse :: N.InlineInduction n => [Fin n]
-inlineUniverse = getUniverse $ N.inlineInduction (Universe []) step where
+inlineUniverse :: N.SNatI n => [Fin n]
+inlineUniverse = getUniverse $ N.induction (Universe []) step where
     step :: Universe n -> Universe ('S n)
     step (Universe xs) = Universe (FZ : map FS xs)
 
 -- | >>> inlineUniverse1 :: NonEmpty (Fin N.Nat3)
 -- 0 :| [1,2]
-inlineUniverse1 :: N.InlineInduction n => NonEmpty (Fin ('S n))
-inlineUniverse1 = getUniverse1 $ N.inlineInduction (Universe1 (FZ :| [])) step where
+inlineUniverse1 :: N.SNatI n => NonEmpty (Fin ('S n))
+inlineUniverse1 = getUniverse1 $ N.induction (Universe1 (FZ :| [])) step where
     step :: Universe1 n -> Universe1 ('S n)
     step (Universe1 xs) = Universe1 (NE.cons FZ (fmap FS xs))
 
@@ -416,8 +416,8 @@ isMin (FS n) = Just n
 --
 -- @since 0.1.1
 --
-isMax :: forall n. N.InlineInduction n => Fin ('S n) -> Maybe (Fin n)
-isMax = getIsMax (N.inlineInduction start step) where
+isMax :: forall n. N.SNatI n => Fin ('S n) -> Maybe (Fin n)
+isMax = getIsMax (N.induction start step) where
     start :: IsMax 'Z
     start = IsMax $ \_ -> Nothing
 
@@ -443,8 +443,8 @@ weakenRight1 = FS
 -- [0,1,2,3]
 --
 -- @since 0.1.1
-weakenLeft1 :: N.InlineInduction n => Fin n -> Fin ('S n)
-weakenLeft1 = getWeaken1 (N.inlineInduction start step) where
+weakenLeft1 :: N.SNatI n => Fin n -> Fin ('S n)
+weakenLeft1 = getWeaken1 (N.induction start step) where
     start :: Weaken1 'Z
     start = Weaken1 absurd
 
@@ -457,8 +457,8 @@ newtype Weaken1 n = Weaken1 { getWeaken1 :: Fin n -> Fin ('S n) }
 
 -- | >>> map (weakenLeft (Proxy :: Proxy N.Nat2)) (universe :: [Fin N.Nat3])
 -- [0,1,2]
-weakenLeft :: forall n m. N.InlineInduction n => Proxy m -> Fin n -> Fin (N.Plus n m)
-weakenLeft _ = getWeakenLeft (N.inlineInduction start step :: WeakenLeft m n) where
+weakenLeft :: forall n m. N.SNatI n => Proxy m -> Fin n -> Fin (N.Plus n m)
+weakenLeft _ = getWeakenLeft (N.induction start step :: WeakenLeft m n) where
     start :: WeakenLeft m 'Z
     start = WeakenLeft absurd
 
@@ -471,8 +471,8 @@ newtype WeakenLeft m n = WeakenLeft { getWeakenLeft :: Fin n -> Fin (N.Plus n m)
 
 -- | >>> map (weakenRight (Proxy :: Proxy N.Nat2)) (universe :: [Fin N.Nat3])
 -- [2,3,4]
-weakenRight :: forall n m. N.InlineInduction n => Proxy n -> Fin m -> Fin (N.Plus n m)
-weakenRight _ = getWeakenRight (N.inlineInduction start step :: WeakenRight m n) where
+weakenRight :: forall n m. N.SNatI n => Proxy n -> Fin m -> Fin (N.Plus n m)
+weakenRight _ = getWeakenRight (N.induction start step :: WeakenRight m n) where
     start = WeakenRight id
     step (WeakenRight go) = WeakenRight $ \x -> FS $ go x
 
@@ -486,7 +486,7 @@ newtype WeakenRight m n = WeakenRight { getWeakenRight :: Fin m -> Fin (N.Plus n
 -- >>> append (Right fin2 :: Either (Fin N.Nat5) (Fin N.Nat4))
 -- 7
 --
-append :: forall n m. N.InlineInduction n => Either (Fin n) (Fin m) -> Fin (N.Plus n m)
+append :: forall n m. N.SNatI n => Either (Fin n) (Fin m) -> Fin (N.Plus n m)
 append (Left n)  = weakenLeft (Proxy :: Proxy m) n
 append (Right m) = weakenRight (Proxy :: Proxy n) m
 
@@ -501,8 +501,8 @@ append (Right m) = weakenRight (Proxy :: Proxy n) m
 -- >>> map split universe :: [Either (Fin N.Nat2) (Fin N.Nat3)]
 -- [Left 0,Left 1,Right 0,Right 1,Right 2]
 --
-split :: forall n m. N.InlineInduction n => Fin (N.Plus n m) -> Either (Fin n) (Fin m)
-split = getSplit (N.inlineInduction start step) where
+split :: forall n m. N.SNatI n => Fin (N.Plus n m) -> Either (Fin n) (Fin m)
+split = getSplit (N.induction start step) where
     start :: Split m 'Z
     start = Split Right
 

@@ -1,7 +1,6 @@
 cabal-version:      2.2
 name:               vec-optics
-version:            0.3
-x-revision:         1
+version:            0.4
 synopsis:           Vec: length-indexed (sized) list: optics support
 category:           Data, Dependent Types, Optics
 description:
@@ -17,7 +16,7 @@ license:            BSD-3-Clause
 license-file:       LICENSE
 author:             Oleg Grenrus <oleg.grenrus@iki.fi>
 maintainer:         Oleg.Grenrus <oleg.grenrus@iki.fi>
-copyright:          (c) 2017-2019 Oleg Grenrus
+copyright:          (c) 2017-2021 Oleg Grenrus
 build-type:         Simple
 extra-source-files: ChangeLog.md
 tested-with:
@@ -44,8 +43,8 @@ library
 
   -- siblings
   build-depends:
-    , fin  ^>=0.1.1
-    , vec  ^>=0.3
+    , fin  ^>=0.2
+    , vec  ^>=0.4
 
   -- other dependencies
   build-depends:    optics-core >=0.2 && <0.4

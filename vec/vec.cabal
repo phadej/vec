@@ -1,6 +1,6 @@
 cabal-version:      2.2
 name:               vec
-version:            0.3.0.1
+version:            0.4
 synopsis:           Vec: length-indexed (sized) list
 category:           Data, Dependent Types
 description:
@@ -66,7 +66,7 @@ license:            BSD-3-Clause
 license-file:       LICENSE
 author:             Oleg Grenrus <oleg.grenrus@iki.fi>
 maintainer:         Oleg.Grenrus <oleg.grenrus@iki.fi>
-copyright:          (c) 2017-2019 Oleg Grenrus
+copyright:          (c) 2017-2021 Oleg Grenrus
 build-type:         Simple
 extra-source-files: ChangeLog.md
 tested-with:
@@ -131,7 +131,7 @@ library
     build-depends: transformers-compat ^>=0.6.5
 
   -- siblings
-  build-depends:    fin ^>=0.1.1
+  build-depends:    fin ^>=0.2
 
   -- other dependencies
   build-depends:
