@@ -21,7 +21,7 @@ license:            BSD3
 license-file:       LICENSE
 author:             Oleg Grenrus <oleg.grenrus@iki.fi>
 maintainer:         Oleg.Grenrus <oleg.grenrus@iki.fi>
-copyright:          (c) 2019 Oleg Grenrus
+copyright:          (c) 2019-2021 Oleg Grenrus
 build-type:         Simple
 extra-source-files: ChangeLog.md
 tested-with:

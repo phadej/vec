@@ -90,7 +90,7 @@ instance Enum Bool
 instance Enum Ordering
 
 -- | 'Either' ~ @+@
-instance (Enum a, Enum b, N.InlineInduction (EnumSize a)) => Enum (Either a b) where
+instance (Enum a, Enum b, N.SNatI (EnumSize a)) => Enum (Either a b) where
     type EnumSize (Either a b) = N.Plus (EnumSize a) (EnumSize b)
 
     to   = bimap to to . F.split

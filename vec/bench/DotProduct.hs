@@ -25,5 +25,5 @@ pullDotProduct xs ys = pullDotProduct' (L.toPull xs) (L.toPull ys)
 pullDotProduct' :: N.SNatI n => P.Vec n Int -> P.Vec n Int -> Int
 pullDotProduct' xs ys = P.sum (P.zipWith (*) xs ys)
 
-inlineDotProduct :: N.InlineInduction n => L.Vec n Int -> L.Vec n Int -> Int
+inlineDotProduct :: N.SNatI n => L.Vec n Int -> L.Vec n Int -> Int
 inlineDotProduct xs ys = I.sum (I.zipWith (*) xs ys)

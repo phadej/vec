@@ -1,6 +1,6 @@
 cabal-version:      2.2
 name:               ral
-version:            0.1.1
+version:            0.2
 synopsis:           Random access lists
 category:           Data, Dependent Types, Singletons
 description:
@@ -25,7 +25,7 @@ license:            GPL-2.0-or-later
 license-file:       LICENSE
 author:             Oleg Grenrus <oleg.grenrus@iki.fi>
 maintainer:         Oleg.Grenrus <oleg.grenrus@iki.fi>
-copyright:          (c) 2019 Oleg Grenrus
+copyright:          (c) 2019-2021 Oleg Grenrus
 build-type:         Simple
 extra-source-files: ChangeLog.md
 tested-with:
@@ -91,7 +91,7 @@ library
   -- siblings
   build-depends:
     , bin  ^>=0.1
-    , fin  ^>=0.1.1
+    , fin  ^>=0.2
 
   -- other dependencies
   build-depends:

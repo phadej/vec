@@ -245,7 +245,7 @@ fromListPrefix = getFromList (N.induction1 start step) where
 --
 -- >>> reifyList "foo" length
 -- 3
-reifyList :: [a] -> (forall n. N.InlineInduction n => Vec n a -> r) -> r
+reifyList :: [a] -> (forall n. N.SNatI n => Vec n a -> r) -> r
 reifyList []       f = f empty
 reifyList (x : xs) f = reifyList xs $ \xs' -> f (cons x xs')
 
@@ -270,7 +270,7 @@ cons x (Vec v) = Vec $ \i -> case i of
 -- | Add a single element at the end of a 'Vec'.
 --
 -- @since 0.2.1
-snoc :: forall a n. N.InlineInduction n => Vec n a -> a -> Vec ('S n) a
+snoc :: forall a n. N.SNatI n => Vec n a -> a -> Vec ('S n) a
 snoc (Vec xs) x = Vec $ \i -> maybe x xs (F.isMax i)
 
 -- | The first element of a 'Vec'.
@@ -289,7 +289,7 @@ tail (Vec v) = Vec (v . FS)
 --
 -- @since 0.2.1
 --
-reverse :: forall n a. N.InlineInduction n => Vec n a -> Vec n a
+reverse :: forall n a. N.SNatI n => Vec n a -> Vec n a
 reverse (Vec v) = Vec (v . F.mirror)
 
 -------------------------------------------------------------------------------

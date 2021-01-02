@@ -46,12 +46,12 @@ type LensLikeVL' f s a = LensLikeVL f s s a a
 -- >>> set (ix (FS FZ)) 'x' ('a' ::: 'b' ::: 'c' ::: VNil)
 -- 'a' ::: 'x' ::: 'c' ::: VNil
 --
-ix :: forall n a. N.InlineInduction n => Fin n -> L.Lens' (Vec n a) a
+ix :: forall n a. N.SNatI n => Fin n -> L.Lens' (Vec n a) a
 ix i = L.lensVL (ixVL i)
 {-# INLINE ix #-}
 
-ixVL :: forall n f a. (N.InlineInduction n, Functor f) => Fin n -> LensLikeVL' f (Vec n a) a
-ixVL = getIxLens $ N.inlineInduction1 start step where
+ixVL :: forall n f a. (N.SNatI n, Functor f) => Fin n -> LensLikeVL' f (Vec n a) a
+ixVL = getIxLens $ N.induction1 start step where
     start :: IxLens f 'Z a
     start = IxLens F.absurd
 
@@ -76,7 +76,7 @@ tailVL f (x ::: xs) = (x :::) <$> f xs
 -------------------------------------------------------------------------------
 
 -- | An 'L.Iso' from 'toPull' and 'fromPull'.
-_Pull :: N.InlineInduction n => L.Iso (Vec n a) (Vec n b) (P.Vec n a) (P.Vec n b)
+_Pull :: N.SNatI n => L.Iso (Vec n a) (Vec n b) (P.Vec n a) (P.Vec n b)
 _Pull = L.iso toPull fromPull
 
 -- | Prism from list.
@@ -90,5 +90,5 @@ _Pull = L.iso toPull fromPull
 -- >>> review _Vec (True ::: False ::: VNil)
 -- [True,False]
 --
-_Vec :: N.InlineInduction n => L.Prism' [a] (Vec n a)
+_Vec :: N.SNatI n => L.Prism' [a] (Vec n a)
 _Vec = L.prism' toList fromList

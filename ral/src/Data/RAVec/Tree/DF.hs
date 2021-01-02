@@ -134,8 +134,8 @@ instance (Eq a, N.SNatI n) => Eq (Tree n a) where
 
 newtype Equal n a = Equal { getEqual :: Tree n a -> Tree n a -> Bool }
 
-instance (Ord a, N.InlineInduction n) => Ord (Tree n a) where
-    compare = getCompare (N.inlineInduction1 start step) where
+instance (Ord a, N.SNatI n) => Ord (Tree n a) where
+    compare = getCompare (N.induction1 start step) where
         start :: Compare 'Z a
         start = Compare $ \(Leaf x) (Leaf y) -> compare x y
 
@@ -145,8 +145,8 @@ instance (Ord a, N.InlineInduction n) => Ord (Tree n a) where
 
 newtype Compare n a = Compare { getCompare :: Tree n a -> Tree n a -> Ordering }
 
-instance (Show a, N.InlineInduction n) => Show (Tree n a) where
-    showsPrec = getShowsPrec (N.inlineInduction1 start step) where
+instance (Show a, N.SNatI n) => Show (Tree n a) where
+    showsPrec = getShowsPrec (N.induction1 start step) where
         start :: ShowsPrec 'Z a
         start = ShowsPrec $ \d (Leaf x) -> showParen (d > 10)
             $ showString "Leaf "
@@ -161,10 +161,10 @@ instance (Show a, N.InlineInduction n) => Show (Tree n a) where
 
 newtype ShowsPrec n a = ShowsPrec { getShowsPrec :: Int -> Tree n a -> ShowS }
 
-instance N.InlineInduction n => Functor (Tree n) where
+instance N.SNatI n => Functor (Tree n) where
     fmap = map
 
-instance N.InlineInduction n => I.Foldable (Tree n) where
+instance N.SNatI n => I.Foldable (Tree n) where
     foldMap = foldMap
 
     foldr  = foldr
@@ -178,32 +178,32 @@ instance N.InlineInduction n => I.Foldable (Tree n) where
 #endif
 
 #ifdef MIN_VERSION_semigroupoids
-instance (N.InlineInduction n) => I.Foldable1 (Tree n) where
+instance (N.SNatI n) => I.Foldable1 (Tree n) where
     foldMap1 = foldMap1
 
-instance (N.InlineInduction n) => I.Traversable1 (Tree n) where
+instance (N.SNatI n) => I.Traversable1 (Tree n) where
     traverse1 = traverse1
 #endif
 
-instance N.InlineInduction n => I.Traversable (Tree n) where
+instance N.SNatI n => I.Traversable (Tree n) where
     traverse = traverse
 
 
-instance (NFData a, N.InlineInduction n) => NFData (Tree n a) where
-    rnf = getRnf (N.inlineInduction1 z s) where
+instance (NFData a, N.SNatI n) => NFData (Tree n a) where
+    rnf = getRnf (N.induction1 z s) where
         z           = Rnf $ \(Leaf x)   -> rnf x
         s (Rnf rec) = Rnf $ \(Node x y) -> rec x `seq` rec y
 
 newtype Rnf n a = Rnf { getRnf :: Tree n a -> () }
 
-instance (Hashable a, N.InlineInduction n) => Hashable (Tree n a) where
-    hashWithSalt = getHashWithSalt (N.inlineInduction1 z s) where
+instance (Hashable a, N.SNatI n) => Hashable (Tree n a) where
+    hashWithSalt = getHashWithSalt (N.induction1 z s) where
         z = HashWithSalt $ \salt (Leaf x) -> salt `hashWithSalt` x
         s (HashWithSalt rec) = HashWithSalt $ \salt (Node x y) -> rec (rec salt x) y
 
 newtype HashWithSalt n a = HashWithSalt { getHashWithSalt :: Int -> Tree n a -> Int }
 
-instance N.InlineInduction n => Applicative (Tree n) where
+instance N.SNatI n => Applicative (Tree n) where
     pure = repeat
     (<*>)  = zipWith ($)
     _ *> x = x
@@ -215,26 +215,26 @@ instance N.InlineInduction n => Applicative (Tree n) where
 -- TODO: Monad
 
 #ifdef MIN_VERSION_distributive
-instance N.InlineInduction n => I.Distributive (Tree n) where
+instance N.SNatI n => I.Distributive (Tree n) where
     distribute f = tabulate (\k -> fmap (! k) f)
 
 #ifdef MIN_VERSION_adjunctions
-instance N.InlineInduction n => I.Representable (Tree n) where
+instance N.SNatI n => I.Representable (Tree n) where
     type Rep (Tree n) = Wrd n
     tabulate = tabulate
     index    = (!)
 #endif
 #endif
 
-instance (Semigroup a, N.InlineInduction n) => Semigroup (Tree n a) where
+instance (Semigroup a, N.SNatI n) => Semigroup (Tree n a) where
     (<>) = zipWith (<>)
 
-instance (Monoid a, N.InlineInduction n) => Monoid (Tree n a) where
+instance (Monoid a, N.SNatI n) => Monoid (Tree n a) where
     mempty = pure mempty
     mappend = zipWith mappend
 
 #ifdef MIN_VERSION_semigroupoids
-instance N.InlineInduction n => Apply (Tree n) where
+instance N.SNatI n => Apply (Tree n) where
     (<.>) = zipWith ($)
     _ .> x = x
     x <. _ = x
@@ -263,8 +263,8 @@ singleton = Leaf
 --
 -- >>> toList $ Node (Node (Leaf 'f') (Leaf 'o')) (Node (Leaf 'o') (Leaf 'd'))
 -- "food"
-toList :: forall n a. N.InlineInduction n => Tree n a -> [a]
-toList xs = getToList (N.inlineInduction1 start step) xs [] where
+toList :: forall n a. N.SNatI n => Tree n a -> [a]
+toList xs = getToList (N.induction1 start step) xs [] where
     start :: ToList 'Z a
     start = ToList (\(Leaf x) -> (x :))
 
@@ -277,8 +277,8 @@ newtype ToList n a = ToList { getToList :: Tree n a -> [a] -> [a] }
 -- Indexing
 -------------------------------------------------------------------------------
 
-flipIndex :: N.InlineInduction n => Wrd n -> Tree n a -> a
-flipIndex = getIndex (N.inlineInduction1 start step) where
+flipIndex :: N.SNatI n => Wrd n -> Tree n a -> a
+flipIndex = getIndex (N.induction1 start step) where
     start :: Index 'Z a
     start = Index $ \_ (Leaf x) -> x
 
@@ -295,15 +295,15 @@ newtype Index n a = Index { getIndex :: Wrd n -> Tree n a -> a }
 -- >>> t ! W1 (W0 WE)
 -- 'c'
 --
-(!) :: N.InlineInduction n => Tree n a -> Wrd n -> a
+(!) :: N.SNatI n => Tree n a -> Wrd n -> a
 (!) = flip flipIndex
 
 -- | Tabulating, inverse of '!'.
 --
 -- >>> tabulate id :: Tree N.Nat2 (Wrd N.Nat2)
 -- Node (Node (Leaf 0b00) (Leaf 0b01)) (Node (Leaf 0b10) (Leaf 0b11))
-tabulate :: N.InlineInduction n => (Wrd n -> a) -> Tree n a
-tabulate = getTabulate (N.inlineInduction1 start step) where
+tabulate :: N.SNatI n => (Wrd n -> a) -> Tree n a
+tabulate = getTabulate (N.induction1 start step) where
     start :: Tabulate 'Z a
     start = Tabulate $ \f -> Leaf (f WE)
 
@@ -312,16 +312,16 @@ tabulate = getTabulate (N.inlineInduction1 start step) where
 
 newtype Tabulate n a = Tabulate { getTabulate :: (Wrd n -> a) -> Tree n a }
 
-leftmost :: N.InlineInduction n => Tree n a -> a
-leftmost = getTheMost (N.inlineInduction1 start step) where
+leftmost :: N.SNatI n => Tree n a -> a
+leftmost = getTheMost (N.induction1 start step) where
     start :: TheMost 'Z a
     start = TheMost $ \(Leaf x) -> x
 
     step :: TheMost m a -> TheMost ('S m) a
     step (TheMost go) = TheMost $ \(Node x _) -> go x
 
-rightmost :: N.InlineInduction n => Tree n a -> a
-rightmost = getTheMost (N.inlineInduction1 start step) where
+rightmost :: N.SNatI n => Tree n a -> a
+rightmost = getTheMost (N.induction1 start step) where
     start :: TheMost 'Z a
     start = TheMost $ \(Leaf x) -> x
 
@@ -340,12 +340,12 @@ newtype TheMost n a = TheMost { getTheMost :: Tree n a -> a }
 -- >>> reverse t
 -- Node (Node (Leaf 'd') (Leaf 'c')) (Node (Leaf 'b') (Leaf 'a'))
 --
-reverse :: forall n a. N.InlineInduction n => Tree n a -> Tree n a
-reverse = getReverse (N.inlineInduction1 start step) where
+reverse :: forall n a. N.SNatI n => Tree n a -> Tree n a
+reverse = getReverse (N.induction1 start step) where
     start :: Reverse 'Z a
     start = Reverse id
 
-    step :: N.InlineInduction m => Reverse m a -> Reverse ('S m) a
+    step :: N.SNatI m => Reverse m a -> Reverse ('S m) a
     step (Reverse go) = Reverse $ \(Node x y) -> Node (go y) (go x)
 
 newtype Reverse n a = Reverse { getReverse :: Tree n a -> Tree n a }
@@ -357,8 +357,8 @@ newtype Reverse n a = Reverse { getReverse :: Tree n a -> Tree n a }
 -- | >>> map not $ Node (Leaf True) (Leaf False)
 -- Node (Leaf False) (Leaf True)
 --
-map :: forall a b n. N.InlineInduction n => (a -> b) -> Tree n a -> Tree n b
-map f = getMap $ N.inlineInduction1 start step where
+map :: forall a b n. N.SNatI n => (a -> b) -> Tree n a -> Tree n b
+map f = getMap $ N.induction1 start step where
     start :: Map a 'Z b
     start = Map $ \(Leaf x) -> Leaf (f x)
 
@@ -372,8 +372,8 @@ newtype Map a n b = Map { getMap :: Tree n a -> Tree n b }
 -- >>> imap (,) t
 -- Node (Node (Leaf (0b00,'a')) (Leaf (0b01,'b'))) (Node (Leaf (0b10,'c')) (Leaf (0b11,'d')))
 --
-imap :: N.InlineInduction n => (Wrd n -> a -> b) -> Tree n a -> Tree n b
-imap = getIMap $ N.inlineInduction1 start step where
+imap :: N.SNatI n => (Wrd n -> a -> b) -> Tree n a -> Tree n b
+imap = getIMap $ N.induction1 start step where
     start :: IMap a 'Z b
     start = IMap $ \f (Leaf x) -> Leaf (f WE x)
 
@@ -384,8 +384,8 @@ imap = getIMap $ N.inlineInduction1 start step where
 newtype IMap a n b = IMap { getIMap :: (Wrd n -> a -> b) -> Tree n a -> Tree n b }
 
 -- | Apply an action to every element of a 'Tree', yielding a 'Tree' of results.
-traverse :: forall n f a b. (Applicative f, N.InlineInduction n) => (a -> f b) -> Tree n a -> f (Tree n b)
-traverse f =  getTraverse $ N.inlineInduction1 start step where
+traverse :: forall n f a b. (Applicative f, N.SNatI n) => (a -> f b) -> Tree n a -> f (Tree n b)
+traverse f =  getTraverse $ N.induction1 start step where
     start :: Traverse f a 'Z b
     start = Traverse $ \(Leaf x) -> Leaf <$> f x
 
@@ -396,8 +396,8 @@ traverse f =  getTraverse $ N.inlineInduction1 start step where
 newtype Traverse f a n b = Traverse { getTraverse :: Tree n a -> f (Tree n b) }
 
 -- | Apply an action to every element of a 'Tree' and its index, yielding a 'Tree' of results.
-itraverse :: forall n f a b. (Applicative f, N.InlineInduction n) => (Wrd n -> a -> f b) -> Tree n a -> f (Tree n b)
-itraverse = getITraverse $ N.inlineInduction1 start step where
+itraverse :: forall n f a b. (Applicative f, N.SNatI n) => (Wrd n -> a -> f b) -> Tree n a -> f (Tree n b)
+itraverse = getITraverse $ N.induction1 start step where
     start :: ITraverse f a 'Z b
     start = ITraverse $ \f (Leaf x) -> Leaf <$> f WE x
 
@@ -409,8 +409,8 @@ newtype ITraverse f a n b = ITraverse { getITraverse :: (Wrd n -> a -> f b) -> T
 
 #ifdef MIN_VERSION_semigroupoids
 -- | Apply an action to non-empty 'Tree', yielding a 'Tree' of results.
-traverse1 :: forall n f a b. (Apply f, N.InlineInduction n) => (a -> f b) -> Tree n a -> f (Tree n b)
-traverse1 f = getTraverse $ N.inlineInduction1 start step where
+traverse1 :: forall n f a b. (Apply f, N.SNatI n) => (a -> f b) -> Tree n a -> f (Tree n b)
+traverse1 f = getTraverse $ N.induction1 start step where
     start :: Traverse f a 'Z b
     start = Traverse $ \(Leaf x) -> Leaf <$> f x
 
@@ -418,8 +418,8 @@ traverse1 f = getTraverse $ N.inlineInduction1 start step where
     step (Traverse go) = Traverse $ \(Node x y) -> liftF2 Node (go x) (go y)
 {-# INLINE traverse1 #-}
 
-itraverse1 :: forall n f a b. (Apply f, N.InlineInduction n) => (Wrd n -> a -> f b) -> Tree n a -> f (Tree n b)
-itraverse1 = getITraverse $ N.inlineInduction1 start step where
+itraverse1 :: forall n f a b. (Apply f, N.SNatI n) => (Wrd n -> a -> f b) -> Tree n a -> f (Tree n b)
+itraverse1 = getITraverse $ N.induction1 start step where
     start :: ITraverse f a 'Z b
     start = ITraverse $ \f (Leaf x) -> Leaf <$> f WE x
 
@@ -429,8 +429,8 @@ itraverse1 = getITraverse $ N.inlineInduction1 start step where
 #endif
 
 -- | Apply an action to every element of a 'Tree' and its index, ignoring the results.
-itraverse_ :: forall n f a b. (Applicative f, N.InlineInduction n) => (Wrd n -> a -> f b) -> Tree n a -> f ()
-itraverse_ = getITraverse_ $ N.inlineInduction1 start step where
+itraverse_ :: forall n f a b. (Applicative f, N.SNatI n) => (Wrd n -> a -> f b) -> Tree n a -> f ()
+itraverse_ = getITraverse_ $ N.induction1 start step where
     start :: ITraverse_ f a 'Z b
     start = ITraverse_ $ \f (Leaf x) -> void (f WE x)
 
@@ -444,8 +444,8 @@ newtype ITraverse_ f a n b = ITraverse_ { getITraverse_ :: (Wrd n -> a -> f b) -
 -------------------------------------------------------------------------------
 
 -- | See 'I.Foldable'.
-foldMap :: forall a n m. (Monoid m, N.InlineInduction n) => (a -> m) -> Tree n a -> m
-foldMap f = getFold (N.inlineInduction1 start step) where
+foldMap :: forall a n m. (Monoid m, N.SNatI n) => (a -> m) -> Tree n a -> m
+foldMap f = getFold (N.induction1 start step) where
     start :: Fold a 'Z m
     start = Fold $ \(Leaf x) -> f x
 
@@ -455,8 +455,8 @@ foldMap f = getFold (N.inlineInduction1 start step) where
 newtype Fold a n b = Fold  { getFold  :: Tree n a -> b }
 
 -- | See 'I.Foldable1'.
-foldMap1 :: forall s a n. (Semigroup s, N.InlineInduction n) => (a -> s) -> Tree n a -> s
-foldMap1 f = getFold $ N.inlineInduction1 start step where
+foldMap1 :: forall s a n. (Semigroup s, N.SNatI n) => (a -> s) -> Tree n a -> s
+foldMap1 f = getFold $ N.induction1 start step where
     start :: Fold a 'Z s
     start = Fold $ \(Leaf x) -> f x
 
@@ -464,8 +464,8 @@ foldMap1 f = getFold $ N.inlineInduction1 start step where
     step (Fold g) = Fold $ \(Node x y) -> g x <> g y
 
 -- | See 'I.FoldableWithIndex'.
-ifoldMap :: forall a n m. (Monoid m, N.InlineInduction n) => (Wrd n -> a -> m) -> Tree n a -> m
-ifoldMap = getIFoldMap $ N.inlineInduction1 start step where
+ifoldMap :: forall a n m. (Monoid m, N.SNatI n) => (Wrd n -> a -> m) -> Tree n a -> m
+ifoldMap = getIFoldMap $ N.induction1 start step where
     start :: IFoldMap a 'Z m
     start = IFoldMap $ \f (Leaf x) -> f WE x
 
@@ -475,8 +475,8 @@ ifoldMap = getIFoldMap $ N.inlineInduction1 start step where
 newtype IFoldMap a n m = IFoldMap { getIFoldMap :: (Wrd n -> a -> m) -> Tree n a -> m }
 
 -- | There is no type-class for this :(
-ifoldMap1 :: forall a n s. (Semigroup s, N.InlineInduction n) => (Wrd ('S n) -> a -> s) -> Tree ('S n) a -> s
-ifoldMap1 = getIFoldMap $ N.inlineInduction1 start step where
+ifoldMap1 :: forall a n s. (Semigroup s, N.SNatI n) => (Wrd ('S n) -> a -> s) -> Tree ('S n) a -> s
+ifoldMap1 = getIFoldMap $ N.induction1 start step where
     start :: IFoldMap a 'Z m
     start = IFoldMap $ \f (Leaf x) -> f WE x
 
@@ -487,8 +487,8 @@ ifoldMap1 = getIFoldMap $ N.inlineInduction1 start step where
 
 
 -- | Right fold.
-foldr :: forall a b n. N.InlineInduction n => (a -> b -> b) -> b -> Tree n a -> b
-foldr f = getFoldr (N.inlineInduction1 start step) where
+foldr :: forall a b n. N.SNatI n => (a -> b -> b) -> b -> Tree n a -> b
+foldr f = getFoldr (N.induction1 start step) where
     start :: Foldr a 'Z b
     start = Foldr $ \z (Leaf x) -> f x z
 
@@ -498,8 +498,8 @@ foldr f = getFoldr (N.inlineInduction1 start step) where
 newtype Foldr a n b = Foldr { getFoldr :: b -> Tree n a -> b }
 
 -- | Right fold with an index.
-ifoldr :: forall a b n. N.InlineInduction n => (Wrd n -> a -> b -> b) -> b -> Tree n a -> b
-ifoldr = getIFoldr $ N.inlineInduction1 start step where
+ifoldr :: forall a b n. N.SNatI n => (Wrd n -> a -> b -> b) -> b -> Tree n a -> b
+ifoldr = getIFoldr $ N.induction1 start step where
     start :: IFoldr a 'Z b
     start = IFoldr $ \f z (Leaf x) -> f WE x z
 
@@ -508,8 +508,8 @@ ifoldr = getIFoldr $ N.inlineInduction1 start step where
 
 newtype IFoldr a n b = IFoldr { getIFoldr :: (Wrd n -> a -> b -> b) -> b -> Tree n a -> b }
 
-foldr1Map :: forall a b n. N.InlineInduction n => (a -> b -> b) -> (a -> b) -> Tree n a -> b
-foldr1Map f = getFoldr1 (N.inlineInduction1 start step) where
+foldr1Map :: forall a b n. N.SNatI n => (a -> b -> b) -> (a -> b) -> Tree n a -> b
+foldr1Map f = getFoldr1 (N.induction1 start step) where
     start :: Foldr1 a 'Z b
     start = Foldr1 $ \z (Leaf x) -> z x
 
@@ -522,8 +522,8 @@ ifoldr1Map :: (Wrd n -> a -> b -> b) -> (Wrd n -> a -> b) -> Tree n a -> b
 ifoldr1Map = ifoldr1Map
 
 -- | Left fold.
-foldl :: forall a b n. N.InlineInduction n => (b -> a -> b) -> b -> Tree n a -> b
-foldl f = getFoldl (N.inlineInduction1 start step) where
+foldl :: forall a b n. N.SNatI n => (b -> a -> b) -> b -> Tree n a -> b
+foldl f = getFoldl (N.induction1 start step) where
     start :: Foldl a 'Z b
     start = Foldl $ \z (Leaf x) -> f z x
 
@@ -533,8 +533,8 @@ foldl f = getFoldl (N.inlineInduction1 start step) where
 newtype Foldl a n b = Foldl { getFoldl :: b -> Tree n a -> b }
 
 -- | Left fold with an index.
-ifoldl :: forall a b n. N.InlineInduction n => (Wrd n -> b -> a -> b) -> b -> Tree n a -> b
-ifoldl = getIFoldl $ N.inlineInduction1 start step where
+ifoldl :: forall a b n. N.SNatI n => (Wrd n -> b -> a -> b) -> b -> Tree n a -> b
+ifoldl = getIFoldl $ N.induction1 start step where
     start :: IFoldl a 'Z b
     start = IFoldl $ \f z (Leaf x) -> f WE z x
 
@@ -544,10 +544,10 @@ ifoldl = getIFoldl $ N.inlineInduction1 start step where
 newtype IFoldl a n b = IFoldl { getIFoldl :: (Wrd n -> b -> a -> b) -> b -> Tree n a -> b }
 
 -- | Yield the length of a 'Tree'. /O(n)/
-length :: forall n a. N.InlineInduction n => Tree n a -> Int
+length :: forall n a. N.SNatI n => Tree n a -> Int
 length _ = getLength l where
     l :: Length n
-    l = N.inlineInduction (Length 1) $ \(Length n) -> Length (2 * n)
+    l = N.induction (Length 1) $ \(Length n) -> Length (2 * n)
 
 newtype Length (n :: Nat) = Length { getLength :: Int }
 
@@ -560,8 +560,8 @@ null _ = False
 -------------------------------------------------------------------------------
 
 -- | Non-strict 'sum'.
-sum :: (Num a, N.InlineInduction n) => Tree n a -> a
-sum = getFold $ N.inlineInduction1 start step where
+sum :: (Num a, N.SNatI n) => Tree n a -> a
+sum = getFold $ N.induction1 start step where
     start :: Num a => Fold a 'Z a
     start = Fold $ \(Leaf x) -> x
 
@@ -569,8 +569,8 @@ sum = getFold $ N.inlineInduction1 start step where
     step (Fold f) = Fold $ \(Node x y) -> f x + f y
 
 -- | Non-strict 'product'.
-product :: (Num a, N.InlineInduction n) => Tree n a -> a
-product = getFold $ N.inlineInduction1 start step where
+product :: (Num a, N.SNatI n) => Tree n a -> a
+product = getFold $ N.induction1 start step where
     start :: Num a => Fold a 'Z a
     start = Fold $ \(Leaf x) -> x
 
@@ -582,8 +582,8 @@ product = getFold $ N.inlineInduction1 start step where
 -------------------------------------------------------------------------------
 
 -- | Zip two 'Tree's with a function.
-zipWith :: forall a b c n. N.InlineInduction n => (a -> b -> c) -> Tree n a -> Tree n b -> Tree n c
-zipWith f = getZipWith $ N.inlineInduction start step where
+zipWith :: forall a b c n. N.SNatI n => (a -> b -> c) -> Tree n a -> Tree n b -> Tree n c
+zipWith f = getZipWith $ N.induction start step where
     start :: ZipWith a b c 'Z
     start = ZipWith $ \(Leaf x) (Leaf y) -> Leaf (f x y)
 
@@ -593,8 +593,8 @@ zipWith f = getZipWith $ N.inlineInduction start step where
 newtype ZipWith a b c n = ZipWith { getZipWith :: Tree n a -> Tree n b -> Tree n c }
 
 -- | Zip two 'Tree's. with a function that also takes the elements' indices.
-izipWith :: N.InlineInduction n => (Wrd n -> a -> b -> c) -> Tree n a -> Tree n b -> Tree n c
-izipWith = getIZipWith $ N.inlineInduction start step where
+izipWith :: N.SNatI n => (Wrd n -> a -> b -> c) -> Tree n a -> Tree n b -> Tree n c
+izipWith = getIZipWith $ N.induction start step where
     start :: IZipWith a b c 'Z
     start = IZipWith $ \f (Leaf x) (Leaf y) -> Leaf (f WE x y)
 
@@ -608,8 +608,8 @@ newtype IZipWith a b c n = IZipWith { getIZipWith :: (Wrd n -> a -> b -> c) -> T
 -- >>> repeat 'x' :: Tree N.Nat2 Char
 -- Node (Node (Leaf 'x') (Leaf 'x')) (Node (Leaf 'x') (Leaf 'x'))
 --
-repeat :: N.InlineInduction n => x -> Tree n x
-repeat x = N.inlineInduction1 (Leaf x) $ \t -> Node t t
+repeat :: N.SNatI n => x -> Tree n x
+repeat x = N.induction1 (Leaf x) $ \t -> Node t t
 
 -------------------------------------------------------------------------------
 -- Monadic
@@ -625,7 +625,7 @@ repeat x = N.inlineInduction1 (Leaf x) $ \t -> Node t t
 --
 -- >>> universe :: Tree N.Nat2 (Wrd N.Nat2)
 -- Node (Node (Leaf 0b00) (Leaf 0b01)) (Node (Leaf 0b10) (Leaf 0b11))
-universe :: N.InlineInduction n => Tree n (Wrd n)
+universe :: N.SNatI n => Tree n (Wrd n)
 universe = tabulate id
 
 -------------------------------------------------------------------------------
@@ -653,8 +653,8 @@ universe = tabulate id
 -- >>> leftmost $ setHead 'x' $ ensureSpine v
 -- 'x'
 --
-ensureSpine :: N.InlineInduction n => Tree n a -> Tree n a
-ensureSpine = getEnsureSpine (N.inlineInduction1 first step) where
+ensureSpine :: N.SNatI n => Tree n a -> Tree n a
+ensureSpine = getEnsureSpine (N.induction1 first step) where
     first :: EnsureSpine 'Z a
     first = EnsureSpine $ \ ~(Leaf x) -> Leaf x
 

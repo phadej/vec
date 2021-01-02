@@ -1,5 +1,7 @@
+{-# LANGUAGE DataKinds           #-}
 {-# LANGUAGE DeriveGeneric       #-}
 {-# LANGUAGE GADTs               #-}
+{-# LANGUAGE RankNTypes          #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TemplateHaskell     #-}
 {-# LANGUAGE TypeOperators       #-}
@@ -21,16 +23,28 @@ import qualified Data.Type.Nat as N
 import Unsafe.Coerce (unsafeCoerce)
 
 -------------------------------------------------------------------------------
--- InlineInduction
+-- SNatI
 -------------------------------------------------------------------------------
 
 -- | This doesn't evaluate compile time.
 lhsInline :: Int
-lhsInline = unTagged (N.inlineInduction1 (pure 0) (retag . fmap succ) :: Tagged N.Nat5 Int)
+lhsInline = unTagged (N.induction1 (pure 0) (retag . fmap succ) :: Tagged N.Nat5 Int)
 
 -- | This doesn't evaluate compile time.
 lhsNormal :: Int
-lhsNormal = unTagged (N.induction1 (pure 0) (retag . fmap succ) :: Tagged N.Nat5 Int)
+lhsNormal = unTagged (manualInduction1 (pure 0) (retag . fmap succ) :: Tagged N.Nat5 Int)
+
+--- | Induction on 'Nat'.
+manualInduction1
+     :: forall n f a. N.SNatI n
+     => f 'N.Z a                                        -- ^ zero case
+     -> (forall m. N.SNatI m => f m a -> f ('N.S m) a)  -- ^ induction step
+     -> f n a
+manualInduction1 z f = go where
+    go :: forall m. N.SNatI m => f m a
+    go = case N.snat :: N.SNat m of
+        N.SZ -> z
+        N.SS -> f go
 
 rhs :: Int
 rhs = 5
@@ -110,10 +124,10 @@ inspect $  'lhsUnfold === 'rhsUnfold
 -- Power
 -------------------------------------------------------------------------------
 
-power :: forall n. N.InlineInduction n => Proxy n -> Int -> Int
+power :: forall n. N.SNatI n => Proxy n -> Int -> Int
 power _ k = unTagged impl where
     impl :: Tagged n Int
-    impl = N.inlineInduction1 (Tagged 1) $ \(Tagged rec') -> Tagged (rec' * k)
+    impl = N.induction1 (Tagged 1) $ \(Tagged rec') -> Tagged (rec' * k)
 
 lhsPower5 :: Int -> Int
 lhsPower5 = power (Proxy :: Proxy N.Nat5)

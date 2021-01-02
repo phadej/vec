@@ -98,7 +98,7 @@ instance Pigeonhole Proxy where
     to _   = Proxy
 
 -- | @'Product' f g x@ ~ @x ^ (size f + size g)@
-instance (Pigeonhole f, Pigeonhole g, N.InlineInduction (PigeonholeSize f)) => Pigeonhole (Product f g) where
+instance (Pigeonhole f, Pigeonhole g, N.SNatI (PigeonholeSize f)) => Pigeonhole (Product f g) where
     type PigeonholeSize (Product f g) = N.Plus (PigeonholeSize f) (PigeonholeSize g)
 
     to = f . V.split where f (a, b) = Pair (to a) (to b)
@@ -121,7 +121,7 @@ instance (Pigeonhole f, Pigeonhole g, N.InlineInduction (PigeonholeSize f)) => P
 --
 gindex
     :: ( G.Generic i, F.GFrom i, G.Generic1 f, GFrom f
-       , F.GEnumSize i ~ GPigeonholeSize f, N.InlineInduction (GPigeonholeSize f)
+       , F.GEnumSize i ~ GPigeonholeSize f, N.SNatI (GPigeonholeSize f)
        )
      => f a -> i -> a
 gindex fa i = gfrom fa V.! F.gfrom i
@@ -139,7 +139,7 @@ gindex fa i = gfrom fa V.! F.gfrom i
 --
 gtabulate
     :: ( G.Generic i, F.GTo i, G.Generic1 f, GTo f
-       , F.GEnumSize i ~ GPigeonholeSize f, N.InlineInduction (GPigeonholeSize f)
+       , F.GEnumSize i ~ GPigeonholeSize f, N.SNatI (GPigeonholeSize f)
        )
      => (i -> a) -> f a
 gtabulate idx = gto $ tabulate (idx . F.gto)
@@ -153,7 +153,7 @@ gtabulate idx = gto $ tabulate (idx . F.gto)
 -- Identity 'X'
 --
 gix :: ( G.Generic i, F.GFrom i, G.Generic1 t, GTo t, GFrom t
-       , F.GEnumSize i ~ GPigeonholeSize t, N.InlineInduction (GPigeonholeSize t)
+       , F.GEnumSize i ~ GPigeonholeSize t, N.SNatI (GPigeonholeSize t)
        , Functor f
        )
     => i -> (a -> f a) -> t a -> f (t a)
@@ -171,8 +171,8 @@ gix i = fusing $ \ab ta -> gto <$> ix (F.gfrom i) ab (gfrom ta)
 -- >>> Lens.set (ix (FS FZ)) 'x' ('a' ::: 'b' ::: 'c' ::: VNil)
 -- 'a' ::: 'x' ::: 'c' ::: VNil
 --
-ix :: forall n f a. (N.InlineInduction n, Functor f) => Fin n -> Lens.LensLike' f (Vec n a) a
-ix = getIxLens $ N.inlineInduction1 start step where
+ix :: forall n f a. (N.SNatI n, Functor f) => Fin n -> Lens.LensLike' f (Vec n a) a
+ix = getIxLens $ N.induction1 start step where
     start :: IxLens f 'Z a
     start = IxLens F.absurd
 
@@ -201,7 +201,7 @@ _tail f (x ::: xs) = (x :::) <$> f xs
 -- __Don't use__, rather use @DeriveTraversable@
 gtraverse
     :: ( G.Generic1 t, GFrom t, GTo t
-       , N.InlineInduction (GPigeonholeSize t)
+       , N.SNatI (GPigeonholeSize t)
        , Applicative f
        )
     => (a -> f b) -> t a -> f (t b)
@@ -219,7 +219,7 @@ gtraverse = confusing $ \afb ta -> gto <$> V.traverse afb (gfrom ta)
 gitraverse
     :: ( G.Generic i, F.GTo i
        , G.Generic1 t, GFrom t, GTo t
-       , F.GEnumSize i ~ GPigeonholeSize t, N.InlineInduction (GPigeonholeSize t)
+       , F.GEnumSize i ~ GPigeonholeSize t, N.SNatI (GPigeonholeSize t)
        , Applicative f
        )
     => (i -> a -> f b) -> t a -> f (t b)

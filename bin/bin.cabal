@@ -1,7 +1,6 @@
 cabal-version:      2.2
 name:               bin
-version:            0.1
-x-revision:         2
+version:            0.1.0.1
 synopsis:           Bin: binary natural numbers.
 category:           Data, Dependent Types, Singletons, Math
 description:
@@ -31,7 +30,7 @@ license:            GPL-2.0-or-later
 license-file:       LICENSE
 author:             Oleg Grenrus <oleg.grenrus@iki.fi>
 maintainer:         Oleg.Grenrus <oleg.grenrus@iki.fi>
-copyright:          (c) 2019 Oleg Grenrus
+copyright:          (c) 2019-2021 Oleg Grenrus
 build-type:         Simple
 extra-source-files: ChangeLog.md
 tested-with:
@@ -66,7 +65,7 @@ library
     , base        >=4.7     && <4.15
     , dec         ^>=0.0.3
     , deepseq     >=1.3.0.2 && <1.5
-    , fin         ^>=0.1.1
+    , fin         ^>=0.2
     , hashable    >=1.2.7.0 && <1.4
     , QuickCheck  ^>=2.13.2 || ^>=2.14
 

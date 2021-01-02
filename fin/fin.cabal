@@ -1,7 +1,6 @@
 cabal-version:      >=1.10
 name:               fin
-version:            0.1.1
-x-revision:         2
+version:            0.2
 synopsis:           Nat and Fin: peano naturals and finite numbers
 category:           Data, Dependent Types, Singletons, Math
 description:
@@ -53,7 +52,7 @@ license:            BSD3
 license-file:       LICENSE
 author:             Oleg Grenrus <oleg.grenrus@iki.fi>
 maintainer:         Oleg.Grenrus <oleg.grenrus@iki.fi>
-copyright:          (c) 2017-2019 Oleg Grenrus
+copyright:          (c) 2017-2021 Oleg Grenrus
 build-type:         Simple
 extra-source-files: ChangeLog.md
 tested-with:
