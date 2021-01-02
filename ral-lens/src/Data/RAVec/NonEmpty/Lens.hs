@@ -72,7 +72,7 @@ type instance L.Index   (NERAVec' n b a) = PosP' n b
 type instance L.IxValue (NERAVec' n b a) = a
 
 instance L.Ixed (NERAVec b a) where
-    ix = ix
+    ix i = ix i
 
 instance L.Ixed (NERAVec' n b a) where
-    ix = ix'
+    ix i = ix' i

@@ -118,7 +118,7 @@ type instance L.IxValue (Vec n a) = a
 -- | 'Vec' doesn't have 'L.At' instance, as we __cannot__ remove value from 'Vec'.
 -- See 'ix' in "Data.Vec.Lazy" module for an 'L.Lens' (not 'L.Traversal').
 instance L.Ixed (Vec n a) where
-    ix = ix
+    ix i = ix i
 
 instance L.Field1 (Vec ('S n) a) (Vec ('S n) a) a a where
     _1 = _head

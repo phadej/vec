@@ -56,4 +56,4 @@ type instance L.Index (Tree n a)   = Wrd n
 type instance L.IxValue (Tree n a) = a
 
 instance L.Ixed (Tree n a) where
-    ix = ix
+    ix i = ix i

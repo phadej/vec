@@ -64,4 +64,4 @@ type instance L.Index (NERAList a)   = Int
 type instance L.IxValue (NERAList a) = a
 
 instance L.Ixed (NERAList a) where
-    ix = ix
+    ix i = ix i

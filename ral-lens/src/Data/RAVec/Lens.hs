@@ -55,4 +55,4 @@ type instance L.Index   (RAVec n a) = Pos n
 type instance L.IxValue (RAVec n a) = a
 
 instance L.Ixed (RAVec b a) where
-    ix = ix
+    ix i = ix i
