@@ -43,4 +43,4 @@ type instance L.Index (RAList a)   = Int
 type instance L.IxValue (RAList a) = a
 
 instance L.Ixed (RAList a) where
-    ix = ix
+    ix i = ix i
