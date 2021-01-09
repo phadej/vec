@@ -6,6 +6,7 @@
 {-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE PolyKinds             #-}
+{-# LANGUAGE Safe                  #-}
 {-# LANGUAGE ScopedTypeVariables   #-}
 {-# LANGUAGE TypeFamilies          #-}
 {-# LANGUAGE TypeOperators         #-}
@@ -32,7 +33,7 @@ import Data.Bifunctor (bimap)
 import Data.Fin       (Fin (..))
 import Data.Nat       (Nat (..))
 import Data.Proxy     (Proxy (..))
-import GHC.Generics   ((:+:) (..), M1 (..), U1 (..), V1)
+import GHC.Generics   (M1 (..), U1 (..), V1, (:+:) (..))
 
 import qualified Data.Fin      as F
 import qualified Data.Type.Nat as N

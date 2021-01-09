@@ -4,6 +4,7 @@
 {-# LANGUAGE DeriveDataTypeable  #-}
 {-# LANGUAGE GADTs               #-}
 {-# LANGUAGE KindSignatures      #-}
+{-# LANGUAGE Safe                #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE StandaloneDeriving  #-}
 -- | Fixed-'Wrd'th (unsigned) integers.
@@ -154,7 +155,7 @@ instance N.SNatI n => Num (Wrd n) where
         go True  (W1 WE) = W1 WE
         go False (W1 WE) = W1 WE
         go b     (W0 w)  = W0 (go b w)
-        go _     (W1 w)  = W0 (go True w) 
+        go _     (W1 w)  = W0 (go True w)
 
 -------------------------------------------------------------------------------
 -- Bits & FiniteBits
@@ -489,7 +490,7 @@ wrdScanl0 g = go where
     go :: forall m. N.SNatI m => s -> (s, Wrd m)
     go s = case N.snat :: N.SNat m of
         N.SZ -> (s, WE)
-        N.SS -> 
+        N.SS ->
             let (s'', b)  = g s'
                 (s' , w') = go s
             in (s'', if b then W1 w' else W0 w')
@@ -506,7 +507,7 @@ wrdScanl g = go where
         let (s'', b)  = g s' True
             (s' , w') = go s w
         in (s'', if b then W1 w' else W0 w')
-    
+
 wrdScanl2 :: forall s n. (s -> Bool -> Bool -> (s, Bool)) -> s ->  Wrd n -> Wrd n -> (s, Wrd n)
 wrdScanl2 g = go where
     go :: s -> Wrd m -> Wrd m -> (s, Wrd m)

@@ -1,4 +1,3 @@
 packages: .
-packages: ../bin
 packages: ../fin
 packages: ../dec

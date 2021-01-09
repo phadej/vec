@@ -6,6 +6,7 @@
 {-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE GADTs                  #-}
 {-# LANGUAGE KindSignatures         #-}
+{-# LANGUAGE Safe                   #-}
 {-# LANGUAGE ScopedTypeVariables    #-}
 {-# LANGUAGE StandaloneDeriving     #-}
 {-# LANGUAGE UndecidableInstances   #-}
@@ -31,8 +32,8 @@ module Data.BinP.PosP (
 
 import Prelude
        (Bounded (..), Either (..), Eq, Int, Integer, Num, Ord (..),
-       Ordering (..), Show (..), ShowS, String, either, fmap, fromIntegral,
-       map, showParen, showString, ($), (*), (+), (++), (.))
+       Ordering (..), Show (..), ShowS, String, either, fmap, fromIntegral, map,
+       showParen, showString, ($), (*), (+), (++), (.))
 
 import Data.Bin        (BinP (..))
 import Data.Nat        (Nat (..))

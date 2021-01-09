@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP                  #-}
 {-# LANGUAGE DataKinds            #-}
 {-# LANGUAGE DeriveDataTypeable   #-}
 {-# LANGUAGE FlexibleContexts     #-}
@@ -8,6 +9,11 @@
 {-# LANGUAGE TypeFamilies         #-}
 {-# LANGUAGE TypeOperators        #-}
 {-# LANGUAGE UndecidableInstances #-}
+#if MIN_VERSION_base(4,8,0)
+{-# LANGUAGE Safe                 #-}
+#else
+{-# LANGUAGE Trustworthy          #-}
+#endif
 -- | Positive binary natural numbers. @DataKinds@ stuff.
 module Data.Type.BinP (
     -- * Singleton
@@ -39,16 +45,16 @@ module Data.Type.BinP (
     BinP1, BinP2, BinP3, BinP4, BinP5, BinP6, BinP7, BinP8, BinP9,
     ) where
 
-import Data.BinP           (BinP (..))
-import Data.Coerce        (coerce)
-import Data.Nat           (Nat (..))
-import Data.Proxy         (Proxy (..))
-import Data.Type.Equality ((:~:) (..), TestEquality (..))
-import Data.Typeable      (Typeable)
-import Numeric.Natural    (Natural)
+import Data.BinP       (BinP (..))
+import Data.Nat        (Nat (..))
+import Data.Proxy      (Proxy (..))
+import Data.Typeable   (Typeable)
+import Numeric.Natural (Natural)
 
 import qualified Data.Type.Nat as N
 import qualified GHC.TypeLits  as GHC
+
+import TrustworthyCompat
 
 -- $setup
 -- >>> :set -XDataKinds

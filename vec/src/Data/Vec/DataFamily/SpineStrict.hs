@@ -3,6 +3,7 @@
 {-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE RankNTypes            #-}
+{-# LANGUAGE Safe                  #-}
 {-# LANGUAGE ScopedTypeVariables   #-}
 {-# LANGUAGE TypeFamilies          #-}
 {-# LANGUAGE UndecidableInstances  #-}
@@ -114,9 +115,9 @@ module Data.Vec.DataFamily.SpineStrict (
     ) where
 
 import Prelude
-       (Bool (..), Eq (..), Functor (..), Int, Maybe (..), Monad (..),
-       Num (..), Ord (..), Ordering (EQ), Show (..), ShowS, const, flip, id,
-       seq, showParen, showString, uncurry, ($), (&&), (.))
+       (Bool (..), Eq (..), Functor (..), Int, Maybe (..), Monad (..), Num (..),
+       Ord (..), Ordering (EQ), Show (..), ShowS, const, flip, id, seq,
+       showParen, showString, uncurry, ($), (&&), (.))
 
 import Control.Applicative (Applicative (..), liftA2, (<$>))
 import Control.DeepSeq     (NFData (..))
@@ -131,8 +132,8 @@ import qualified Data.Foldable    as I (Foldable (..))
 import qualified Data.Traversable as I (Traversable (..))
 import qualified Test.QuickCheck  as QC
 
-import qualified Data.Functor.WithIndex     as WI (FunctorWithIndex (..))
 import qualified Data.Foldable.WithIndex    as WI (FoldableWithIndex (..))
+import qualified Data.Functor.WithIndex     as WI (FunctorWithIndex (..))
 import qualified Data.Traversable.WithIndex as WI (TraversableWithIndex (..))
 
 #ifdef MIN_VERSION_adjunctions

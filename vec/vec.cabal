@@ -146,13 +146,18 @@ library
       build-depends: adjunctions ^>=4.4
 
   if flag(semigroupoids)
-    build-depends: semigroupoids >=5.2.2 && <5.4
+    build-depends: semigroupoids >=5.3.5 && <5.4
 
   other-extensions:
     CPP
     FlexibleContexts
     GADTs
     TypeOperators
+
+  if impl(ghc >=9.0)
+    -- these flags may abort compilation with GHC-8.10
+    -- https://gitlab.haskell.org/ghc/ghc/-/merge_requests/3295
+    ghc-options: -Winferred-safe-imports -Wmissing-safe-haskell-mode
 
   x-docspec-extra-packages: void
 

@@ -6,6 +6,7 @@
 {-# LANGUAGE GADTs                 #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE RankNTypes            #-}
+{-# LANGUAGE Safe                  #-}
 {-# LANGUAGE ScopedTypeVariables   #-}
 {-# LANGUAGE StandaloneDeriving    #-}
 {-# LANGUAGE TypeOperators         #-}
@@ -49,11 +50,11 @@ module Data.Type.Nat.LE (
     ) where
 
 import Data.Type.Dec      (Dec (..), Decidable (..), Neg)
-import Data.Type.Equality ((:~:) (..))
 import Data.Typeable      (Typeable)
 import Data.Void          (absurd)
 
 import Data.Type.Nat
+import TrustworthyCompat
 
 -------------------------------------------------------------------------------
 -- Proof

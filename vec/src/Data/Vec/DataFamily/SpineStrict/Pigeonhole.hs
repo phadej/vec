@@ -6,6 +6,7 @@
 {-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE PolyKinds             #-}
+{-# LANGUAGE Safe                  #-}
 {-# LANGUAGE ScopedTypeVariables   #-}
 {-# LANGUAGE TypeFamilies          #-}
 {-# LANGUAGE TypeOperators         #-}
@@ -36,7 +37,7 @@ import Data.Functor.Product            (Product (..))
 import Data.Nat                        (Nat (..))
 import Data.Proxy                      (Proxy (..))
 import Data.Vec.DataFamily.SpineStrict (Vec (..), tabulate)
-import GHC.Generics                    ((:*:) (..), M1 (..), Par1 (..), U1 (..))
+import GHC.Generics                    (M1 (..), Par1 (..), U1 (..), (:*:) (..))
 
 import qualified Control.Lens.Yocto              as Lens
 import qualified Data.Fin                        as F

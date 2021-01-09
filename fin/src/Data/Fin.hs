@@ -3,6 +3,7 @@
 {-# LANGUAGE EmptyCase            #-}
 {-# LANGUAGE GADTs                #-}
 {-# LANGUAGE KindSignatures       #-}
+{-# LANGUAGE Safe                 #-}
 {-# LANGUAGE ScopedTypeVariables  #-}
 {-# LANGUAGE StandaloneDeriving   #-}
 {-# LANGUAGE TypeOperators        #-}
@@ -247,7 +248,7 @@ instance (n ~ 'S m, N.SNatI m) => QC.Function (Fin n) where
 instance N.SNatI n => U.Universe (Fin n) where
     universe = universe
 
--- | 
+-- |
 --
 -- >>> (U.cardinality :: U.Tagged (Fin N.Nat3) Natural) == U.Tagged (genericLength (U.universeF :: [Fin N.Nat3]))
 -- True

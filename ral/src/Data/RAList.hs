@@ -1,3 +1,4 @@
+{-# LANGUAGE Safe #-}
 -- | Random access list.
 --
 -- This module is designed to imported qualifed.
@@ -29,8 +30,8 @@ module Data.RAList (
     itraverse,
     ) where
 
-import Prelude (Maybe (..))
 import Data.RAList.Internal
+import Prelude              (Maybe (..))
 
 import qualified Data.RAList.NonEmpty as NE
 

@@ -6,6 +6,7 @@
 {-# LANGUAGE GADTs                 #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE RankNTypes            #-}
+{-# LANGUAGE Safe                  #-}
 {-# LANGUAGE ScopedTypeVariables   #-}
 {-# LANGUAGE StandaloneDeriving    #-}
 {-# LANGUAGE TypeFamilies          #-}
@@ -67,13 +68,14 @@ module Data.RAVec.NonEmpty (
     liftShrink, liftShrink',
     ) where
 
-import Prelude (Bool (..), uncurry, Int, Eq (..), Functor (..), Ord (..), Show, seq, ($), (.))
+import Prelude
+       (Bool (..), Eq (..), Functor (..), Int, Ord (..), Show, seq, uncurry,
+       ($), (.))
 
 import Control.Applicative (Applicative (..), (<$>))
 import Control.DeepSeq     (NFData (..))
 import Data.Bin            (BinP (..))
 import Data.BinP.PosP      (PosP (..), PosP' (..))
-import Data.Coerce         (coerce)
 import Data.Hashable       (Hashable (..))
 import Data.List.NonEmpty  (NonEmpty (..))
 import Data.Monoid         (Monoid (..))
@@ -91,8 +93,8 @@ import qualified Data.Foldable    as I (Foldable (..))
 import qualified Data.Traversable as I (Traversable (..))
 import qualified Test.QuickCheck  as QC
 
-import qualified Data.Functor.WithIndex     as WI (FunctorWithIndex (..))
 import qualified Data.Foldable.WithIndex    as WI (FoldableWithIndex (..))
+import qualified Data.Functor.WithIndex     as WI (FunctorWithIndex (..))
 import qualified Data.Traversable.WithIndex as WI (TraversableWithIndex (..))
 
 #ifdef MIN_VERSION_distributive
@@ -110,7 +112,8 @@ import qualified Data.Semigroup.Foldable    as I (Foldable1 (..))
 import qualified Data.Semigroup.Traversable as I (Traversable1 (..))
 #endif
 
-import Data.RAVec.Tree (Tree (..))
+import Data.RAVec.Tree   (Tree (..))
+import TrustworthyCompat
 
 -- $setup
 -- >>> :set -XScopedTypeVariables -XDataKinds

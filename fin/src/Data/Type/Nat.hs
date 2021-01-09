@@ -7,6 +7,7 @@
 {-# LANGUAGE RankNTypes           #-}
 {-# LANGUAGE ScopedTypeVariables  #-}
 {-# LANGUAGE StandaloneDeriving   #-}
+{-# LANGUAGE Trustworthy          #-}
 {-# LANGUAGE TypeFamilies         #-}
 {-# LANGUAGE TypeOperators        #-}
 {-# LANGUAGE UndecidableInstances #-}
@@ -63,23 +64,22 @@ module Data.Type.Nat (
     proofMultNOne,
     )  where
 
-import Data.Function      (fix)
-import Data.Proxy         (Proxy (..))
-import Data.Type.Dec      (Dec (..))
-import Data.Type.Equality ((:~:) (..), TestEquality (..))
-import Data.Typeable      (Typeable)
-import Numeric.Natural    (Natural)
+import Data.Function   (fix)
+import Data.Proxy      (Proxy (..))
+import Data.Type.Dec   (Dec (..))
+import Data.Typeable   (Typeable)
+import Numeric.Natural (Natural)
 
 import qualified GHC.TypeLits as GHC
 
 import Unsafe.Coerce (unsafeCoerce)
-import Data.Coerce (coerce)
 
 #if !MIN_VERSION_base(4,11,0)
 import Data.Type.Equality (type (==))
 #endif
 
 import Data.Nat
+import TrustworthyCompat
 
 -- $setup
 -- >>> :set -XTypeOperators -XDataKinds
