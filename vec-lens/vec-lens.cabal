@@ -54,7 +54,7 @@ library
     , vec  ^>=0.4
 
   -- other dependencies
-  build-depends:    lens ^>=4.18.1 || ^>=4.19.1
+  build-depends:    lens ^>=4.18.1 || ^>=4.19.1 || ^>=5
   other-extensions:
     CPP
     FlexibleContexts

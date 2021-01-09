@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP                   #-}
 {-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE TypeFamilies          #-}
@@ -42,6 +43,7 @@ ixVL (Pos n) f (NonEmpty x) = NonEmpty <$> NE.ixVL n f x
 -- Instances
 -------------------------------------------------------------------------------
 
+#if !MIN_VERSION_optics_core(0,4,0)
 instance L.FunctorWithIndex (Pos b) (RAVec b) where
     imap = imap
 
@@ -51,6 +53,7 @@ instance L.FoldableWithIndex (Pos b) (RAVec b) where
 
 instance L.TraversableWithIndex (Pos b) (RAVec b) where
     itraverse = itraverse
+#endif
 
 instance L.Each (Pos n) (RAVec n a) (RAVec n b) a b where
 

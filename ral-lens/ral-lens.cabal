@@ -47,7 +47,7 @@ library
     , base  >=4.7   && <4.15
     , bin   ^>=0.1
     , fin   ^>=0.2
-    , lens  >=4.16  && <4.20
+    , lens  >=4.16  && <5.1
     , ral   ^>=0.2
 
 -- dump-core

@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP                   #-}
 {-# LANGUAGE DataKinds             #-}
 {-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
@@ -101,6 +102,7 @@ _Vec = L.prism' toList fromList
 -- Instances
 -------------------------------------------------------------------------------
 
+#if !MIN_VERSION_lens(5,0,0)
 instance L.FunctorWithIndex (Fin n) (Vec n) where
     imap = imap
 
@@ -110,6 +112,7 @@ instance L.FoldableWithIndex (Fin n) (Vec n) where
 
 instance L.TraversableWithIndex (Fin n) (Vec n) where
     itraverse = itraverse
+#endif
 
 instance L.Each (Vec n a) (Vec n b) a b where
     each = traverse

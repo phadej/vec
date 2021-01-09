@@ -47,7 +47,7 @@ library
     , vec  ^>=0.4
 
   -- other dependencies
-  build-depends:    optics-core >=0.2 && <0.4
+  build-depends:    optics-core >=0.2 && <0.5
   other-extensions:
     CPP
     FlexibleContexts

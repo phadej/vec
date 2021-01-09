@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP                   #-}
 {-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE RankNTypes            #-}
@@ -49,6 +50,7 @@ instance TreeIx t => TreeIx (Tr.Node t) where
 -- Instances
 -------------------------------------------------------------------------------
 
+#if !MIN_VERSION_lens(5,0,0)
 instance L.FunctorWithIndex Int NERAList where
     imap = imap
 
@@ -57,6 +59,7 @@ instance L.FoldableWithIndex Int NERAList where
 
 instance L.TraversableWithIndex Int NERAList where
     itraverse = itraverse
+#endif
 
 instance L.Each (NERAList a) (NERAList b) a b
 
