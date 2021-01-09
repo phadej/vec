@@ -1,6 +1,7 @@
 {-# LANGUAGE BangPatterns       #-}
 {-# LANGUAGE CPP                #-}
 {-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE Safe               #-}
 
 #if __GLASGOW_HASKELL__ < 710
 {-# LANGUAGE DataKinds          #-}
@@ -84,8 +85,8 @@ instance Ord BinP where
         go _acc _      BE     = GT
         go  acc (B0 a) (B0 b) = go acc a b
         go  acc (B1 a) (B1 b) = go acc a b
-        go  acc (B0 a) (B1 b) = go LT  a b
-        go  acc (B1 a) (B0 b) = go GT  a b
+        go _acc (B0 a) (B1 b) = go LT  a b
+        go _acc (B1 a) (B0 b) = go GT  a b
 
 instance Show BinP where
     showsPrec d = showsPrec d . toNatural

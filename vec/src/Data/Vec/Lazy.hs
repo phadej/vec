@@ -7,6 +7,7 @@
 {-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE GADTs                  #-}
 {-# LANGUAGE RankNTypes             #-}
+{-# LANGUAGE Safe                   #-}
 {-# LANGUAGE ScopedTypeVariables    #-}
 {-# LANGUAGE StandaloneDeriving     #-}
 {-# LANGUAGE TypeFamilies           #-}
@@ -79,9 +80,8 @@ module Data.Vec.Lazy (
     )  where
 
 import Prelude
-       (Bool (..), Eq (..), Functor (..), Int, Maybe (..), Monad (..),
-       Num (..), Ord (..), Show (..), id, seq, showParen, showString, uncurry,
-       ($), (.))
+       (Bool (..), Eq (..), Functor (..), Int, Maybe (..), Monad (..), Num (..),
+       Ord (..), Show (..), id, seq, showParen, showString, uncurry, ($), (.))
 
 import Control.Applicative (Applicative (..), (<$>))
 import Control.DeepSeq     (NFData (..))
@@ -98,8 +98,8 @@ import qualified Data.Foldable    as I (Foldable (..))
 import qualified Data.Traversable as I (Traversable (..))
 import qualified Test.QuickCheck  as QC
 
-import qualified Data.Functor.WithIndex     as WI (FunctorWithIndex (..))
 import qualified Data.Foldable.WithIndex    as WI (FoldableWithIndex (..))
+import qualified Data.Functor.WithIndex     as WI (FunctorWithIndex (..))
 import qualified Data.Traversable.WithIndex as WI (TraversableWithIndex (..))
 
 #ifdef MIN_VERSION_adjunctions
@@ -505,7 +505,7 @@ take = go LE.ZS.leProof where
     go LE.ZS.LEZero _              = VNil
     go (LE.ZS.LESucc p) (x ::: xs) = x ::: go p xs
 
--- | 
+-- |
 --
 -- >>> let xs = 'a' ::: 'b' ::: 'c' ::: 'd' ::: 'e' ::: VNil
 -- >>> drop xs :: Vec N.Nat3 Char

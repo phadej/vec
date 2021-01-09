@@ -4,6 +4,7 @@
 {-# LANGUAGE DeriveFunctor     #-}
 {-# LANGUAGE DeriveTraversable #-}
 {-# LANGUAGE FlexibleContexts  #-}
+{-# LANGUAGE Safe              #-}
 {-# LANGUAGE TypeFamilies      #-}
 module Data.RAList.Tree.Internal (
     Leaf (..),

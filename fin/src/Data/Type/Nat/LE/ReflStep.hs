@@ -5,6 +5,7 @@
 {-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE GADTs                 #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE Safe                  #-}
 {-# LANGUAGE ScopedTypeVariables   #-}
 {-# LANGUAGE StandaloneDeriving    #-}
 {-# LANGUAGE TypeOperators         #-}
@@ -35,15 +36,15 @@ module Data.Type.Nat.LE.ReflStep (
     proofZeroLEZero,
     ) where
 
-import Data.Type.Dec      (Dec (..), Decidable (..), Neg)
-import Data.Type.Equality ((:~:) (..))
-import Data.Typeable      (Typeable)
-import Data.Void          (absurd)
+import Data.Type.Dec (Dec (..), Decidable (..), Neg)
+import Data.Typeable (Typeable)
+import Data.Void     (absurd)
 
 import qualified Control.Category as C
 
 import           Data.Type.Nat
-import qualified Data.Type.Nat.LE as ZeroSucc
+import qualified Data.Type.Nat.LE  as ZeroSucc
+import           TrustworthyCompat
 
 -------------------------------------------------------------------------------
 -- Proof

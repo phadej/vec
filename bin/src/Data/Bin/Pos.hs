@@ -6,6 +6,7 @@
 {-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE GADTs                  #-}
 {-# LANGUAGE KindSignatures         #-}
+{-# LANGUAGE Safe                   #-}
 {-# LANGUAGE ScopedTypeVariables    #-}
 {-# LANGUAGE StandaloneDeriving     #-}
 {-# LANGUAGE UndecidableInstances   #-}
@@ -38,7 +39,7 @@ import Numeric.Natural (Natural)
 
 import qualified Data.BinP.PosP  as PP
 import qualified Data.Type.Bin   as B
-import qualified Data.Type.BinP   as BP
+import qualified Data.Type.BinP  as BP
 import qualified Test.QuickCheck as QC
 
 import Data.Type.Bin

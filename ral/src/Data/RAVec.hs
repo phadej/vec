@@ -7,6 +7,7 @@
 {-# LANGUAGE GADTs                 #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE RankNTypes            #-}
+{-# LANGUAGE Safe                  #-}
 {-# LANGUAGE ScopedTypeVariables   #-}
 {-# LANGUAGE StandaloneDeriving    #-}
 {-# LANGUAGE TypeFamilies          #-}
@@ -44,6 +45,9 @@ module Data.RAVec (
     foldr,
     ifoldr,
 
+    -- * Special folds
+    null,
+
     -- * Mapping
     map,
     imap,
@@ -68,7 +72,8 @@ module Data.RAVec (
     )  where
 
 import Prelude
-       (Bool (..), Eq (..), Functor (..), Int, Maybe (..), Ord (..), Show, ($), (.))
+       (Bool (..), Eq (..), Functor (..), Int, Maybe (..), Ord (..), Show, ($),
+       (.))
 
 import Control.Applicative (Applicative (..), (<$>))
 import Control.DeepSeq     (NFData (..))
@@ -79,7 +84,6 @@ import Data.List.NonEmpty  (NonEmpty (..))
 import Data.Monoid         (Monoid (..))
 import Data.Semigroup      (Semigroup (..))
 import Data.Type.Bin       (SBin (..), SBinI (..), SBinPI (..))
-import Data.Type.Equality  ((:~:) (..))
 import Data.Typeable       (Typeable)
 
 import qualified Data.RAVec.NonEmpty as NE
@@ -89,8 +93,8 @@ import qualified Data.Foldable    as I (Foldable (..))
 import qualified Data.Traversable as I (Traversable (..))
 import qualified Test.QuickCheck  as QC
 
-import qualified Data.Functor.WithIndex     as WI (FunctorWithIndex (..))
 import qualified Data.Foldable.WithIndex    as WI (FoldableWithIndex (..))
+import qualified Data.Functor.WithIndex     as WI (FunctorWithIndex (..))
 import qualified Data.Traversable.WithIndex as WI (TraversableWithIndex (..))
 
 #ifdef MIN_VERSION_distributive
@@ -109,6 +113,7 @@ import qualified Data.Semigroup.Traversable as I (Traversable1 (..))
 #endif
 
 import Data.RAVec.NonEmpty (NERAVec (..))
+import TrustworthyCompat
 
 -- $setup
 -- >>> :set -XScopedTypeVariables -XDataKinds
@@ -474,5 +479,5 @@ instance QC.CoArbitrary a => QC.CoArbitrary (RAVec b a) where
 
 instance (B.SBinI b, QC.Function a) => QC.Function (RAVec b a) where
     function = case B.sbin :: B.SBin b of
-        SBZ -> QC.functionMap (\Empty -> ())       (\() -> Empty) 
+        SBZ -> QC.functionMap (\Empty -> ())       (\() -> Empty)
         SBP -> QC.functionMap (\(NonEmpty r) -> r) NonEmpty

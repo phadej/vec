@@ -1,5 +1,6 @@
-{-# LANGUAGE CPP        #-}
-{-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE CPP         #-}
+{-# LANGUAGE RankNTypes  #-}
+{-# LANGUAGE Trustworthy #-}
 -- | A small module defining the least you need to support
 -- van-Laarhoven lenses without depending on @lens@ or @microlens@ or ...
 --

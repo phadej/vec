@@ -3,6 +3,7 @@
 - `SNat` is now what was called `InlineInduction`.
   To migrate code from `fin-0.1` to `fin-0.2` it's often enough to
   replace `InlineInduction` with `SNatI`, and `inlineInduction` with `induction`. 
+- Explicitly mark all modules as Safe or Trustworthy.
 
 ## 0.1.2
 

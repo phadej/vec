@@ -5,6 +5,7 @@
 {-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE GADTs                  #-}
 {-# LANGUAGE RankNTypes             #-}
+{-# LANGUAGE Safe                   #-}
 {-# LANGUAGE ScopedTypeVariables    #-}
 {-# LANGUAGE TypeFamilies           #-}
 -- | Depth indexed perfect tree as data family.
@@ -90,8 +91,8 @@ import qualified Data.Foldable    as I (Foldable (..))
 import qualified Data.Traversable as I (Traversable (..))
 import qualified Test.QuickCheck  as QC
 
-import qualified Data.Functor.WithIndex     as WI (FunctorWithIndex (..))
 import qualified Data.Foldable.WithIndex    as WI (FoldableWithIndex (..))
+import qualified Data.Functor.WithIndex     as WI (FunctorWithIndex (..))
 import qualified Data.Traversable.WithIndex as WI (TraversableWithIndex (..))
 
 #ifdef MIN_VERSION_distributive

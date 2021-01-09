@@ -1,3 +1,4 @@
+{-# LANGUAGE Safe #-}
 module Data.RAList.Tree (
     Leaf (..),
     Node (..),

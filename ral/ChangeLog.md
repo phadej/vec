@@ -4,6 +4,7 @@
 
 - `fin-0.2` support
 - Add `indexed-traversable` instances
+- Explicitly mark all modules as Safe or Trustworthy.
 
 ## 0.1.1
 

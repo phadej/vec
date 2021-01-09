@@ -1,3 +1,4 @@
+{-# LANGUAGE Safe #-}
 module Data.Type.Dec (
     -- * Types
     Neg,

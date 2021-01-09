@@ -6,6 +6,7 @@
 {-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE GADTs                  #-}
 {-# LANGUAGE RankNTypes             #-}
+{-# LANGUAGE Safe                   #-}
 {-# LANGUAGE ScopedTypeVariables    #-}
 {-# LANGUAGE StandaloneDeriving     #-}
 {-# LANGUAGE TypeFamilies           #-}
@@ -69,8 +70,8 @@ module Data.RAVec.Tree (
     ) where
 
 import Prelude
-       (Bool (..), Eq (..), Functor (..), Int, Ord (..), Show, id, seq,
-       uncurry, ($), (+), Num, (*), (.))
+       (Bool (..), Eq (..), Functor (..), Int, Num, Ord (..), Show, id, seq,
+       uncurry, ($), (*), (+), (.))
 
 import Control.Applicative (Applicative (..), (<$>))
 import Control.DeepSeq     (NFData (..))

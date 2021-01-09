@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP                  #-}
 {-# LANGUAGE DataKinds            #-}
 {-# LANGUAGE DeriveDataTypeable   #-}
 {-# LANGUAGE FlexibleContexts     #-}
@@ -8,6 +9,11 @@
 {-# LANGUAGE TypeFamilies         #-}
 {-# LANGUAGE TypeOperators        #-}
 {-# LANGUAGE UndecidableInstances #-}
+#if MIN_VERSION_base(4,8,0)
+{-# LANGUAGE Safe                 #-}
+#else
+{-# LANGUAGE Trustworthy          #-}
+#endif
 -- | Binary natural numbers. @DataKinds@ stuff.
 module Data.Type.Bin (
     -- * Singleton
@@ -43,17 +49,18 @@ module Data.Type.Bin (
     Bin0, Bin1, Bin2, Bin3, Bin4, Bin5, Bin6, Bin7, Bin8, Bin9,
     ) where
 
-import Data.Bin           (Bin (..), BinP (..))
-import Data.Nat           (Nat (..))
-import Data.Proxy         (Proxy (..))
-import Data.Type.Equality ((:~:) (..), TestEquality (..))
-import Data.Typeable      (Typeable)
-import Numeric.Natural    (Natural)
-import Data.Type.BinP (SBinP (..), SBinPI (..))
+import Data.Bin        (Bin (..), BinP (..))
+import Data.Nat        (Nat (..))
+import Data.Proxy      (Proxy (..))
+import Data.Type.BinP  (SBinP (..), SBinPI (..))
+import Data.Typeable   (Typeable)
+import Numeric.Natural (Natural)
 
-import qualified Data.Type.Nat as N
-import qualified GHC.TypeLits  as GHC
 import qualified Data.Type.BinP as BP
+import qualified Data.Type.Nat  as N
+import qualified GHC.TypeLits   as GHC
+
+import TrustworthyCompat
 
 -- $setup
 -- >>> :set -XDataKinds
@@ -288,7 +295,7 @@ type family Mult2Plus1 (b :: Bin) :: BinP where
 -- >>> :kind! Succ Bin5
 -- Succ Bin5 :: Bin
 -- = 'BP ('B0 ('B1 'BE))
--- 
+--
 -- @
 -- `Succ`   :: 'Bin' -> 'Bin'
 -- `Succ'`  :: 'Bin' -> 'BinP'
