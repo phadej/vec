@@ -90,6 +90,10 @@ import qualified Data.Foldable    as I (Foldable (..))
 import qualified Data.Traversable as I (Traversable (..))
 import qualified Test.QuickCheck  as QC
 
+import qualified Data.Functor.WithIndex     as WI (FunctorWithIndex (..))
+import qualified Data.Foldable.WithIndex    as WI (FoldableWithIndex (..))
+import qualified Data.Traversable.WithIndex as WI (TraversableWithIndex (..))
+
 #ifdef MIN_VERSION_distributive
 import qualified Data.Distributive as I (Distributive (..))
 
@@ -188,6 +192,18 @@ instance (N.SNatI n) => I.Traversable1 (Tree n) where
 instance N.SNatI n => I.Traversable (Tree n) where
     traverse = traverse
 
+-- | @since 0.2
+instance N.SNatI n => WI.FunctorWithIndex (Wrd n) (Tree n) where
+    imap = imap
+
+-- | @since 0.2
+instance N.SNatI n => WI.FoldableWithIndex (Wrd n) (Tree n) where
+    ifoldMap = ifoldMap
+    ifoldr   = ifoldr
+
+-- | @since 0.2
+instance N.SNatI n => WI.TraversableWithIndex (Wrd n) (Tree n) where
+    itraverse = itraverse
 
 instance (NFData a, N.SNatI n) => NFData (Tree n a) where
     rnf = getRnf (N.induction1 z s) where

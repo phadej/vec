@@ -1,5 +1,10 @@
 # Revision history for vec
 
+## 0.4
+
+- Support `fin-0.2`
+- Add `indexed-traversable` instances
+
 ## 0.3.0.1
 
 - Fix `product`

@@ -89,6 +89,10 @@ import qualified Data.Foldable    as I (Foldable (..))
 import qualified Data.Traversable as I (Traversable (..))
 import qualified Test.QuickCheck  as QC
 
+import qualified Data.Functor.WithIndex     as WI (FunctorWithIndex (..))
+import qualified Data.Foldable.WithIndex    as WI (FoldableWithIndex (..))
+import qualified Data.Traversable.WithIndex as WI (TraversableWithIndex (..))
+
 #ifdef MIN_VERSION_distributive
 import qualified Data.Distributive as I (Distributive (..))
 
@@ -148,6 +152,19 @@ instance I.Foldable (RAVec b) where
 
 instance I.Traversable (RAVec b) where
     traverse = traverse
+
+-- | @since 0.2
+instance WI.FunctorWithIndex (Pos n) (RAVec n) where
+    imap = imap
+
+-- | @since 0.2
+instance WI.FoldableWithIndex (Pos n) (RAVec n) where
+    ifoldMap = ifoldMap
+    ifoldr   = ifoldr
+
+-- | @since 0.2
+instance WI.TraversableWithIndex (Pos n) (RAVec n) where
+    itraverse = itraverse
 
 #ifdef MIN_VERSION_semigroupoids
 instance b ~ 'BP n => I.Foldable1 (RAVec b) where

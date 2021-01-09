@@ -1,11 +1,12 @@
-{-# LANGUAGE CPP                 #-}
-{-# LANGUAGE DeriveFoldable      #-}
-{-# LANGUAGE DeriveFunctor       #-}
-{-# LANGUAGE DeriveTraversable   #-}
-{-# LANGUAGE FlexibleContexts    #-}
-{-# LANGUAGE InstanceSigs        #-}
-{-# LANGUAGE KindSignatures      #-}
-{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE CPP                   #-}
+{-# LANGUAGE DeriveFoldable        #-}
+{-# LANGUAGE DeriveFunctor         #-}
+{-# LANGUAGE DeriveTraversable     #-}
+{-# LANGUAGE FlexibleContexts      #-}
+{-# LANGUAGE InstanceSigs          #-}
+{-# LANGUAGE KindSignatures        #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE ScopedTypeVariables   #-}
 module Data.RAList.Internal (
     RAList (..),
     -- * Showing
@@ -47,6 +48,10 @@ import Data.Semigroup      (Semigroup (..))
 import qualified Data.Foldable    as I (Foldable (..))
 import qualified Data.Traversable as I (Traversable (..))
 import qualified Test.QuickCheck  as QC
+
+import qualified Data.Foldable.WithIndex    as WI (FoldableWithIndex (..))
+import qualified Data.Functor.WithIndex     as WI (FunctorWithIndex (..))
+import qualified Data.Traversable.WithIndex as WI (TraversableWithIndex (..))
 
 import qualified Data.RAList.NonEmpty.Internal as NE
 
@@ -109,6 +114,19 @@ instance Monoid (RAList a) where
 #ifdef MIN_VERSION_semigroupoids
 -- Apply, Bind
 #endif
+
+-- | @since 0.2
+instance WI.FunctorWithIndex Int RAList where
+    imap = imap
+
+-- | @since 0.2
+instance WI.FoldableWithIndex Int RAList where
+    ifoldMap = ifoldMap
+    -- ifoldr   = ifoldr -- TODO, PR welcome!
+
+-- | @since 0.2
+instance WI.TraversableWithIndex Int RAList where
+    itraverse = itraverse
 
 -------------------------------------------------------------------------------
 -- Showing
