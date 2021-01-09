@@ -131,6 +131,10 @@ import qualified Data.Foldable    as I (Foldable (..))
 import qualified Data.Traversable as I (Traversable (..))
 import qualified Test.QuickCheck  as QC
 
+import qualified Data.Functor.WithIndex     as WI (FunctorWithIndex (..))
+import qualified Data.Foldable.WithIndex    as WI (FoldableWithIndex (..))
+import qualified Data.Traversable.WithIndex as WI (TraversableWithIndex (..))
+
 #ifdef MIN_VERSION_adjunctions
 import qualified Data.Functor.Rep as I (Representable (..))
 #endif
@@ -242,6 +246,18 @@ instance (N.SNatI m, n ~ 'S m) => I.Traversable1 (Vec n) where
 instance N.SNatI n => I.Traversable (Vec n) where
     traverse = traverse
 
+-- | @since 0.4
+instance N.SNatI n => WI.FunctorWithIndex (Fin n) (Vec n) where
+    imap = imap
+
+-- | @since 0.4
+instance N.SNatI n => WI.FoldableWithIndex (Fin n) (Vec n) where
+    ifoldMap = ifoldMap
+    ifoldr   = ifoldr
+
+-- | @since 0.4
+instance N.SNatI n => WI.TraversableWithIndex (Fin n) (Vec n) where
+    itraverse = itraverse
 
 instance (NFData a, N.SNatI n) => NFData (Vec n a) where
     rnf = getRnf (N.induction1 z s) where

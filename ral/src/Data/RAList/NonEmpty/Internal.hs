@@ -1,12 +1,13 @@
-{-# LANGUAGE BangPatterns        #-}
-{-# LANGUAGE CPP                 #-}
-{-# LANGUAGE DeriveFoldable      #-}
-{-# LANGUAGE DeriveFunctor       #-}
-{-# LANGUAGE DeriveTraversable   #-}
-{-# LANGUAGE FlexibleContexts    #-}
-{-# LANGUAGE InstanceSigs        #-}
-{-# LANGUAGE KindSignatures      #-}
-{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE BangPatterns          #-}
+{-# LANGUAGE CPP                   #-}
+{-# LANGUAGE DeriveFoldable        #-}
+{-# LANGUAGE DeriveFunctor         #-}
+{-# LANGUAGE DeriveTraversable     #-}
+{-# LANGUAGE FlexibleContexts      #-}
+{-# LANGUAGE InstanceSigs          #-}
+{-# LANGUAGE KindSignatures        #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE ScopedTypeVariables   #-}
 module Data.RAList.NonEmpty.Internal (
     NERAList (..),
     NERAList' (..),
@@ -60,6 +61,10 @@ import qualified Data.Foldable      as I (Foldable (..))
 import qualified Data.List.NonEmpty as NEList
 import qualified Data.Traversable   as I (Traversable (..))
 import qualified Test.QuickCheck    as QC
+
+import qualified Data.Foldable.WithIndex    as WI (FoldableWithIndex (..))
+import qualified Data.Functor.WithIndex     as WI (FunctorWithIndex (..))
+import qualified Data.Traversable.WithIndex as WI (TraversableWithIndex (..))
 
 #ifdef MIN_VERSION_semigroupoids
 import Data.Functor.Apply (Apply (..))
@@ -165,6 +170,19 @@ instance Semigroup (NERAList a) where
 #ifdef MIN_VERSION_semigroupoids
 -- Apply, Bind
 #endif
+
+-- | @since 0.2
+instance WI.FunctorWithIndex Int NERAList where
+    imap = imap
+
+-- | @since 0.2
+instance WI.FoldableWithIndex Int NERAList where
+    ifoldMap = ifoldMap
+    -- ifoldr   = ifoldr -- TODO, PR welcome!
+
+-- | @since 0.2
+instance WI.TraversableWithIndex Int NERAList where
+    itraverse = itraverse
 
 -------------------------------------------------------------------------------
 -- Showing

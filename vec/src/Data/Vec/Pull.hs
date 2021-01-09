@@ -59,8 +59,8 @@ module Data.Vec.Pull (
     ) where
 
 import Prelude
-       (Bool (..), Eq (..), Functor (..), Int, Maybe (..), Monad (..),
-       Num (..), all, const, id, maybe, ($), (.))
+       (Bool (..), Eq (..), Functor (..), Int, Maybe (..), Monad (..), Num (..),
+       all, const, id, maybe, ($), (.))
 
 import Control.Applicative (Applicative (..), (<$>))
 import Data.Fin            (Fin (..))
@@ -73,6 +73,9 @@ import Data.Typeable       (Typeable)
 
 --- Instances
 import qualified Data.Foldable as I (Foldable (..))
+
+import qualified Data.Foldable.WithIndex as WI (FoldableWithIndex (..))
+import qualified Data.Functor.WithIndex  as WI (FunctorWithIndex (..))
 
 #ifdef MIN_VERSION_adjunctions
 import qualified Data.Functor.Rep as I (Representable (..))
@@ -118,6 +121,15 @@ instance Functor (Vec n) where
 
 instance N.SNatI n => I.Foldable (Vec n) where
     foldMap = foldMap
+
+-- | @since 0.4
+instance WI.FunctorWithIndex (Fin n) (Vec n) where
+    imap = imap
+
+-- | @since 0.4
+instance N.SNatI n => WI.FoldableWithIndex (Fin n) (Vec n) where
+    ifoldMap = ifoldMap
+    ifoldr   = ifoldr
 
 #ifdef MIN_VERSION_semigroupoids
 instance (N.SNatI m, n ~ 'S m)  => I.Foldable1 (Vec n) where
