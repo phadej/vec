@@ -66,17 +66,26 @@ deriving instance Typeable 'B0
 deriving instance Typeable 'B1
 #endif
 
--- | >>> sort [1 .. 9 :: BinP]
+-- |
+--
+-- >>> sort [ 1 .. 9 :: BinP ]
 -- [1,2,3,4,5,6,7,8,9]
 --
+-- >>> sort $ reverse [ 1 .. 9 :: BinP ]
+-- [1,2,3,4,5,6,7,8,9]
+--
+-- >>> sort $ [ 1 .. 9 ] ++ [ 1 .. 9 :: BinP ]
+-- [1,1,2,2,3,3,4,4,5,5,6,6,7,7,8,8,9,9]
+--
 instance Ord BinP where
-    compare BE     BE     = EQ
-    compare BE     _      = LT
-    compare _      BE     = GT
-    compare (B0 a) (B0 b) = compare a b
-    compare (B1 a) (B1 b) = compare a b
-    compare (B0 a) (B1 b) = compare a b `mappend` LT
-    compare (B1 a) (B0 b) = compare a b `mappend` GT
+    compare = go EQ where
+        go  acc BE     BE     = acc
+        go _acc BE     _      = LT
+        go _acc _      BE     = GT
+        go  acc (B0 a) (B0 b) = go acc a b
+        go  acc (B1 a) (B1 b) = go acc a b
+        go  acc (B0 a) (B1 b) = go LT  a b
+        go  acc (B1 a) (B0 b) = go GT  a b
 
 instance Show BinP where
     showsPrec d = showsPrec d . toNatural
