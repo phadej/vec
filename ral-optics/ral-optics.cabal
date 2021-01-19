@@ -44,7 +44,7 @@ library
     , base         >=4.9   && <4.15
     , bin          ^>=0.1
     , fin          ^>=0.2
-    , optics-core  >=0.2   && <0.4
+    , optics-core  >=0.2   && <0.5
     , ral          ^>=0.2
 
 -- dump-core

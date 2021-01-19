@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP                   #-}
 {-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE RankNTypes            #-}
@@ -28,6 +29,7 @@ ix i f (NonEmpty xs) = NonEmpty <$> NE.ix i f xs
 -- Instances
 -------------------------------------------------------------------------------
 
+#if !MIN_VERSION_lens(5,0,0)
 instance L.FunctorWithIndex Int RAList where
     imap = imap
 
@@ -36,6 +38,7 @@ instance L.FoldableWithIndex Int RAList where
 
 instance L.TraversableWithIndex Int RAList where
     itraverse = itraverse
+#endif
 
 instance L.Each (RAList a) (RAList b) a b
 

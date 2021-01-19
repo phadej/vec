@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP                   #-}
 {-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE TypeFamilies          #-}
@@ -46,6 +47,7 @@ ixVL (W1 is) f (Node x y) = (x `Node`) <$> ixVL is f y
 -- Instances
 -------------------------------------------------------------------------------
 
+#if !MIN_VERSION_optics_core(0,4,0)
 instance L.FunctorWithIndex (Wrd n) (Tree n) where
     imap = imap
 
@@ -55,6 +57,7 @@ instance L.FoldableWithIndex (Wrd n) (Tree n) where
 
 instance L.TraversableWithIndex (Wrd n) (Tree n) where
     itraverse = itraverse
+#endif
 
 instance L.Each (Wrd n) (Tree n a) (Tree n b) a b where
 

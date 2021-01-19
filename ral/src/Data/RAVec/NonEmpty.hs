@@ -189,6 +189,19 @@ instance WI.FoldableWithIndex (PosP n) (NERAVec n) where
 instance WI.TraversableWithIndex (PosP n) (NERAVec n) where
     itraverse = itraverse
 
+-- | @since 0.2
+instance WI.FunctorWithIndex (PosP' n m) (NERAVec' n m) where
+    imap = imap'
+
+-- | @since 0.2
+instance WI.FoldableWithIndex (PosP' n m) (NERAVec' n m) where
+    ifoldMap = ifoldMap'
+    ifoldr   = ifoldr'
+
+-- | @since 0.2
+instance WI.TraversableWithIndex (PosP' n m) (NERAVec' n m) where
+    itraverse = itraverse'
+
 #ifdef MIN_VERSION_semigroupoids
 instance I.Foldable1 (NERAVec b) where
     foldMap1   = foldMap1

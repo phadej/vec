@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP                   #-}
 {-# LANGUAGE DataKinds             #-}
 {-# LANGUAGE GADTs                 #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
@@ -87,9 +88,11 @@ _Vec = L.prism' toList fromList
 -- Instances
 -------------------------------------------------------------------------------
 
+#if !MIN_VERSION_lens(5,0,0)
 instance L.FunctorWithIndex (Fin n) (Vec n) where
     imap = imap
 
 instance N.SNatI n => L.FoldableWithIndex (Fin n) (Vec n) where
     ifoldMap = ifoldMap
     ifoldr   = ifoldr
+#endif

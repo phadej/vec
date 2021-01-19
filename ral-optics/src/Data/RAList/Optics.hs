@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP                   #-}
 {-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE RankNTypes            #-}
@@ -30,6 +31,7 @@ ixVL i point f (NonEmpty x) = fmap NonEmpty (NE.ixVL i point f x)
 -- Instances
 -------------------------------------------------------------------------------
 
+#if !MIN_VERSION_optics_core(0,4,0)
 instance L.FunctorWithIndex Int RAList where
     imap = imap
 
@@ -38,6 +40,7 @@ instance L.FoldableWithIndex Int RAList where
 
 instance L.TraversableWithIndex Int RAList where
     itraverse = itraverse
+#endif
 
 instance L.Each Int (RAList a) (RAList b) a b
 

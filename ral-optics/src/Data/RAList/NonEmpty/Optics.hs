@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP                   #-}
 {-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE RankNTypes            #-}
@@ -27,6 +28,7 @@ ix i = L.atraversalVL (ixVL i)
 -- Instances
 -------------------------------------------------------------------------------
 
+#if !MIN_VERSION_optics_core(0,4,0)
 instance L.FunctorWithIndex Int NERAList where
     imap = imap
 
@@ -35,6 +37,7 @@ instance L.FoldableWithIndex Int NERAList where
 
 instance L.TraversableWithIndex Int NERAList where
     itraverse = itraverse
+#endif
 
 instance L.Each Int (NERAList a) (NERAList b) a b
 

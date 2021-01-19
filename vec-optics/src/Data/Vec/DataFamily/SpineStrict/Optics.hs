@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP                   #-}
 {-# LANGUAGE DataKinds             #-}
 {-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
@@ -120,6 +121,7 @@ newtype IxLens f n a = IxLens { getIxLens :: Fin n -> LensLikeVL' f (Vec n a) a 
 -- Instances
 -------------------------------------------------------------------------------
 
+#if !MIN_VERSION_optics_core(0,4,0)
 instance N.SNatI n => L.FunctorWithIndex (Fin n) (Vec n) where
     imap = imap
 
@@ -129,6 +131,7 @@ instance N.SNatI n => L.FoldableWithIndex (Fin n) (Vec n) where
 
 instance N.SNatI n => L.TraversableWithIndex (Fin n) (Vec n) where
     itraverse = itraverse
+#endif
 
 instance N.SNatI n => L.Each (Fin n) (Vec n a) (Vec n b) a b where
 
