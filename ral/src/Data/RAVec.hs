@@ -31,6 +31,7 @@ module Data.RAVec (
     toList,
     toNonEmpty,
     fromList,
+    reifyList,
     reifyNonEmpty,
 
     -- * Indexing
@@ -117,12 +118,14 @@ import TrustworthyCompat
 
 -- $setup
 -- >>> :set -XScopedTypeVariables -XDataKinds
--- >>> import Prelude (print, Char, Bounded (..))
+-- >>> import Prelude (print, Char, Bounded (..), Maybe (..), (.), ($), Eq (..))
 -- >>> import Data.List (sort)
 -- >>> import Data.Wrd (Wrd (..))
--- >>> import Data.Bin.Pos (top, pop)
+-- >>> import Data.Bin.Pos (Pos (..), top, pop)
 -- >>> import Data.BinP.PosP (PosP (..), PosP' (..))
+-- >>> import Data.List.NonEmpty (NonEmpty (..))
 -- >>> import qualified Data.Bin.Pos as P
+-- >>> import qualified Data.Type.Bin as B
 
 -------------------------------------------------------------------------------
 -- Random access vec

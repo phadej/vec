@@ -83,7 +83,11 @@ import TrustworthyCompat
 
 -- $setup
 -- >>> :set -XTypeOperators -XDataKinds
--- >>> import Data.Type.Dec (decShow)
+-- >>> import qualified GHC.TypeLits as GHC
+-- >>> import Data.Type.Dec (Dec (..), decShow)
+-- >>> import Data.Type.Equality
+-- >>> import Control.Applicative (Const (..))
+-- >>> import Data.Coerce (coerce)
 
 -------------------------------------------------------------------------------
 -- SNat

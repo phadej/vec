@@ -54,6 +54,8 @@ import Data.Type.BinP
 -- $setup
 -- >>> import Prelude (map, putStrLn)
 -- >>> import Data.Foldable (traverse_)
+-- >>> import qualified Data.Type.Nat as N
+-- >>> import Data.Type.BinP
 
 -------------------------------------------------------------------------------
 -- Data

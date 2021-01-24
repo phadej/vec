@@ -129,7 +129,9 @@ import qualified Data.Type.Nat.LE.ReflStep as LE.RS
 -- $setup
 -- >>> :set -XScopedTypeVariables
 -- >>> import Data.Proxy (Proxy (..))
--- >>> import Prelude (Char, not, uncurry)
+-- >>> import Prelude (Char, not, uncurry, Bool (..), Maybe (..), ($), (<$>), id, (.), Int)
+-- >>> import qualified Data.Type.Nat as N
+-- >>> import Data.Fin (Fin (..))
 
 -------------------------------------------------------------------------------
 -- Type

@@ -56,6 +56,9 @@ import Data.Void          (absurd)
 import Data.Type.Nat
 import TrustworthyCompat
 
+-- $setup
+-- >>> import Data.Type.Nat
+
 -------------------------------------------------------------------------------
 -- Proof
 -------------------------------------------------------------------------------

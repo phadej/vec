@@ -56,6 +56,8 @@ import qualified Data.Bits as I (Bits (..), FiniteBits (..))
 
 -- $setup
 -- >>> :set -XDataKinds
+-- >>> import Data.Nat (Nat(..))
+-- >>> import qualified Data.Type.Nat as N
 
 -------------------------------------------------------------------------------
 -- Data

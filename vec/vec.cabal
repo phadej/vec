@@ -160,6 +160,7 @@ library
     ghc-options: -Winferred-safe-imports -Wmissing-safe-haskell-mode
 
   x-docspec-extra-packages: void
+  x-docspec-extra-packages: lens
 
 test-suite inspection
   type:             exitcode-stdio-1.0

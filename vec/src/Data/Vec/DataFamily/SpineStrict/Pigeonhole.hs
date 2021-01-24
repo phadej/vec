@@ -58,6 +58,10 @@ import Control.Monad.Trans.Instances ()
 -- >>> import Data.Void (absurd)
 -- >>> import GHC.Generics (Generic, Generic1)
 -- >>> import Prelude (Int, Show, Char, Integer)
+-- >>> import Data.Proxy (Proxy (..))
+-- >>> import qualified Control.Lens as Lens
+-- >>> import Data.Fin (Fin (..))
+-- >>> import Data.Vec.DataFamily.SpineStrict (Vec (..))
 
 -------------------------------------------------------------------------------
 -- Class
@@ -166,12 +170,6 @@ gix i = fusing $ \ab ta -> gto <$> ix (F.gfrom i) ab (gfrom ta)
 -------------------------------------------------------------------------------
 
 -- | Index lens.
---
--- >>> Lens.view (ix (FS FZ)) ('a' ::: 'b' ::: 'c' ::: VNil)
--- 'b'
---
--- >>> Lens.set (ix (FS FZ)) 'x' ('a' ::: 'b' ::: 'c' ::: VNil)
--- 'a' ::: 'x' ::: 'c' ::: VNil
 --
 ix :: forall n f a. (N.SNatI n, Functor f) => Fin n -> Lens.LensLike' f (Vec n a) a
 ix = getIxLens $ N.induction1 start step where

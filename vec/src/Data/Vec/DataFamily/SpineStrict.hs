@@ -160,7 +160,10 @@ import qualified Data.Vec.Pull as P
 -- $setup
 -- >>> :set -XScopedTypeVariables -XDataKinds
 -- >>> import Data.Proxy (Proxy (..))
--- >>> import Prelude (Char, not, uncurry, error)
+-- >>> import Prelude (Char, not, uncurry, error, Eq (..), Ord (..), Bool (..), Maybe (..), ($), (<$>), id, (.), Int)
+-- >>> import qualified Data.Type.Nat as N
+-- >>> import Data.Fin (Fin (..))
+-- >>> import Data.Nat (Nat (..))
 
 -------------------------------------------------------------------------------
 -- Type

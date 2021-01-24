@@ -31,6 +31,7 @@ import Data.Vec.Lazy.Inline
 -- >>> import Data.Fin (Fin (..))
 -- >>> import Prelude (Maybe (..), Char, Bool (..))
 -- >>> import Control.Lens ((^.), (&), (.~), over, (^?), (#))
+-- >>> import qualified Data.Type.Nat as N
 
 -------------------------------------------------------------------------------
 -- Indexing

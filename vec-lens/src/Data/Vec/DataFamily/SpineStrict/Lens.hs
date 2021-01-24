@@ -33,6 +33,9 @@ import Data.Vec.DataFamily.SpineStrict
 -- >>> :set -XScopedTypeVariables
 -- >>> import Prelude (Maybe (..), Char, Bool (..))
 -- >>> import Control.Lens ((^.), (&), (.~), over, (^?), (#))
+-- >>> import qualified Data.Type.Nat as N
+-- >>> import Data.Fin (Fin (..))
+-- >>> import Data.Vec.DataFamily.SpineStrict
 
 -------------------------------------------------------------------------------
 -- Indexing

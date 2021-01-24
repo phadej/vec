@@ -45,8 +45,9 @@ import qualified Test.QuickCheck as QC
 import Data.Type.Bin
 
 -- $setup
--- >>> import Prelude (map, putStrLn)
+-- >>> import Prelude (map, putStrLn, Ord (..), Bounded (..), ($), (.))
 -- >>> import Data.Foldable (traverse_)
+-- >>> import Data.Type.Bin
 
 -------------------------------------------------------------------------------
 -- Data

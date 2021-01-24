@@ -69,6 +69,11 @@ import qualified Test.QuickCheck       as QC
 
 -- $setup
 -- >>> import Data.List (genericLength)
+-- >>> import Data.List.NonEmpty (NonEmpty (..))
+-- >>> import Numeric.Natural (Natural)
+-- >>> import qualified Data.Type.Nat as N
+-- >>> import qualified Data.Universe.Class as U
+-- >>> import qualified Data.Universe.Helpers as U
 
 -------------------------------------------------------------------------------
 -- Type

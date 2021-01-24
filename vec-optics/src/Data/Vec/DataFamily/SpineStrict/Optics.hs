@@ -33,6 +33,9 @@ import Data.Vec.DataFamily.SpineStrict
 -- >>> :set -XScopedTypeVariables
 -- >>> import Prelude (Maybe (..), Char, Bool (..))
 -- >>> import Optics.Core (over, view, set, (%), review, preview)
+-- >>> import Data.Fin (Fin (..))
+-- >>> import qualified Data.Type.Nat as N
+-- >>> import Data.Vec.DataFamily.SpineStrict
 
 type LensLikeVL f s t a b = (a -> f b) -> s -> f t
 type LensLikeVL' f s a = LensLikeVL f s s a a

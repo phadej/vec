@@ -34,6 +34,7 @@ import Data.Vec.Lazy
 -- >>> import Data.Vec.Lazy
 -- >>> import Prelude (Maybe (..), Char, Bool (..))
 -- >>> import Optics.Core (over, view, set, (%), review, preview)
+-- >>> import qualified Data.Type.Nat as N
 
 type LensLikeVL f s t a b = (a -> f b) -> s -> f t
 type LensLikeVL' f s a = LensLikeVL f s s a a

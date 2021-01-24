@@ -21,6 +21,9 @@ module Data.Type.Nat.LT (
 import Data.Type.Nat
 import Data.Type.Nat.LE
 
+-- $setup
+-- >>> import Data.Type.Nat
+
 -- | An evidence \(n < m\) which is the same as (\1 + n \le m\).
 type LTProof n m = LEProof ('S n) m
 

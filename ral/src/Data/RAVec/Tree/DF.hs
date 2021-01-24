@@ -113,7 +113,9 @@ import qualified Data.Semigroup.Traversable as I (Traversable1 (..))
 -- $setup
 -- >>> :set -XScopedTypeVariables
 -- >>> import Data.Proxy (Proxy (..))
--- >>> import Prelude (Char, not, uncurry, flip, error)
+-- >>> import Prelude (Char, not, uncurry, flip, error, ($), Bool (..), id)
+-- >>> import Data.Wrd (Wrd (..))
+-- >>> import qualified Data.Type.Nat as N
 
 -------------------------------------------------------------------------------
 -- Types

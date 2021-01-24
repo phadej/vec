@@ -66,6 +66,10 @@ import TrustworthyCompat
 -- >>> :set -XDataKinds
 -- >>> import Data.Bin
 -- >>> import Data.Type.BinP (BinP2, BinP3)
+-- >>> import Data.Nat (Nat (..))
+-- >>> import qualified Data.Type.BinP as BP
+-- >>> import qualified Data.Type.Nat as N
+-- >>> import qualified GHC.TypeLits as GHC
 
 -------------------------------------------------------------------------------
 -- Singletons

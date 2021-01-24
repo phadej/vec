@@ -100,8 +100,10 @@ import qualified Data.Type.Nat as N
 -- $setup
 -- >>> :set -XScopedTypeVariables
 -- >>> import Data.Proxy (Proxy (..))
--- >>> import Prelude (Char, Bool (..), not)
+-- >>> import Prelude (Char, Bool (..), not, Maybe (..), (<$>), ($))
 -- >>> import qualified Data.Vec.Lazy as L
+-- >>> import qualified Data.Type.Nat as N
+-- >>> import Data.Fin (Fin (..))
 
 -------------------------------------------------------------------------------
 -- Type
