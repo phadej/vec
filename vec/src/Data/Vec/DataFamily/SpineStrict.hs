@@ -63,6 +63,7 @@ module Data.Vec.DataFamily.SpineStrict (
     toPull,
     fromPull,
     toList,
+    toNonEmpty,
     fromList,
     fromListPrefix,
     reifyList,
@@ -72,7 +73,9 @@ module Data.Vec.DataFamily.SpineStrict (
     cons,
     snoc,
     head,
+    last,
     tail,
+    init,
     -- * Reverse
     reverse,
     -- * Concatenation and splitting
@@ -123,6 +126,7 @@ import Prelude
 import Control.Applicative (Applicative (..), liftA2, (<$>))
 import Control.DeepSeq     (NFData (..))
 import Data.Fin            (Fin (..))
+import Data.List.NonEmpty  (NonEmpty (..))
 import Data.Hashable       (Hashable (..))
 import Data.Monoid         (Monoid (..))
 import Data.Nat            (Nat (..))
@@ -451,6 +455,15 @@ toList = getToList (N.induction1 start step) where
 
 newtype ToList n a = ToList { getToList :: Vec n a -> [a] }
 
+-- |
+--
+-- >>> toNonEmpty $ 1 ::: 2 ::: 3 ::: VNil
+-- 1 :| [2,3]
+--
+-- @since 0.4
+toNonEmpty :: forall n a. N.SNatI n => Vec ('S n) a -> NonEmpty a
+toNonEmpty (x ::: xs) = x :| toList xs
+
 -- | Convert list @[a]@ to @'Vec' n a@.
 -- Returns 'Nothing' if lengths don't match exactly.
 --
@@ -560,6 +573,33 @@ head (x ::: _) = x
 -- | The elements after the 'head' of a 'Vec'.
 tail :: Vec ('S n) a -> Vec n a
 tail (_ ::: xs) = xs
+
+-- | The last element of a 'Vec'.
+--
+-- @since 0.4
+last :: forall n a. N.SNatI n => Vec ('S n) a -> a
+last xs = getLast (N.induction1 start step) xs where
+    start :: Last 'Z a
+    start = Last $ \(x:::VNil) -> x
+    
+    step :: Last m a -> Last ('S m) a
+    step (Last rec) = Last $ \(_ ::: ys) -> rec ys
+    
+
+newtype Last n a = Last { getLast :: Vec ('S n) a -> a }
+
+-- | The elements before the 'last' of a 'Vec'.
+--
+-- @since 0.4
+init :: forall n a. N.SNatI n => Vec ('S n) a -> Vec n a
+init xs = getInit (N.induction1 start step) xs where
+    start :: Init 'Z a
+    start = Init (const VNil)
+    
+    step :: Init m a -> Init ('S m) a
+    step (Init rec) = Init $ \(y ::: ys) -> y ::: rec ys
+
+newtype Init n a = Init { getInit :: Vec ('S n) a -> Vec n a}
 
 -------------------------------------------------------------------------------
 -- Reverse

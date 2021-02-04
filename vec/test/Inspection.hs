@@ -6,6 +6,7 @@ module Inspection where
 import Prelude hiding (zipWith)
 
 import Data.Fin        (Fin (..))
+import Data.List.NonEmpty (NonEmpty (..))
 import Data.Vec.Lazy   (Vec (..))
 import Test.Inspection
 
@@ -119,3 +120,51 @@ rhsReverse = 'a' ::: 'b' ::: 'c' ::: VNil
 
 inspect $ 'lhsReverse  === 'rhsReverse
 inspect $ 'lhsReverse' =/= 'rhsReverse
+
+-------------------------------------------------------------------------------
+-- last
+-------------------------------------------------------------------------------
+
+lhsLast :: Char
+lhsLast = I.last $ 'a' ::: 'b' ::: 'c' ::: VNil
+
+lhsLast' :: Char
+lhsLast' = L.last $ 'a' ::: 'b' ::: 'c' :::VNil
+
+rhsLast :: Char 
+rhsLast = 'c'
+
+inspect $ 'lhsLast === 'rhsLast
+inspect $ 'lhsLast' =/= 'rhsLast
+
+-------------------------------------------------------------------------------
+-- init
+-------------------------------------------------------------------------------
+
+lhsInit :: Vec N.Nat2 Char
+lhsInit = I.init $ 'a' ::: 'b' ::: 'c' ::: VNil
+
+lhsInit' :: Vec N.Nat2 Char
+lhsInit' = L.init $ 'a' ::: 'b' ::: 'c' ::: VNil
+
+rhsInit :: Vec N.Nat2 Char
+rhsInit = 'a' ::: 'b' ::: VNil
+
+inspect $ 'lhsInit  === 'rhsInit
+inspect $ 'lhsInit' =/= 'rhsInit
+
+-------------------------------------------------------------------------------
+-- toNonEmpty
+-------------------------------------------------------------------------------
+
+lhsToNonEmpty :: NonEmpty Char
+lhsToNonEmpty = I.toNonEmpty $ 'a' ::: 'b' ::: 'c' ::: VNil
+
+lhsToNonEmpty' :: NonEmpty Char
+lhsToNonEmpty' = L.toNonEmpty $ 'a' ::: 'b' ::: 'c' ::: VNil
+
+rhsToNonEmpty :: NonEmpty Char
+rhsToNonEmpty = 'a' :| ['b', 'c']
+
+inspect $ 'lhsToNonEmpty  === 'rhsToNonEmpty
+inspect $ 'lhsToNonEmpty' =/= 'rhsToNonEmpty

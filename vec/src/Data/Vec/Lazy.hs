@@ -23,6 +23,7 @@ module Data.Vec.Lazy (
     toPull,
     fromPull,
     toList,
+    toNonEmpty,
     fromList,
     fromListPrefix,
     reifyList,
@@ -32,7 +33,9 @@ module Data.Vec.Lazy (
     cons,
     snoc,
     head,
+    last,
     tail,
+    init,
     -- * Reverse
     reverse,
     -- * Concatenation and splitting
@@ -88,6 +91,7 @@ import Control.DeepSeq     (NFData (..))
 import Control.Lens.Yocto  ((<&>))
 import Data.Fin            (Fin (..))
 import Data.Hashable       (Hashable (..))
+import Data.List.NonEmpty  (NonEmpty (..))
 import Data.Monoid         (Monoid (..))
 import Data.Nat            (Nat (..))
 import Data.Semigroup      (Semigroup (..))
@@ -363,6 +367,15 @@ toList :: Vec n a -> [a]
 toList VNil       = []
 toList (x ::: xs) = x : toList xs
 
+-- |  
+--
+-- >>> toNonEmpty $ 1 ::: 2 ::: 3 ::: VNil
+-- 1 :| [2,3]
+--
+-- @since 0.4
+toNonEmpty :: Vec ('S n) a -> NonEmpty a
+toNonEmpty (x ::: xs) = x :| toList xs
+
 -- | Convert list @[a]@ to @'Vec' n a@.
 -- Returns 'Nothing' if lengths don't match exactly.
 --
@@ -456,9 +469,23 @@ snoc (y ::: ys) x = y ::: snoc ys x
 head :: Vec ('S n) a -> a
 head (x ::: _) = x
 
+-- | The last element of a 'Vec'.
+--
+-- @since 0.4
+last :: Vec ('S n) a -> a
+last (x ::: VNil) = x
+last (_ ::: xs@(_ ::: _)) = last xs
+
 -- | The elements after the 'head' of a 'Vec'.
 tail :: Vec ('S n) a -> Vec n a
 tail (_ ::: xs) = xs
+
+-- | The elements before the 'last' of a 'Vec'.
+--
+-- @since 0.4
+init :: Vec ('S n) a -> Vec n a
+init (_ ::: VNil) = VNil
+init (x ::: xs@(_ ::: _)) = x ::: init xs
 
 -------------------------------------------------------------------------------
 -- Reverse

@@ -6,6 +6,7 @@
 - Add `indexed-traversable` instances
 - Explicitly mark all modules as Safe or Trustworthy.
 - Add `Eq1`, `Ord1` and `Show1` instances
+- Add `init`, `last` and `toNonEmpty`
 
 ## 0.3.0.1
 
