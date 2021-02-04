@@ -23,6 +23,7 @@ module Data.Vec.Lazy.Inline (
     toPull,
     fromPull,
     toList,
+    toNonEmpty,
     fromList,
     fromListPrefix,
     reifyList,
@@ -32,7 +33,9 @@ module Data.Vec.Lazy.Inline (
     cons,
     snoc,
     head,
+    last,
     tail,
+    init,
     -- * Concatenation and splitting
     (++),
     split,
@@ -79,6 +82,7 @@ import Prelude (Int, Maybe (..), Num (..), const, flip, id, ($), (.))
 
 import Control.Applicative (Applicative (pure, (*>)), liftA2, (<$>))
 import Data.Fin            (Fin (..))
+import Data.List.NonEmpty  (NonEmpty (..))
 import Data.Monoid         (Monoid (..))
 import Data.Nat            (Nat (..))
 import Data.Semigroup      (Semigroup (..))
@@ -143,6 +147,11 @@ toList = getToList (N.induction1 start step) where
     step (ToList f) = ToList $ \(x ::: xs) -> x : f xs
 
 newtype ToList n a = ToList { getToList :: Vec n a -> [a] }
+
+-- >>> toNonEmpty $ 1 ::: 2 ::: 3 ::: VNil
+-- 1 :| [2, 3]
+toNonEmpty :: forall n a. N.SNatI n => Vec ('S n) a -> NonEmpty a
+toNonEmpty (x ::: xs) = x :| toList xs
 
 -- | Convert list @[a]@ to @'Vec' n a@.
 -- Returns 'Nothing' if lengths don't match exactly.
@@ -237,6 +246,29 @@ snoc xs x = getSnoc (N.induction1 start step) xs where
     step (Snoc rec) = Snoc $ \(y ::: ys) -> y ::: rec ys
 
 newtype Snoc n a = Snoc { getSnoc :: Vec n a -> Vec ('S n) a }
+
+-- | The last element of a 'Vec'.
+last :: forall n a. N.SNatI n => Vec ('S n) a -> a
+last xs = getLast (N.induction1 start step) xs where
+    start :: Last 'Z a
+    start = Last $ \(x:::VNil) -> x
+    
+    step :: Last m a -> Last ('S m) a
+    step (Last rec) = Last $ \(_ ::: ys) -> rec ys
+    
+
+newtype Last n a = Last { getLast :: Vec ('S n) a -> a }
+
+-- | The elements before the 'last' of a 'Vec'.
+init :: forall n a. N.SNatI n => Vec ('S n) a -> Vec n a
+init xs = getInit (N.induction1 start step) xs where
+    start :: Init 'Z a
+    start = Init (const VNil)
+    
+    step :: Init m a -> Init ('S m) a
+    step (Init rec) = Init $ \(y ::: ys) -> y ::: rec ys
+
+newtype Init n a = Init { getInit :: Vec ('S n) a -> Vec n a}
 
 -------------------------------------------------------------------------------
 -- Reverse

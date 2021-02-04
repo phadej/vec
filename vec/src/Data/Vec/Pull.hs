@@ -20,6 +20,7 @@ module Data.Vec.Pull (
     singleton,
     -- * Conversions
     toList,
+    toNonEmpty,
     fromList,
     fromListPrefix,
     reifyList,
@@ -29,7 +30,9 @@ module Data.Vec.Pull (
     cons,
     snoc,
     head,
+    last,
     tail,
+    init,
     -- * Reverse
     reverse,
     -- * Folds
@@ -61,7 +64,7 @@ module Data.Vec.Pull (
 
 import Prelude
        (Bool (..), Eq (..), Functor (..), Int, Maybe (..), Monad (..), Num (..),
-       all, const, id, maybe, ($), (.))
+       all, const, id, maxBound, maybe, ($), (.))
 
 import Control.Applicative (Applicative (..), (<$>))
 import Data.Fin            (Fin (..))
@@ -206,6 +209,10 @@ singleton = Vec . const
 toList :: N.SNatI n => Vec n a -> [a]
 toList v = unVec v <$> F.universe
 
+-- | Convert 'Vec' to NonEmpty.
+toNonEmpty :: N.SNatI n => Vec ('S n) a -> NonEmpty a
+toNonEmpty v = head v :| toList (tail v)
+
 -- | Convert list @[a]@ to @'Vec' n a@.
 -- Returns 'Nothing' if lengths don't match exactly.
 --
@@ -290,9 +297,17 @@ snoc (Vec xs) x = Vec $ \i -> maybe x xs (F.isMax i)
 head :: Vec ('S n) a -> a
 head (Vec v) = v FZ
 
+-- | The last element of a 'Vec'.
+last :: forall n a. N.SNatI n => Vec ('S n) a -> a
+last (Vec v) = v maxBound 
+
 -- | The elements after the 'head' of a 'Vec'.
 tail :: Vec ('S n) a -> Vec n a
 tail (Vec v) = Vec (v . FS)
+
+-- | The elements before the 'last' of a 'Vec'.
+init :: forall n a. N.SNatI n => Vec ('S n) a -> Vec n a
+init (Vec v) = Vec (v . F.weakenLeft1)
 
 -------------------------------------------------------------------------------
 -- Reverse
