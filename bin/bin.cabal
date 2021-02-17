@@ -63,7 +63,7 @@ library
 
   other-modules:    TrustworthyCompat
   build-depends:
-    , base        >=4.7     && <4.15
+    , base        >=4.7     && <4.16
     , dec         ^>=0.0.3
     , deepseq     >=1.3.0.2 && <1.5
     , fin         ^>=0.2

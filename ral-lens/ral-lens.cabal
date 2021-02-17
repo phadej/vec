@@ -44,7 +44,7 @@ library
     Data.RAVec.Tree.Lens
 
   build-depends:
-    , base  >=4.7   && <4.15
+    , base  >=4.7   && <4.16
     , bin   ^>=0.1
     , fin   ^>=0.2
     , lens  >=4.16  && <5.1
