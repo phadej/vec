@@ -81,7 +81,7 @@ module Data.Vec.Lazy (
 
 import Prelude
        (Bool (..), Eq (..), Functor (..), Int, Maybe (..), Monad (..), Num (..),
-       Ord (..), Show (..), id, seq, showParen, showString, uncurry, ($), (.))
+       Ord (..), Show (..), id, seq, showParen, showString, uncurry, ($), (.), (&&), Ordering (..))
 
 import Control.Applicative (Applicative (..), (<$>))
 import Control.DeepSeq     (NFData (..))
@@ -101,6 +101,8 @@ import qualified Test.QuickCheck  as QC
 import qualified Data.Foldable.WithIndex    as WI (FoldableWithIndex (..))
 import qualified Data.Functor.WithIndex     as WI (FunctorWithIndex (..))
 import qualified Data.Traversable.WithIndex as WI (TraversableWithIndex (..))
+
+import Data.Functor.Classes (Eq1 (..), Ord1 (..), Show1 (..))
 
 #ifdef MIN_VERSION_adjunctions
 import qualified Data.Functor.Rep as I (Representable (..))
@@ -125,6 +127,7 @@ import qualified Data.Vec.Pull as P
 
 import qualified Data.Type.Nat.LE          as LE.ZS
 import qualified Data.Type.Nat.LE.ReflStep as LE.RS
+
 
 -- $setup
 -- >>> :set -XScopedTypeVariables
@@ -252,6 +255,55 @@ instance Apply (Vec n) where
 instance I.Bind (Vec n) where
     (>>-) = bind
     join  = join
+#endif
+
+-------------------------------------------------------------------------------
+-- Data.Functor.Classes
+-------------------------------------------------------------------------------
+
+#ifndef MIN_VERSION_transformers_compat
+#define MIN_VERSION_transformers_compat(x,y,z) 0
+#endif
+
+#if MIN_VERSION_base(4,9,0)
+#define LIFTED_FUNCTOR_CLASSES 1
+#else
+#if MIN_VERSION_transformers(0,5,0)
+#define LIFTED_FUNCTOR_CLASSES 1
+#else
+#if MIN_VERSION_transformers_compat(0,5,0) && !MIN_VERSION_transformers(0,4,0)
+#define LIFTED_FUNCTOR_CLASSES 1
+#endif
+#endif
+#endif
+
+#if LIFTED_FUNCTOR_CLASSES
+-- | @since 0.4
+instance Eq1 (Vec n) where
+    liftEq _eq VNil       VNil       = True
+    liftEq  eq (x ::: xs) (y ::: ys) = eq x y && liftEq eq xs ys
+
+-- | @since 0.4
+instance Ord1 (Vec n) where
+    liftCompare _cmp VNil       VNil       = EQ
+    liftCompare  cmp (x ::: xs) (y ::: ys) = cmp x y <> liftCompare cmp xs ys
+
+-- | @since 0.4
+instance Show1 (Vec n) where
+    liftShowsPrec _  _  _ VNil       = showString "VNil"
+    liftShowsPrec sp sl d (x ::: xs) = showParen (d > 5)
+        $ sp 6 x
+        . showString " ::: "
+        . liftShowsPrec sp sl 5 xs
+#else
+-- | @since 0.4
+instance Eq1 (Vec n) where eq1 = (==)
+
+-- | @since 0.4
+instance Ord1 (Vec n) where compare1 = compare
+
+-- | @since 0.4
+instance Show1 (Vec n) where showsPrec1 = showsPrec
 #endif
 
 -------------------------------------------------------------------------------
