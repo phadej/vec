@@ -1,6 +1,7 @@
 {-# LANGUAGE CPP                   #-}
 {-# LANGUAGE DataKinds             #-}
 {-# LANGUAGE FlexibleInstances     #-}
+{-# LANGUAGE InstanceSigs          #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE RankNTypes            #-}
 {-# LANGUAGE Safe                  #-}
@@ -136,6 +137,8 @@ import qualified Data.Foldable.WithIndex    as WI (FoldableWithIndex (..))
 import qualified Data.Functor.WithIndex     as WI (FunctorWithIndex (..))
 import qualified Data.Traversable.WithIndex as WI (TraversableWithIndex (..))
 
+import Data.Functor.Classes (Eq1 (..), Ord1 (..), Show1 (..))
+
 #ifdef MIN_VERSION_adjunctions
 import qualified Data.Functor.Rep as I (Representable (..))
 #endif
@@ -185,30 +188,30 @@ data instance Vec ('S n) a = a ::: !(Vec n a)
 -- >>> 'a' ::: 'b' ::: VNil == 'a' ::: 'c' ::: VNil
 -- False
 instance (Eq a, N.SNatI n) => Eq (Vec n a) where
-    (==) = getEqual (N.induction1 start step) where
-        start :: Equal 'Z a
+    (==) = getEqual (N.induction start step) where
+        start :: Equal a a 'Z
         start = Equal $ \_ _ -> True
 
-        step :: Equal m a -> Equal ('S m) a
+        step :: Equal a a m -> Equal a a ('S m)
         step (Equal go) = Equal $ \(x ::: xs) (y ::: ys) ->
             x == y && go xs ys
 
-newtype Equal n a = Equal { getEqual :: Vec n a -> Vec n a -> Bool }
+newtype Equal a b n = Equal { getEqual :: Vec n a -> Vec n b -> Bool }
 
 -- |
 --
 -- >>> compare ('a' ::: 'b' ::: VNil) ('a' ::: 'c' ::: VNil)
 -- LT
 instance (Ord a, N.SNatI n) => Ord (Vec n a) where
-    compare = getCompare (N.induction1 start step) where
-        start :: Compare 'Z a
+    compare = getCompare (N.induction start step) where
+        start :: Compare a a 'Z
         start = Compare $ \_ _ -> EQ
 
-        step :: Compare m a -> Compare ('S m) a
+        step :: Compare a a m -> Compare a a ('S m)
         step (Compare go) = Compare $ \(x ::: xs) (y ::: ys) ->
             compare x y <> go xs ys
 
-newtype Compare n a = Compare { getCompare :: Vec n a -> Vec n a -> Ordering }
+newtype Compare a b n = Compare { getCompare :: Vec n a -> Vec n b -> Ordering }
 
 instance (Show a, N.SNatI n) => Show (Vec n a) where
     showsPrec = getShowsPrec (N.induction1 start step) where
@@ -323,6 +326,73 @@ instance N.SNatI n => I.Bind (Vec n) where
     join  = join
 #endif
 
+-------------------------------------------------------------------------------
+-- Data.Functor.Classes
+-------------------------------------------------------------------------------
+
+#ifndef MIN_VERSION_transformers_compat
+#define MIN_VERSION_transformers_compat(x,y,z) 0
+#endif
+
+
+#if MIN_VERSION_base(4,9,0)
+#define LIFTED_FUNCTOR_CLASSES 1
+#else
+#if MIN_VERSION_transformers(0,5,0)
+#define LIFTED_FUNCTOR_CLASSES 1
+#else
+#if MIN_VERSION_transformers_compat(0,5,0) && !MIN_VERSION_transformers(0,4,0)
+#define LIFTED_FUNCTOR_CLASSES 1
+#endif
+#endif
+#endif
+
+#if LIFTED_FUNCTOR_CLASSES
+
+-- | @since 0.4
+instance N.SNatI n => Eq1 (Vec n) where
+    liftEq :: forall a b. (a -> b -> Bool) -> Vec n a -> Vec n b -> Bool
+    liftEq eq = getEqual (N.induction start step) where
+        start :: Equal a b 'Z
+        start = Equal $ \_ _ -> True
+
+        step :: Equal a b m -> Equal a b ('S m)
+        step (Equal go) = Equal $ \(x ::: xs) (y ::: ys) ->
+            eq x y && go xs ys
+
+-- | @since 0.4
+instance N.SNatI n => Ord1 (Vec n) where
+    liftCompare :: forall a b. (a -> b -> Ordering) -> Vec n a -> Vec n b -> Ordering
+    liftCompare cmp = getCompare (N.induction start step) where
+        start :: Compare a b 'Z
+        start = Compare $ \_ _ -> EQ
+
+        step :: Compare a b m -> Compare a b ('S m)
+        step (Compare go) = Compare $ \(x ::: xs) (y ::: ys) ->
+            cmp x y <> go xs ys
+
+-- | @since 0.4
+instance N.SNatI n => Show1 (Vec n) where
+    liftShowsPrec :: forall a. (Int -> a -> ShowS) -> ([a] -> ShowS) -> Int -> Vec n a -> ShowS
+    liftShowsPrec sp _ = getShowsPrec (N.induction1 start step) where
+        start :: ShowsPrec 'Z a
+        start = ShowsPrec $ \_ _ -> showString "VNil"
+
+        step :: ShowsPrec m a -> ShowsPrec ('S m) a
+        step (ShowsPrec go) = ShowsPrec $ \d (x ::: xs) -> showParen (d > 5)
+            $ sp 6 x
+            . showString " ::: "
+            . go 5 xs
+#else
+-- | @since 0.4
+instance N.SNatI n => Eq1 (Vec n) where eq1 = (==)
+
+-- | @since 0.4
+instance N.SNatI n => Ord1 (Vec n) where compare1 = compare
+
+-- | @since 0.4
+instance N.SNatI n => Show1 (Vec n) where showsPrec1 = showsPrec
+#endif
 -------------------------------------------------------------------------------
 -- Construction
 -------------------------------------------------------------------------------

@@ -5,6 +5,7 @@
 - Support `fin-0.2`
 - Add `indexed-traversable` instances
 - Explicitly mark all modules as Safe or Trustworthy.
+- Add `Eq1`, `Ord1` and `Show1` instances
 
 ## 0.3.0.1
 
