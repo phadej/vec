@@ -39,7 +39,7 @@ import Data.Proxy                      (Proxy (..))
 import Data.Vec.DataFamily.SpineStrict (Vec (..), tabulate)
 import GHC.Generics                    (M1 (..), Par1 (..), U1 (..), (:*:) (..))
 
-import qualified Control.Lens.Yocto              as Lens
+import qualified Control.Lens.Yocto              as YLens
 import qualified Data.Fin                        as F
 import qualified Data.Fin.Enum                   as F
 import qualified Data.Type.Nat                   as N
@@ -171,7 +171,7 @@ gix i = fusing $ \ab ta -> gto <$> ix (F.gfrom i) ab (gfrom ta)
 
 -- | Index lens.
 --
-ix :: forall n f a. (N.SNatI n, Functor f) => Fin n -> Lens.LensLike' f (Vec n a) a
+ix :: forall n f a. (N.SNatI n, Functor f) => Fin n -> YLens.LensLike' f (Vec n a) a
 ix = getIxLens $ N.induction1 start step where
     start :: IxLens f 'Z a
     start = IxLens F.absurd
@@ -181,14 +181,14 @@ ix = getIxLens $ N.induction1 start step where
         FZ   -> _head
         FS j -> _tail . l j
 
-newtype IxLens f n a = IxLens { getIxLens :: Fin n -> Lens.LensLike' f (Vec n a) a }
+newtype IxLens f n a = IxLens { getIxLens :: Fin n -> YLens.LensLike' f (Vec n a) a }
 
-_head :: Lens.Lens' (Vec ('S n) a) a
+_head :: YLens.Lens' (Vec ('S n) a) a
 _head f (x ::: xs) = (::: xs) <$> f x
 {-# INLINE _head #-}
 
 -- | Head lens. /Note:/ @lens@ 'Lens._head' is a 'Lens.Traversal''.
-_tail :: Lens.Lens' (Vec ('S n) a) (Vec n a)
+_tail :: YLens.Lens' (Vec ('S n) a) (Vec n a)
 _tail f (x ::: xs) = (x :::) <$> f xs
 {-# INLINE _tail #-}
 
