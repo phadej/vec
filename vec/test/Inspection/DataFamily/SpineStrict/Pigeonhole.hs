@@ -9,7 +9,7 @@
 {-# OPTIONS_GHC -dsuppress-type-signatures #-}
 -- {-# OPTIONS_GHC -dsuppress-uniques #-}
 -- This makes gix tests pass, default is 60
-{-# OPTIONS_GHC -funfolding-use-threshold=200 #-}
+{-# OPTIONS_GHC -funfolding-use-threshold=240 #-}
 module Inspection.DataFamily.SpineStrict.Pigeonhole where
 
 import Data.Functor.Compat                        ((<&>))
