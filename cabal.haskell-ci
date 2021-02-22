@@ -1,7 +1,7 @@
 branches: master
 tests:    >=8.0
 benchmarks:
-doctest:  >=8.6
+doctest:  >=8.6 && <9
 docspec:  True
 haddock:  >=8.6
 

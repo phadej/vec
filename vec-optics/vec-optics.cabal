@@ -20,7 +20,13 @@ copyright:          (c) 2017-2021 Oleg Grenrus
 build-type:         Simple
 extra-source-files: ChangeLog.md
 tested-with:
-  GHC ==8.0.2 || ==8.2.2 || ==8.4.4 || ==8.6.5 || ==8.8.4 || ==8.10.3
+  GHC ==8.0.2
+   || ==8.2.2
+   || ==8.4.4
+   || ==8.6.5
+   || ==8.8.4
+   || ==8.10.4
+   || ==9.0.1
 
 source-repository head
   type:     git

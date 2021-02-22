@@ -32,4 +32,7 @@ package vec
 -- constraints: ral -semigroupoids
 -- constraints: ral -adjunctions
 
-allow-newer: parallel-3.2.2.0:base
+-- allow-newer: parallel-3.2.2.0:base
+allow-newer: cassava-0.5.2.0:base
+allow-newer: vector-th-unbox-0.2.1.7:base
+allow-newer: vector-th-unbox-0.2.1.7:template-haskell
