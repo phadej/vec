@@ -55,7 +55,7 @@ import Data.Type.Bin
 
 -- | 'Pos' is to 'Bin' is what 'Fin' is to 'Nat'.
 --
--- The name is picked, as sthe lack of beter alternatives.
+-- The name is picked, as the lack of better alternatives.
 --
 data Pos (b :: Bin) where
     Pos :: PosP b -> Pos ('BP b)
