@@ -274,8 +274,8 @@ jobs:
           if [ $((HCNUMVER >= 80600 && HCNUMVER < 90000)) -ne 0 ] ; then doctest  src ; fi
       - name: docspec
         run: |
-          $CABAL v2-build $ARG_COMPILER $ARG_TESTS $ARG_BENCH all
-          cabal-docspec $ARG_COMPILER
+          if [ $((HCNUMVER >= 71000)) -ne 0 ] ; then $CABAL v2-build $ARG_COMPILER $ARG_TESTS $ARG_BENCH all ; fi
+          if [ $((HCNUMVER >= 71000)) -ne 0 ] ; then cabal-docspec $ARG_COMPILER ; fi
       - name: cabal check
         run: |
           cd ${PKGDIR_bin} || false
