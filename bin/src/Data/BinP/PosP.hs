@@ -43,6 +43,7 @@ import Data.Wrd        (Wrd (..))
 import Numeric.Natural (Natural)
 
 import qualified Data.Bin        as B
+import qualified Data.Boring     as Boring
 import qualified Data.Type.Bin   as B
 import qualified Data.Type.BinP  as BP
 import qualified Data.Type.Nat   as N
@@ -277,6 +278,14 @@ universe' = case B.sbinp :: SBinP b of
     B.SBE -> map AtEnd W.universe
     B.SB0 -> map There0 universe'
     B.SB1 -> map Here W.universe ++ map There1 universe'
+
+-------------------------------------------------------------------------------
+-- Boring
+-------------------------------------------------------------------------------
+
+-- | @since 0.1.2
+instance b ~ 'BE => Boring.Boring (PosP b) where
+    boring = boring
 
 -------------------------------------------------------------------------------
 -- Helpers

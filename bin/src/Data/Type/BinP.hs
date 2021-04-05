@@ -46,6 +46,7 @@ module Data.Type.BinP (
     ) where
 
 import Data.BinP       (BinP (..))
+import Data.Boring     (Boring (..))
 import Data.Nat        (Nat (..))
 import Data.Proxy      (Proxy (..))
 import Data.Typeable   (Typeable)
@@ -249,6 +250,14 @@ induction e o i = go where
         SBE -> e
         SB0 -> o go
         SB1 -> i go
+
+-------------------------------------------------------------------------------
+-- Boring
+-------------------------------------------------------------------------------
+
+-- | @since 0.1.2
+instance SBinPI b => Boring (SBinP b) where
+    boring = sbinp
 
 -------------------------------------------------------------------------------
 -- Aliases of BinP

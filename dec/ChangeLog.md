@@ -1,5 +1,9 @@
 # Revision history for dec
 
+## 0.0.5
+
+- Add `boringYes` and `absurdNo`.
+
 ## 0.0.4
 
 - Mark module as explicitly `Safe`.

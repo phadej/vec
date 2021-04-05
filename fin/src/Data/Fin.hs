@@ -61,6 +61,7 @@ import Data.Typeable      (Typeable)
 import GHC.Exception      (ArithException (..), throw)
 import Numeric.Natural    (Natural)
 
+import qualified Data.Boring           as Boring
 import qualified Data.List.NonEmpty    as NE
 import qualified Data.Type.Nat         as N
 import qualified Data.Universe.Class   as U
@@ -211,6 +212,14 @@ instance NFData (Fin n) where
 
 instance Hashable (Fin n) where
     hashWithSalt salt = hashWithSalt salt . cata (0 :: Integer) succ
+
+-------------------------------------------------------------------------------
+-- Boring
+-------------------------------------------------------------------------------
+
+-- | @since 0.2.1
+instance n ~ 'Z => Boring.Absurd (Fin n) where
+    absurd = absurd
 
 -------------------------------------------------------------------------------
 -- QuickCheck

@@ -80,6 +80,7 @@ import Control.Applicative (Applicative (..), (<$>))
 import Control.DeepSeq     (NFData (..))
 import Data.Bin            (Bin (..))
 import Data.Bin.Pos        (Pos (..))
+import Data.Boring         (Boring (..))
 import Data.Hashable       (Hashable (..))
 import Data.List.NonEmpty  (NonEmpty (..))
 import Data.Monoid         (Monoid (..))
@@ -230,6 +231,10 @@ instance Apply (RAVec b) where
 #endif
 
 -- TODO: I.Bind?
+
+-- | @since 0.2.1
+instance b ~ 'BZ => Boring (RAVec b a) where
+    boring = empty
 
 -------------------------------------------------------------------------------
 -- Construction

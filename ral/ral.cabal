@@ -1,6 +1,6 @@
 cabal-version:      2.2
 name:               ral
-version:            0.2
+version:            0.2.1
 synopsis:           Random access lists
 category:           Data, Dependent Types, Singletons
 description:
@@ -97,6 +97,7 @@ library
 
   -- other dependencies
   build-depends:
+    , boring               ^>=0.2
     , hashable             >=1.2.7.0 && <1.4
     , indexed-traversable  ^>=0.1.1
     , QuickCheck           ^>=2.14.2

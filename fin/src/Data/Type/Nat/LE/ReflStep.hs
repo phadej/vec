@@ -36,9 +36,9 @@ module Data.Type.Nat.LE.ReflStep (
     proofZeroLEZero,
     ) where
 
+import Data.Boring   (Absurd (..), Boring (..))
 import Data.Type.Dec (Dec (..), Decidable (..), Neg)
 import Data.Typeable (Typeable)
-import Data.Void     (absurd)
 
 import qualified Control.Category as C
 
@@ -150,6 +150,18 @@ leSwap np = case (snat :: SNat m, snat :: SNat n) of
 leSwap' :: LEProof n m -> LEProof ('S m) n -> void
 leSwap' p LERefl     = case p of LEStep p' -> leSwap' (leStepL p') LERefl
 leSwap' p (LEStep q) = leSwap' (leStepL p) q
+
+-------------------------------------------------------------------------------
+-- Boring
+-------------------------------------------------------------------------------
+
+-- | @since 0.2.1
+instance (ZeroSucc.LE n m, SNatI m) => Boring (LEProof n m) where
+    boring = fromZeroSucc ZeroSucc.leProof
+
+-- | @since 0.2.1
+instance (ZeroSucc.LE m n, n' ~ 'S n, SNatI n) => Absurd (LEProof n' m) where
+    absurd = ZeroSucc.leSwap' ZeroSucc.leProof . toZeroSucc
 
 -------------------------------------------------------------------------------
 -- Decidability

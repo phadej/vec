@@ -67,6 +67,7 @@ import Prelude
        all, const, id, maxBound, maybe, ($), (.))
 
 import Control.Applicative (Applicative (..), (<$>))
+import Data.Boring         (Boring (..))
 import Data.Fin            (Fin (..))
 import Data.List.NonEmpty  (NonEmpty (..))
 import Data.Monoid         (Monoid (..))
@@ -187,6 +188,10 @@ instance I.Bind (Vec n) where
     join  = join
 #endif
 
+-- | @since 0.4.1
+instance n ~ 'N.Z => Boring (Vec n a) where
+    boring = empty
+
 -------------------------------------------------------------------------------
 -- Construction
 -------------------------------------------------------------------------------
@@ -301,7 +306,7 @@ head (Vec v) = v FZ
 
 -- | The last element of a 'Vec'.
 last :: forall n a. N.SNatI n => Vec ('S n) a -> a
-last (Vec v) = v maxBound 
+last (Vec v) = v maxBound
 
 -- | The elements after the 'head' of a 'Vec'.
 tail :: Vec ('S n) a -> Vec n a

@@ -38,6 +38,7 @@ import Data.Typeable   (Typeable)
 import Numeric.Natural (Natural)
 
 import qualified Data.BinP.PosP  as PP
+import qualified Data.Boring     as Boring
 import qualified Data.Type.Bin   as B
 import qualified Data.Type.BinP  as BP
 import qualified Test.QuickCheck as QC
@@ -185,6 +186,18 @@ pop = weakenRight1
 --
 weakenRight1 :: SBinPI b => Pos ('BP b) -> Pos (Succ'' b)
 weakenRight1 (Pos b) = Pos (PP.weakenRight1 b)
+
+-------------------------------------------------------------------------------
+-- Boring
+-------------------------------------------------------------------------------
+
+-- | @since 0.1.2
+instance b ~ 'BP 'BE => Boring.Boring (Pos b) where
+    boring = boring
+
+-- | @since 0.1.2
+instance b ~ 'BZ => Boring.Absurd (Pos b) where
+    absurd = absurd
 
 -------------------------------------------------------------------------------
 -- Universe

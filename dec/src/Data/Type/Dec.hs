@@ -14,9 +14,15 @@ module Data.Type.Dec (
     decShow,
     decToMaybe,
     decToBool,
+
+    -- * Boring
+    -- | @'Dec' a@ can be 'Boring' in two ways: When 'a' is 'Boring' or 'Absurd'.
+    boringYes,
+    absurdNo,
     ) where
 
 import Data.Void (Void)
+import Data.Boring (Absurd (..), Boring (..))
 
 -- | Intuitionistic negation.
 type Neg a = a -> Void
@@ -106,3 +112,24 @@ decToMaybe (No _)  = Nothing
 decToBool :: Dec a -> Bool
 decToBool (Yes _) = True
 decToBool (No _)  = False
+
+-------------------------------------------------------------------------------
+-- Boring
+-------------------------------------------------------------------------------
+
+-- | This relies on the fact that @a@ is /proposition/ in h-Prop sense.
+--
+-- @since 0.1.3
+instance Decidable a => Boring (Dec a) where
+    boring = decide
+-- | 'Yes', it's 'boring'.
+--
+-- @since 0.0.5
+boringYes :: Boring a => Dec a
+boringYes = Yes boring
+
+-- | 'No', it's 'absurd'.
+--
+-- @since 0.0.5
+absurdNo :: Absurd a => Dec a
+absurdNo = No absurd
