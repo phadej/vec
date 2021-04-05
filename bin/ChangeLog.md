@@ -1,5 +1,9 @@
 # Version history for bin
 
+## 0.1.2
+
+- Add `boring` instances
+
 ## 0.1.1
 
 - Explicitly mark all modules as Safe or Trustworthy.

@@ -49,9 +49,9 @@ module Data.Type.Nat.LE (
     proofZeroLEZero,
     ) where
 
-import Data.Type.Dec      (Dec (..), Decidable (..), Neg)
-import Data.Typeable      (Typeable)
-import Data.Void          (absurd)
+import Data.Boring   (Boring (..), Absurd (..))
+import Data.Type.Dec (Dec (..), Decidable (..), Neg)
+import Data.Typeable (Typeable)
 
 import Data.Type.Nat
 import TrustworthyCompat
@@ -162,6 +162,18 @@ leSwap np = case (snat :: SNat m, snat :: SNat n) of
 --
 leSwap' :: LEProof n m -> LEProof ('S m) n -> void
 leSwap' p (LESucc q) = case p of LESucc p' -> leSwap' p' q
+
+-------------------------------------------------------------------------------
+-- Boring
+-------------------------------------------------------------------------------
+
+-- | @since 0.2.1
+instance LE n m => Boring (LEProof n m) where
+    boring = leProof
+
+-- | @since 0.2.1
+instance (LE m n, n' ~ 'S n) => Absurd (LEProof n' m) where
+    absurd = leSwap' leProof
 
 -------------------------------------------------------------------------------
 -- Dedidablity

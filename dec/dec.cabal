@@ -1,6 +1,6 @@
 cabal-version:      >=1.10
 name:               dec
-version:            0.0.4
+version:            0.0.5
 synopsis:           Decidable propositions.
 category:           Data, Dependent Types
 description:
@@ -44,12 +44,14 @@ library
   hs-source-dirs:   src
   ghc-options:      -Wall -fprint-explicit-kinds
   exposed-modules:  Data.Type.Dec
-  build-depends:    base >=4.7 && <4.16
+  build-depends:
+      base    >=4.7 && <4.16
+    , boring  >=0.2 && <0.3
 
   if !impl(ghc >=7.10)
     build-depends: void >=0.7.3 && <0.8
 
-  if impl(ghc >= 9.0)
+  if impl(ghc >=9.0)
     -- these flags may abort compilation with GHC-8.10
     -- https://gitlab.haskell.org/ghc/ghc/-/merge_requests/3295
     ghc-options: -Winferred-safe-imports -Wmissing-safe-haskell-mode

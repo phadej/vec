@@ -1,5 +1,9 @@
 # Version history for ral
 
+## 0.2.1
+
+- Add `boring` instances
+
 ## 0.2
 
 - `fin-0.2` support

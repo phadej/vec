@@ -84,11 +84,13 @@ module Data.Vec.Lazy (
 
 import Prelude
        (Bool (..), Eq (..), Functor (..), Int, Maybe (..), Monad (..), Num (..),
-       Ord (..), Show (..), id, seq, showParen, showString, uncurry, ($), (.), (&&), Ordering (..))
+       Ord (..), Ordering (..), Show (..), id, seq, showParen, showString,
+       uncurry, ($), (&&), (.))
 
 import Control.Applicative (Applicative (..), (<$>))
 import Control.DeepSeq     (NFData (..))
 import Control.Lens.Yocto  ((<&>))
+import Data.Boring         (Boring (..))
 import Data.Fin            (Fin (..))
 import Data.Hashable       (Hashable (..))
 import Data.List.NonEmpty  (NonEmpty (..))
@@ -261,6 +263,10 @@ instance I.Bind (Vec n) where
     join  = join
 #endif
 
+-- | @since 0.4.1
+instance n ~ 'N.Z => Boring (Vec n a) where
+    boring = empty
+
 -------------------------------------------------------------------------------
 -- Data.Functor.Classes
 -------------------------------------------------------------------------------
@@ -367,7 +373,7 @@ toList :: Vec n a -> [a]
 toList VNil       = []
 toList (x ::: xs) = x : toList xs
 
--- |  
+-- |
 --
 -- >>> toNonEmpty $ 1 ::: 2 ::: 3 ::: VNil
 -- 1 :| [2,3]

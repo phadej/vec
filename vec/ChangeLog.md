@@ -1,5 +1,9 @@
 # Revision history for vec
 
+## 0.4.1
+
+- Add `boring` instances
+
 ## 0.4
 
 - Support `fin-0.2`

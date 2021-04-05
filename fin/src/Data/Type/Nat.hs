@@ -69,6 +69,7 @@ import Data.Proxy      (Proxy (..))
 import Data.Type.Dec   (Dec (..))
 import Data.Typeable   (Typeable)
 import Numeric.Natural (Natural)
+import Data.Boring     (Boring (..))
 
 import qualified GHC.TypeLits as GHC
 
@@ -245,6 +246,10 @@ type family EqNat (n :: Nat) (m :: Nat) where
 #if !MIN_VERSION_base(4,11,0)
 type instance n == m = EqNat n m
 #endif
+
+-- | @since 0.2.1
+instance SNatI n => Boring (SNat n) where
+    boring = snat
 
 -------------------------------------------------------------------------------
 -- Induction

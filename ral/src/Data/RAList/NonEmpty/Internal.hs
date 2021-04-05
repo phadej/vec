@@ -52,6 +52,7 @@ import Prelude
 import Control.Applicative (Applicative (..), (<$>))
 import Control.DeepSeq     (NFData (..))
 import Control.Exception   (ArrayException (IndexOutOfBounds), throw)
+import Data.Boring         (Absurd (..))
 import Data.Hashable       (Hashable (..))
 import Data.List.NonEmpty  (NonEmpty (..))
 import Data.Maybe          (fromMaybe)
@@ -184,6 +185,10 @@ instance WI.FoldableWithIndex Int NERAList where
 -- | @since 0.2
 instance WI.TraversableWithIndex Int NERAList where
     itraverse = itraverse
+
+-- | @since 0.2.1
+instance Absurd a => Absurd (NERAList a) where
+    absurd = absurd . head
 
 -------------------------------------------------------------------------------
 -- Showing

@@ -50,6 +50,7 @@ module Data.Type.Bin (
     ) where
 
 import Data.Bin        (Bin (..), BinP (..))
+import Data.Boring     (Boring (..))
 import Data.Nat        (Nat (..))
 import Data.Proxy      (Proxy (..))
 import Data.Type.BinP  (SBinP (..), SBinPI (..))
@@ -371,6 +372,14 @@ type family Plus (a :: Bin) (b :: Bin) :: Bin where
     Plus 'BZ     b       = b
     Plus a       'BZ     = a
     Plus ('BP a) ('BP b) = 'BP (BP.Plus a b)
+
+-------------------------------------------------------------------------------
+-- Boring
+-------------------------------------------------------------------------------
+
+-- | @since 0.1.2
+instance SBinI b => Boring (SBin b) where
+    boring = sbin
 
 -------------------------------------------------------------------------------
 --- Aliases of Bin

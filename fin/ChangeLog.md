@@ -1,3 +1,7 @@
+## 0.2.1
+
+- Add `boring` instances
+
 ## 0.2
 
 - `SNat` is now what was called `InlineInduction`.

@@ -1,6 +1,6 @@
 cabal-version:      2.2
 name:               vec
-version:            0.4
+version:            0.4.1
 synopsis:           Vec: length-indexed (sized) list
 category:           Data, Dependent Types
 description:
@@ -129,8 +129,9 @@ library
     build-depends: semigroups >=0.18.4 && <0.20
 
   -- Ensure Data.Functor.Classes is always available
-  if impl(ghc >= 7.10)
-    build-depends: transformers >= 0.4.2.0
+  if impl(ghc >=7.10)
+    build-depends: transformers >=0.4.2.0
+
   else
     build-depends: transformers-compat ^>=0.6.5
 
@@ -139,6 +140,7 @@ library
 
   -- other dependencies
   build-depends:
+    , boring               ^>=0.2
     , hashable             >=1.2.7.0 && <1.4
     , indexed-traversable  ^>=0.1.1
     , QuickCheck           ^>=2.14.2
@@ -150,7 +152,7 @@ library
       build-depends: adjunctions ^>=4.4
 
   if flag(semigroupoids)
-    build-depends: semigroupoids >=5.3.5 && <5.4
+    build-depends: semigroupoids ^>=5.3.5
 
   other-extensions:
     CPP
