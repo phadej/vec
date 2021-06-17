@@ -64,12 +64,15 @@ module Data.Type.Nat (
     proofMultNOne,
     )  where
 
+import Data.Boring     (Boring (..))
 import Data.Function   (fix)
 import Data.Proxy      (Proxy (..))
 import Data.Type.Dec   (Dec (..))
 import Data.Typeable   (Typeable)
 import Numeric.Natural (Natural)
-import Data.Boring     (Boring (..))
+
+import Data.GADT.Compare (GCompare (..), GEq (..), GOrdering (..))
+import Data.GADT.DeepSeq (GNFData (..))
 
 import qualified GHC.TypeLits as GHC
 
@@ -101,6 +104,13 @@ data SNat (n :: Nat) where
   deriving (Typeable)
 
 deriving instance Show (SNat p)
+
+instance GEq SNat where
+    geq = testEquality
+
+instance GNFData SNat where
+    grnf SZ = ()
+    grnf SS = ()
 
 -- | Implicit 'SNat'.
 --
