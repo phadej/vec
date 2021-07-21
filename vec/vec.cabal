@@ -197,6 +197,7 @@ benchmark bench
   hs-source-dirs:   bench
   default-language: Haskell2010
   other-modules:    DotProduct
+                    Universe
   build-depends:
     , base
     , criterion  >=1.4.0.0 && <1.6
