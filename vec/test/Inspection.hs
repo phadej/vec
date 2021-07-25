@@ -6,6 +6,7 @@ module Inspection where
 import Prelude hiding (zipWith)
 
 import Data.Fin        (Fin (..))
+import qualified Data.List as List
 import Data.List.NonEmpty (NonEmpty (..))
 import Data.Vec.Lazy   (Vec (..))
 import Test.Inspection
@@ -131,7 +132,7 @@ lhsLast = I.last $ 'a' ::: 'b' ::: 'c' ::: VNil
 lhsLast' :: Char
 lhsLast' = L.last $ 'a' ::: 'b' ::: 'c' :::VNil
 
-rhsLast :: Char 
+rhsLast :: Char
 rhsLast = 'c'
 
 inspect $ 'lhsLast === 'rhsLast
@@ -168,3 +169,19 @@ rhsToNonEmpty = 'a' :| ['b', 'c']
 
 inspect $ 'lhsToNonEmpty  === 'rhsToNonEmpty
 inspect $ 'lhsToNonEmpty' =/= 'rhsToNonEmpty
+
+-------------------------------------------------------------------------------
+-- scanr
+-------------------------------------------------------------------------------
+
+lhsScanr :: Vec N.Nat5 Int
+lhsScanr = I.scanr (-) 0 $ 1 ::: 2 ::: 3 ::: 4 ::: VNil
+
+lhsScanr' :: Vec N.Nat5 Int
+lhsScanr' = L.scanr (-) 0 $ 1 ::: 2 ::: 3 ::: 4 ::: VNil
+
+rhsScanr :: Vec N.Nat5 Int
+rhsScanr = (-2) ::: 3 ::: (-1) ::: 4 ::: 0 ::: VNil
+
+inspect $ 'lhsScanr  === 'rhsScanr
+inspect $ 'lhsScanr' =/= 'rhsScanr

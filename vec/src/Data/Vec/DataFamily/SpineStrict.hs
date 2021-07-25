@@ -91,6 +91,11 @@ module Data.Vec.DataFamily.SpineStrict (
     ifoldMap1,
     foldr,
     ifoldr,
+    -- * Scans
+    scanr,
+    scanl,
+    scanr1,
+    scanl1,
     -- * Special folds
     length,
     null,
@@ -582,10 +587,10 @@ last :: forall n a. N.SNatI n => Vec ('S n) a -> a
 last xs = getLast (N.induction1 start step) xs where
     start :: Last 'Z a
     start = Last $ \(x:::VNil) -> x
-    
+
     step :: Last m a -> Last ('S m) a
     step (Last rec) = Last $ \(_ ::: ys) -> rec ys
-    
+
 
 newtype Last n a = Last { getLast :: Vec ('S n) a -> a }
 
@@ -596,7 +601,7 @@ init :: forall n a. N.SNatI n => Vec ('S n) a -> Vec n a
 init xs = getInit (N.induction1 start step) xs where
     start :: Init 'Z a
     start = Init (const VNil)
-    
+
     step :: Init m a -> Init ('S m) a
     step (Init rec) = Init $ \(y ::: ys) -> y ::: rec ys
 
@@ -844,6 +849,36 @@ ifoldr = getIFoldr $ N.induction1 start step where
     step (IFoldr go) = IFoldr $ \f z (x ::: xs) -> f FZ x (go (f . FS) z xs)
 
 newtype IFoldr a n b = IFoldr { getIFoldr :: (Fin n -> a -> b -> b) -> b -> Vec n a -> b }
+
+scanr :: forall a b n. N.SNatI n => (a -> b -> b) -> b -> Vec n a -> Vec ('S n) b
+scanr f z = getScan $ N.induction1 start step where
+    start :: Scan a 'Z b
+    start = Scan $ \_ -> singleton z
+
+    step :: Scan a m b -> Scan a ('S m) b
+    step (Scan go) = Scan $ \(x ::: xs) -> let ys@(y ::: _) = go xs in f x y ::: ys
+
+newtype Scan a n b = Scan { getScan :: Vec n a -> Vec ('S n) b }
+
+scanl :: forall a b n. N.SNatI n => (b -> a -> b) -> b -> Vec n a -> Vec ('S n) b
+scanl f z = reverse . scanr (flip f) z . reverse
+
+scanr1 :: forall a n. N.SNatI n => (a -> a -> a) -> Vec n a -> Vec n a
+scanr1 f = getScan1 $ N.induction1 start step where
+    start :: Scan1 'Z a
+    start = Scan1 $ \_ -> VNil
+
+    step :: forall m. N.SNatI m => Scan1 m a -> Scan1 ('S m) a
+    step (Scan1 go) = Scan1 $ \(x ::: xs) -> case N.snat :: N.SNat m of
+        N.SZ -> x ::: VNil
+        N.SS -> let ys@(y ::: _) = go xs in f x y ::: ys
+
+newtype Scan1 n a = Scan1 { getScan1 :: Vec n a -> Vec n a }
+
+scanl1 :: forall a n. N.SNatI n => (a -> a -> a) -> Vec n a -> Vec n a
+scanl1 f xs = case N.snat :: N.SNat n of
+    N.SZ -> VNil
+    N.SS -> let (y ::: ys) = xs in scanl f y ys
 
 -- | Yield the length of a 'Vec'. /O(n)/
 length :: forall n a. N.SNatI n => Vec n a -> Int

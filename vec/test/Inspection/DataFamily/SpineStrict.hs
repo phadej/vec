@@ -93,3 +93,27 @@ rhsReverse :: Vec N.Nat3 Char
 rhsReverse = 'a' ::: 'b' ::: 'c' ::: VNil
 
 inspect $ 'lhsReverse  === 'rhsReverse
+
+-------------------------------------------------------------------------------
+-- scanr
+-------------------------------------------------------------------------------
+
+lhsScanr :: Vec N.Nat5 Int
+lhsScanr = I.scanr (-) 0 $ 1 ::: 2 ::: 3 ::: 4 ::: VNil
+
+rhsScanr :: Vec N.Nat5 Int
+rhsScanr = (-2) ::: 3 ::: (-1) ::: 4 ::: 0 ::: VNil
+
+inspect $ 'lhsScanr  === 'rhsScanr
+
+-------------------------------------------------------------------------------
+-- scanl
+-------------------------------------------------------------------------------
+
+lhsScanl :: Vec N.Nat5 Int
+lhsScanl = I.scanl (-) 0 $ 1 ::: 2 ::: 3 ::: 4 ::: VNil
+
+rhsScanl :: Vec N.Nat5 Int
+rhsScanl = 0 ::: (-1) ::: (-3) ::: (-6) ::: (-10) ::: VNil
+
+inspect $ 'lhsScanl  === 'rhsScanl
