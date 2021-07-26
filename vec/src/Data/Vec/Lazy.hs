@@ -700,7 +700,7 @@ scanr :: forall a b n. (a -> b -> b) -> b -> Vec n a -> Vec ('S n) b
 scanr f z = go where
     go :: Vec m a -> Vec ('S m) b
     go VNil = singleton z
-    go (x ::: xs) = let ys@(y ::: _) = go xs in f x y ::: ys
+    go (x ::: xs) = case go xs of ys@(y ::: _) -> f x y ::: ys
 
 scanl :: forall a b n. (b -> a -> b) -> b -> Vec n a -> Vec ('S n) b
 scanl f = go where
@@ -713,7 +713,7 @@ scanr1 f = go where
     go :: Vec m a -> Vec m a
     go VNil = VNil
     go (x ::: VNil) = x ::: VNil
-    go (x ::: xs@(_ ::: _)) = let ys@(y ::: _) = go xs in f x y ::: ys
+    go (x ::: xs@(_ ::: _)) = case go xs of ys@(y ::: _) -> f x y ::: ys
 
 scanl1 :: forall a n. (a -> a -> a) -> Vec n a -> Vec n a
 scanl1 _ VNil = VNil

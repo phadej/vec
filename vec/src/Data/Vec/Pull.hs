@@ -12,7 +12,7 @@
 --
 -- The module tries to have same API as "Data.Vec.Lazy", missing bits:
 -- @withDict@, @toPull@, @fromPull@, @traverse@ (and variants),
--- @(++)@, @concat@ and @split@.
+-- @scanr@ (and variants), @(++)@, @concat@ and @split@.
 module Data.Vec.Pull (
     Vec (..),
     -- * Construction
@@ -43,11 +43,6 @@ module Data.Vec.Pull (
     foldr,
     ifoldr,
     foldl',
-    -- * Scans
-    scanr,
-    scanl,
-    scanr1,
-    scanl1,
     -- * Special folds
     length,
     null,
@@ -74,10 +69,7 @@ import Prelude
 import Control.Applicative (Applicative (..), (<$>))
 import Data.Boring         (Boring (..))
 import Data.Fin            (Fin (..))
-import qualified Data.List as List
 import Data.List.NonEmpty  (NonEmpty (..))
-import qualified Data.List.NonEmpty as NonEmpty
-import Data.Maybe          (fromJust)
 import Data.Monoid         (Monoid (..))
 import Data.Nat            (Nat (..))
 import Data.Proxy          (Proxy (..))
@@ -387,18 +379,6 @@ ifoldr f z (Vec v) = I.foldr (\a b -> f a (v a) b) z F.universe
 -- | Strict left fold.
 foldl' :: N.SNatI n => (b -> a -> b) -> b -> Vec n a -> b
 foldl' f z (Vec v) = I.foldl' (\b a -> f b (v a)) z F.universe
-
-scanr :: forall a b n. N.SNatI n => (a -> b -> b) -> b -> Vec n a -> Vec ('S n) b
-scanr f z = fromJust . fromList . NonEmpty.toList . NonEmpty.scanr f z
-
-scanl :: forall a b n. N.SNatI n => (b -> a -> b) -> b -> Vec n a -> Vec ('S n) b
-scanl f z = fromJust . fromList . NonEmpty.toList . NonEmpty.scanl f z
-
-scanr1 :: forall a n. N.SNatI n => (a -> a -> a) -> Vec n a -> Vec n a
-scanr1 f = fromJust . fromList . List.scanr1 f . toList
-
-scanl1 :: forall a n. N.SNatI n => (a -> a -> a) -> Vec n a -> Vec n a
-scanl1 f = fromJust . fromList . List.scanl1 f . toList
 
 -- | Yield the length of a 'Vec'.
 length :: forall n a. N.SNatI n => Vec n a -> Int

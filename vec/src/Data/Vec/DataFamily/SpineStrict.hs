@@ -1,3 +1,4 @@
+{-# LANGUAGE BangPatterns          #-}
 {-# LANGUAGE CPP                   #-}
 {-# LANGUAGE DataKinds             #-}
 {-# LANGUAGE FlexibleInstances     #-}
@@ -851,29 +852,36 @@ ifoldr = getIFoldr $ N.induction1 start step where
 newtype IFoldr a n b = IFoldr { getIFoldr :: (Fin n -> a -> b -> b) -> b -> Vec n a -> b }
 
 scanr :: forall a b n. N.SNatI n => (a -> b -> b) -> b -> Vec n a -> Vec ('S n) b
-scanr f z = getScan $ N.induction1 start step where
-    start :: Scan a 'Z b
-    start = Scan $ \_ -> singleton z
+scanr f z = getScanr $ N.induction1 start step where
+    start :: Scanr a 'Z b
+    start = Scanr $ \_ -> singleton z
 
-    step :: Scan a m b -> Scan a ('S m) b
-    step (Scan go) = Scan $ \(x ::: xs) -> let ys@(y ::: _) = go xs in f x y ::: ys
+    step :: Scanr a m b -> Scanr a ('S m) b
+    step (Scanr go) = Scanr $ \(x ::: xs) -> let ys@(y ::: _) = go xs in f x y ::: ys
 
-newtype Scan a n b = Scan { getScan :: Vec n a -> Vec ('S n) b }
+newtype Scanr a n b = Scanr { getScanr :: Vec n a -> Vec ('S n) b }
 
 scanl :: forall a b n. N.SNatI n => (b -> a -> b) -> b -> Vec n a -> Vec ('S n) b
-scanl f z = reverse . scanr (flip f) z . reverse
+scanl f = getScanl $ N.induction1 start step where
+    start :: Scanl a 'Z b
+    start = Scanl $ \z VNil -> singleton z
+
+    step :: Scanl a m b -> Scanl a ('S m) b
+    step (Scanl go) = Scanl $ \(!acc) (x ::: xs) -> acc ::: go (f acc x) xs
+
+newtype Scanl a n b = Scanl { getScanl :: b -> Vec n a -> Vec ('S n) b }
 
 scanr1 :: forall a n. N.SNatI n => (a -> a -> a) -> Vec n a -> Vec n a
-scanr1 f = getScan1 $ N.induction1 start step where
-    start :: Scan1 'Z a
-    start = Scan1 $ \_ -> VNil
+scanr1 f = getScanr1 $ N.induction1 start step where
+    start :: Scanr1 'Z a
+    start = Scanr1 $ \_ -> VNil
 
-    step :: forall m. N.SNatI m => Scan1 m a -> Scan1 ('S m) a
-    step (Scan1 go) = Scan1 $ \(x ::: xs) -> case N.snat :: N.SNat m of
+    step :: forall m. N.SNatI m => Scanr1 m a -> Scanr1 ('S m) a
+    step (Scanr1 go) = Scanr1 $ \(x ::: xs) -> case N.snat :: N.SNat m of
         N.SZ -> x ::: VNil
         N.SS -> let ys@(y ::: _) = go xs in f x y ::: ys
 
-newtype Scan1 n a = Scan1 { getScan1 :: Vec n a -> Vec n a }
+newtype Scanr1 n a = Scanr1 { getScanr1 :: Vec n a -> Vec n a }
 
 scanl1 :: forall a n. N.SNatI n => (a -> a -> a) -> Vec n a -> Vec n a
 scanl1 f xs = case N.snat :: N.SNat n of
