@@ -58,8 +58,10 @@ module Data.Vec.Lazy (
     -- * Scans
     scanr,
     scanl,
+    scanl',
     scanr1,
     scanl1,
+    scanl1',
     -- * Special folds
     length,
     null,
@@ -696,18 +698,28 @@ foldl' f z = go z where
     go !acc VNil       = acc
     go !acc (x ::: xs) = go (f acc x) xs
 
+-- | Right-to-left scan.
 scanr :: forall a b n. (a -> b -> b) -> b -> Vec n a -> Vec ('S n) b
 scanr f z = go where
     go :: Vec m a -> Vec ('S m) b
     go VNil = singleton z
     go (x ::: xs) = case go xs of ys@(y ::: _) -> f x y ::: ys
 
+-- | Left-to-right scan.
 scanl :: forall a b n. (b -> a -> b) -> b -> Vec n a -> Vec ('S n) b
 scanl f = go where
+    go :: b -> Vec m a -> Vec ('S m) b
+    go acc VNil = acc ::: VNil
+    go acc (x ::: xs) = acc ::: go (f acc x) xs
+
+-- | Left-to-right scan with strict accumulator.
+scanl' :: forall a b n. (b -> a -> b) -> b -> Vec n a -> Vec ('S n) b
+scanl' f = go where
     go :: b -> Vec m a -> Vec ('S m) b
     go !acc VNil = acc ::: VNil
     go !acc (x ::: xs) = acc ::: go (f acc x) xs
 
+-- | Right-to-left scan with no starting value.
 scanr1 :: forall a n. (a -> a -> a) -> Vec n a -> Vec n a
 scanr1 f = go where
     go :: Vec m a -> Vec m a
@@ -715,9 +727,15 @@ scanr1 f = go where
     go (x ::: VNil) = x ::: VNil
     go (x ::: xs@(_ ::: _)) = case go xs of ys@(y ::: _) -> f x y ::: ys
 
+-- | Left-to-right scan with no starting value.
 scanl1 :: forall a n. (a -> a -> a) -> Vec n a -> Vec n a
 scanl1 _ VNil = VNil
 scanl1 f (x ::: xs) = scanl f x xs
+
+-- | Left-to-right scan with no starting value, and with strict accumulator.
+scanl1' :: forall a n. (a -> a -> a) -> Vec n a -> Vec n a
+scanl1' _ VNil = VNil
+scanl1' f (x ::: xs) = scanl' f x xs
 
 -- | Yield the length of a 'Vec'. /O(n)/
 length :: Vec n a -> Int

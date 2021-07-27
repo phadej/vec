@@ -192,14 +192,30 @@ inspect $ 'lhsScanr' =/= 'rhsScanr
 lhsScanl :: Vec N.Nat5 Int
 lhsScanl = I.scanl (-) 0 $ 1 ::: 2 ::: 3 ::: 4 ::: VNil
 
-lhsScanl' :: Vec N.Nat5 Int
-lhsScanl' = L.scanl (-) 0 $ 1 ::: 2 ::: 3 ::: 4 ::: VNil
+lhsScanl0 :: Vec N.Nat5 Int
+lhsScanl0 = L.scanl (-) 0 $ 1 ::: 2 ::: 3 ::: 4 ::: VNil
 
 rhsScanl :: Vec N.Nat5 Int
 rhsScanl = 0 ::: (-1) ::: (-3) ::: (-6) ::: (-10) ::: VNil
 
 inspect $ 'lhsScanl  === 'rhsScanl
-inspect $ 'lhsScanl' =/= 'rhsScanl
+inspect $ 'lhsScanl0 =/= 'rhsScanl
+
+-------------------------------------------------------------------------------
+-- scanl'
+-------------------------------------------------------------------------------
+
+lhsScanl' :: Vec N.Nat5 Int
+lhsScanl' = I.scanl' (-) 0 $ 1 ::: 2 ::: 3 ::: 4 ::: VNil
+
+lhsScanl'0 :: Vec N.Nat5 Int
+lhsScanl'0 = L.scanl' (-) 0 $ 1 ::: 2 ::: 3 ::: 4 ::: VNil
+
+rhsScanl' :: Vec N.Nat5 Int
+rhsScanl' = 0 ::: (-1) ::: (-3) ::: (-6) ::: (-10) ::: VNil
+
+inspect $ 'lhsScanl'  === 'rhsScanl'
+inspect $ 'lhsScanl'0 =/= 'rhsScanl'
 
 -------------------------------------------------------------------------------
 -- scanr1
@@ -224,11 +240,27 @@ inspect $ 'lhsScanr1' =/= 'rhsScanr1
 lhsScanl1 :: Vec N.Nat4 Int
 lhsScanl1 = I.scanl1 (-) $ 1 ::: 2 ::: 3 ::: 4 ::: VNil
 
-lhsScanl1' :: Vec N.Nat4 Int
-lhsScanl1' = L.scanl1 (-) $ 1 ::: 2 ::: 3 ::: 4 ::: VNil
+lhsScanl10 :: Vec N.Nat4 Int
+lhsScanl10 = L.scanl1 (-) $ 1 ::: 2 ::: 3 ::: 4 ::: VNil
 
 rhsScanl1 :: Vec N.Nat4 Int
 rhsScanl1 = 1 ::: (-1) ::: (-4) ::: (-8) ::: VNil
 
 inspect $ 'lhsScanl1  === 'rhsScanl1
-inspect $ 'lhsScanl1' =/= 'rhsScanl1
+inspect $ 'lhsScanl10 =/= 'rhsScanl1
+
+-------------------------------------------------------------------------------
+-- scanl1'
+-------------------------------------------------------------------------------
+
+lhsScanl1' :: Vec N.Nat4 Int
+lhsScanl1' = I.scanl1' (-) $ 1 ::: 2 ::: 3 ::: 4 ::: VNil
+
+lhsScanl1'0 :: Vec N.Nat4 Int
+lhsScanl1'0 = L.scanl1' (-) $ 1 ::: 2 ::: 3 ::: 4 ::: VNil
+
+rhsScanl1' :: Vec N.Nat4 Int
+rhsScanl1' = 1 ::: (-1) ::: (-4) ::: (-8) ::: VNil
+
+inspect $ 'lhsScanl1'  === 'rhsScanl1'
+inspect $ 'lhsScanl1'0 =/= 'rhsScanl1'

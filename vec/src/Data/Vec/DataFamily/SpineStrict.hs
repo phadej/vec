@@ -95,8 +95,10 @@ module Data.Vec.DataFamily.SpineStrict (
     -- * Scans
     scanr,
     scanl,
+    scanl',
     scanr1,
     scanl1,
+    scanl1',
     -- * Special folds
     length,
     null,
@@ -851,6 +853,7 @@ ifoldr = getIFoldr $ N.induction1 start step where
 
 newtype IFoldr a n b = IFoldr { getIFoldr :: (Fin n -> a -> b -> b) -> b -> Vec n a -> b }
 
+-- | Right-to-left scan.
 scanr :: forall a b n. N.SNatI n => (a -> b -> b) -> b -> Vec n a -> Vec ('S n) b
 scanr f z = getScanr $ N.induction1 start step where
     start :: Scanr a 'Z b
@@ -861,8 +864,18 @@ scanr f z = getScanr $ N.induction1 start step where
 
 newtype Scanr a n b = Scanr { getScanr :: Vec n a -> Vec ('S n) b }
 
+-- | Left-to-right scan.
 scanl :: forall a b n. N.SNatI n => (b -> a -> b) -> b -> Vec n a -> Vec ('S n) b
 scanl f = getScanl $ N.induction1 start step where
+    start :: Scanl a 'Z b
+    start = Scanl $ \z VNil -> singleton z
+
+    step :: Scanl a m b -> Scanl a ('S m) b
+    step (Scanl go) = Scanl $ \acc (x ::: xs) -> acc ::: go (f acc x) xs
+
+-- | Left-to-right scan with strict accumulator.
+scanl' :: forall a b n. N.SNatI n => (b -> a -> b) -> b -> Vec n a -> Vec ('S n) b
+scanl' f = getScanl $ N.induction1 start step where
     start :: Scanl a 'Z b
     start = Scanl $ \z VNil -> singleton z
 
@@ -871,6 +884,7 @@ scanl f = getScanl $ N.induction1 start step where
 
 newtype Scanl a n b = Scanl { getScanl :: b -> Vec n a -> Vec ('S n) b }
 
+-- | Right-to-left scan with no starting value.
 scanr1 :: forall a n. N.SNatI n => (a -> a -> a) -> Vec n a -> Vec n a
 scanr1 f = getScanr1 $ N.induction1 start step where
     start :: Scanr1 'Z a
@@ -883,10 +897,17 @@ scanr1 f = getScanr1 $ N.induction1 start step where
 
 newtype Scanr1 n a = Scanr1 { getScanr1 :: Vec n a -> Vec n a }
 
+-- | Left-to-right scan with no starting value.
 scanl1 :: forall a n. N.SNatI n => (a -> a -> a) -> Vec n a -> Vec n a
 scanl1 f xs = case N.snat :: N.SNat n of
     N.SZ -> VNil
     N.SS -> let (y ::: ys) = xs in scanl f y ys
+
+-- | Left-to-right scan with no starting value, and with strict accumulator.
+scanl1' :: forall a n. N.SNatI n => (a -> a -> a) -> Vec n a -> Vec n a
+scanl1' f xs = case N.snat :: N.SNat n of
+    N.SZ -> VNil
+    N.SS -> let (y ::: ys) = xs in scanl' f y ys
 
 -- | Yield the length of a 'Vec'. /O(n)/
 length :: forall n a. N.SNatI n => Vec n a -> Int
