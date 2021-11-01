@@ -115,7 +115,7 @@ import qualified Data.Type.Nat as N
 
 -- | Easily fuseable 'Vec'.
 --
--- It unpurpose don't have /bad/ (fusion-wise) instances, like 'Traversable'.
+-- It on purpose doesn't have /bad/ (fusion-wise) instances, like 'Traversable'.
 -- Generally, there aren't functions which would be __bad consumers__ or __bad producers__.
 newtype Vec n a = Vec { unVec :: Fin n -> a }
   deriving (Typeable)
