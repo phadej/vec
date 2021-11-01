@@ -4,7 +4,7 @@ version:            0.2.1
 synopsis:           Random access lists
 category:           Data, Dependent Types, Singletons
 description:
-  This package provides ordinary random access list, 'RAList', and also 
+  This package provides ordinary random access list, 'RAList', and also
   a length indexed variant, 'RAVec'.
   .
   The data structure allows fast cons-operation (like ordinary list) but also fast random access (like non-functional arrays).
@@ -13,7 +13,7 @@ description:
   .
   === Similar packages
   .
-  This packages don't provide length-indexed variant, and their 'RAList' has
+  These packages don't provide length-indexed variants, and their 'RAList' has
   opaque structure.
   .
   * https://hackage.haskell.org/package/ralist
