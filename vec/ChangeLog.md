@@ -3,6 +3,8 @@
 ## 0.4.1
 
 - Add `boring` instances
+- Add `dfoldr`, `dfoldl` and `dfoldl'`
+- Implement `Lazy.reverse` using `dfoldl`
 
 ## 0.4
 
