@@ -582,10 +582,10 @@ last :: forall n a. N.SNatI n => Vec ('S n) a -> a
 last xs = getLast (N.induction1 start step) xs where
     start :: Last 'Z a
     start = Last $ \(x:::VNil) -> x
-    
+
     step :: Last m a -> Last ('S m) a
     step (Last rec) = Last $ \(_ ::: ys) -> rec ys
-    
+
 
 newtype Last n a = Last { getLast :: Vec ('S n) a -> a }
 
@@ -596,7 +596,7 @@ init :: forall n a. N.SNatI n => Vec ('S n) a -> Vec n a
 init xs = getInit (N.induction1 start step) xs where
     start :: Init 'Z a
     start = Init (const VNil)
-    
+
     step :: Init m a -> Init ('S m) a
     step (Init rec) = Init $ \(y ::: ys) -> y ::: rec ys
 
