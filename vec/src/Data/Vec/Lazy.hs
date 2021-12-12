@@ -38,6 +38,10 @@ module Data.Vec.Lazy (
     init,
     -- * Reverse
     reverse,
+    -- * Dependent folds
+    dfoldr,
+    dfoldl,
+    dfoldl',
     -- * Concatenation and splitting
     (++),
     split,
@@ -84,7 +88,7 @@ module Data.Vec.Lazy (
 
 import Prelude
        (Bool (..), Eq (..), Functor (..), Int, Maybe (..), Monad (..), Num (..),
-       Ord (..), Ordering (..), Show (..), id, seq, showParen, showString,
+       Ord (..), Ordering (..), Show (..), flip, id, seq, showParen, showString,
        uncurry, ($), (&&), (.))
 
 import Control.Applicative (Applicative (..), (<$>))
@@ -98,6 +102,8 @@ import Data.Monoid         (Monoid (..))
 import Data.Nat            (Nat (..))
 import Data.Semigroup      (Semigroup (..))
 import Data.Typeable       (Typeable)
+
+import SafeCompat (coerce)
 
 --- Instances
 import qualified Data.Foldable    as I (Foldable (..))
@@ -505,8 +511,52 @@ init (x ::: xs@(_ ::: _)) = x ::: init xs
 -- @since 0.2.1
 --
 reverse :: Vec n a -> Vec n a
-reverse VNil       = VNil
-reverse (x ::: xs) = snoc (reverse xs) x
+reverse xs = unflipVec (dfoldl c (FlipVec VNil) xs)
+  where
+    c :: forall a m. FlippedVec a m -> a -> FlippedVec a ('S m)
+    c = coerce (flip (:::) :: Vec m a -> a -> Vec ('S m) a)
+
+newtype FlippedVec a n = FlipVec { unflipVec :: Vec n a }
+
+-------------------------------------------------------------------------------
+-- Indexed folds
+-------------------------------------------------------------------------------
+
+-- | Dependent right fold.
+--
+-- This could been called an indexed fold, but that name is already used.
+--
+-- @since 0.4.1
+--
+dfoldr :: forall n a f. (forall m. a -> f m -> f ('S m)) -> f 'Z -> Vec n a -> f n
+dfoldr c n = go where
+    go :: Vec m a -> f m
+    go VNil       = n
+    go (x ::: xs) = c x (go xs)
+
+-- | Dependent left fold.
+--
+-- @since 0.4.1
+--
+dfoldl :: forall n a f. (forall m. f m -> a -> f ('S m))-> f 'Z -> Vec n a -> f n
+dfoldl _ n VNil       = n
+dfoldl c n (x ::: xs) = unwrapSucc (dfoldl c' (WrapSucc (c n x)) xs)
+  where
+    c' :: forall m. WrappedSucc f m -> a -> WrappedSucc f ('S m)
+    c' = coerce (c :: f ('S m) -> a -> f ('S ('S m)))
+
+-- | Dependent strict left fold.
+--
+-- @since 0.4.1
+--
+dfoldl' :: forall n a f. (forall m. f m -> a -> f ('S m))-> f 'Z -> Vec n a -> f n
+dfoldl' _ !n VNil       = n
+dfoldl' c !n (x ::: xs) = unwrapSucc (dfoldl' c' (WrapSucc (c n x)) xs)
+  where
+    c' :: forall m. WrappedSucc f m -> a -> WrappedSucc f ('S m)
+    c' = coerce (c :: f ('S m) -> a -> f ('S ('S m)))
+
+newtype WrappedSucc f n = WrapSucc { unwrapSucc :: f ('S n) }
 
 -------------------------------------------------------------------------------
 -- Concatenation

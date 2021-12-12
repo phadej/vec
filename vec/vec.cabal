@@ -118,6 +118,7 @@ library
   other-modules:
     Control.Lens.Yocto
     Data.Functor.Confusing
+    SafeCompat
 
   -- GHC boot libs
   build-depends:
