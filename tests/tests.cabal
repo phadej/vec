@@ -33,13 +33,14 @@ library
   hs-source-dirs:   src
   ghc-options:      -Wall -fprint-explicit-kinds
   exposed-modules:
+    Laws
     Models
     ModelTest
     Tests
     Uniformity
 
   build-depends:
-    , base        >=0 && <5
+    , base        <5
     , bin
     , fin
     , QuickCheck
@@ -47,7 +48,7 @@ library
   build-depends:
     , containers
     , math-functions
-    , tasty             ^>=1.2.3 || ^>=1.3.1
+    , tasty             ^>=1.2.3 || ^>=1.3.1 || ^>=1.4
     , tasty-quickcheck  ^>=0.10.1
 
   if !impl(ghc >=7.10)

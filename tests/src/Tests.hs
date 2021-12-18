@@ -24,6 +24,7 @@ import qualified Data.Type.Nat   as N
 import qualified Data.Wrd        as W
 import qualified Test.QuickCheck as QC
 
+import Laws
 import Models
 import Uniformity
 
@@ -54,6 +55,8 @@ natTests :: TestTree
 natTests = testGroup "Data.Nat"
     [ ordTests          N.toNatural
     , numTests' False   N.toNatural
+
+    , ordLaws (0 :: N.Nat)
     ]
 
 -------------------------------------------------------------------------------
@@ -66,6 +69,8 @@ finTests = testGroup "Data.Fin"
 
     , testUniformity (QC.arbitrary :: QC.Gen (F.Fin N.Nat3)) id 2
     , testUniformity (QC.arbitrary :: QC.Gen (F.Fin N.Nat9)) id 8
+
+    , ordLaws (0 :: F.Fin N.Nat9)
     ]
 
 -------------------------------------------------------------------------------
@@ -85,6 +90,8 @@ wrdTests = testGroup "Data.Wrd"
 
     , testUniformity (QC.arbitrary :: QC.Gen (Wrd N.Nat2)) id 4
     , testUniformity (QC.arbitrary :: QC.Gen (Wrd N.Nat5)) id 32
+
+    , ordLaws (0 :: Wrd N.Nat8)
     ]
   where
     wrd8 :: Wrd N.Nat8 -> Word8
@@ -104,6 +111,9 @@ binTests = testGroup "Data.Bin"
     , ordTests          BP.toNatural
     , numTests' False   B.toNatural
     , numTests' False   BP.toNatural
+
+    , ordLaws (0 :: B.Bin)
+    , ordLaws (0 :: BP.BinP)
     ]
 
 -------------------------------------------------------------------------------
@@ -126,4 +136,7 @@ posTests = testGroup "Data.Pos"
 
     , testUniformity (QC.arbitrary :: QC.Gen (PosP ('B1 ('B1 ('B1 ('B1 'BE)))))) id 31
     , testUniformity (QC.arbitrary :: QC.Gen (PosP ('B1 ('B1 ('B0 ('B1 'BE)))))) id 27
+
+    , ordLaws (P.top :: Pos B.Bin4)
+    , ordLaws (PP.top :: PosP BP.BinP5)
     ]
