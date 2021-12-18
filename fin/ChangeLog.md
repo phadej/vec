@@ -2,6 +2,7 @@
 
 - Add `boring` instances
 - Explicitly implement `>=` and `>` for `Nat`.
+- `<=`, `>=` and `min` for `Nat` are lazier
 
 ## 0.2
 
