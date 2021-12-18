@@ -63,17 +63,13 @@ instance Ord Nat where
     compare (S _) Z     = GT
     compare (S n) (S m) = compare n m
 
-    Z   < Z   = False
-    Z   < S _ = True
-    S _ < Z   = False
-    S n < S m = n < m
-
     Z   <= _   = True
     S _ <= Z   = False
     S n <= S m = n <= m
 
-    n >  m = not (m <= n)
-    n >= m = not (m < n)
+    n <  m = not (m <= n)
+    n >  m = not (n <= m)
+    n >= m = m <= n
 
     min Z     _     = Z
     min (S _) Z     = Z
