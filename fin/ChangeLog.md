@@ -1,6 +1,7 @@
 ## 0.2.1
 
 - Add `boring` instances
+- Explicitly implement `>=` and `>` for `Nat`.
 
 ## 0.2
 

@@ -73,6 +73,9 @@ instance Ord Nat where
     S _ <= Z   = False
     S n <= S m = n <= m
 
+    n >  m = not (m <= n)
+    n >= m = not (m < n)
+
     min Z     Z     = Z
     min Z     (S _) = Z
     min (S _) Z     = Z
