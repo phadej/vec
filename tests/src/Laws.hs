@@ -1,16 +1,9 @@
 {-# LANGUAGE ScopedTypeVariables #-}
-module Main (main) where
+module Laws where
 
 import Test.QuickCheck       (label, counterexample, Arbitrary, Property, property, (===))
-import Test.Tasty            (TestTree, defaultMain, testGroup)
+import Test.Tasty            (TestTree, testGroup)
 import Test.Tasty.QuickCheck (testProperty)
-
-import Data.Nat (Nat)
-
-main :: IO ()
-main = defaultMain $ testGroup "fin"
-    [ ordLaws (0 :: Nat)
-    ]
 
 ordLaws :: forall a. (Arbitrary a, Ord a, Show a) => a -> TestTree
 ordLaws p = testGroup "Ord"
