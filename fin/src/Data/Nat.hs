@@ -68,13 +68,14 @@ instance Ord Nat where
     S _ < Z   = False
     S n < S m = n < m
 
-    Z   <= Z   = True
-    Z   <= S _ = True
+    Z   <= _   = True
     S _ <= Z   = False
     S n <= S m = n <= m
 
-    min Z     Z     = Z
-    min Z     (S _) = Z
+    n >  m = not (m <= n)
+    n >= m = not (m < n)
+
+    min Z     _     = Z
     min (S _) Z     = Z
     min (S n) (S m) = S (min n m)
 
