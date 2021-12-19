@@ -75,10 +75,6 @@ import qualified GHC.TypeLits as GHC
 
 import Unsafe.Coerce (unsafeCoerce)
 
-#if !MIN_VERSION_base(4,11,0)
-import Data.Type.Equality (type (==))
-#endif
-
 import Data.Nat
 import TrustworthyCompat
 
@@ -300,7 +296,7 @@ newtype Fix a (n :: Nat) = Fix { getFix :: (a -> a) -> a }
 -- | Convert to GHC 'GHC.Nat'.
 --
 -- >>> :kind! ToGHC Nat5
--- ToGHC Nat5 :: GHC.Nat
+-- ToGHC Nat5 :: GHC.Nat...
 -- = 5
 --
 type family ToGHC (n :: Nat) :: GHC.Nat where
@@ -348,13 +344,13 @@ type family Mult2 (n :: Nat) :: Nat where
 
 -- | Division by two. 'False' is 0 and 'True' is 1 as a remainder.
 --
--- >>> :kind! DivMod2 Nat7
--- DivMod2 Nat7 :: (Nat, Bool)
--- = '( 'S ('S ('S 'Z)), 'True)
+-- >>> :kind! DivMod2 Nat7 == '(Nat3, True)
+-- DivMod2 Nat7 == '(Nat3, True) :: Bool
+-- = 'True
 --
--- >>> :kind! DivMod2 Nat4
--- DivMod2 Nat4 :: (Nat, Bool)
--- = '( 'S ('S 'Z), 'False)
+-- >>> :kind! DivMod2 Nat4 == '(Nat2, False)
+-- DivMod2 Nat4 == '(Nat2, False) :: Bool
+-- = 'True
 --
 type family DivMod2 (n :: Nat) :: (Nat, Bool) where
     DivMod2 'Z          = '( 'Z, 'False)

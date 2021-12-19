@@ -3,6 +3,7 @@
 ## 0.1.2
 
 - Add `boring` instances
+- Add `EqBinP` and `EqBin` type families
 
 ## 0.1.1
 

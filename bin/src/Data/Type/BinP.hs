@@ -28,6 +28,7 @@ module Data.Type.BinP (
     reflectToNum,
     -- * Type equality
     eqBinP,
+    EqBinP,
     -- * Induction
     induction,
     -- * Arithmetic
@@ -146,6 +147,17 @@ instance TestEquality SBinP where
     testEquality SB1 SB1 = eqBinP
 
     testEquality _ _ = Nothing
+
+-- | @since 0.1.2
+type family EqBinP (n :: BinP) (m :: BinP) where
+    EqBinP 'BE 'BE         = 'True
+    EqBinP ('B0 n) ('B0 m) = EqBinP n m
+    EqBinP ('B1 n) ('B1 m) = EqBinP n m
+    EqBinP n       m       = 'False
+
+#if !MIN_VERSION_base(4,11,0)
+type instance n == m = EqBinP n m
+#endif
 
 -------------------------------------------------------------------------------
 -- Convert to GHC Nat
