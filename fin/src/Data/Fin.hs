@@ -248,8 +248,8 @@ instance QC.CoArbitrary (Fin n) where
 
 instance (n ~ 'S m, N.SNatI m) => QC.Function (Fin n) where
     function = case N.snat :: N.SNat m of
-        N.SZ -> QC.functionMap (\FZ -> ()) (\() -> FZ)
-        N.SS -> QC.functionMap isMin       (maybe FZ FS)
+        N.SZ -> QC.functionMap (\_ -> ()) (\() -> FZ)
+        N.SS -> QC.functionMap isMin      (maybe FZ FS)
 
 -- TODO: https://github.com/nick8325/quickcheck/pull/283
 -- newtype Fun b m = Fun { getFun :: (Fin ('S m) -> b) -> Fin ('S m) QC.:-> b }

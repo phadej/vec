@@ -72,6 +72,7 @@ library
     , fin         ^>=0.2
     , hashable    >=1.2.7.0 && <1.5
     , QuickCheck  ^>=2.14.2
+    , some        ^>=1.0.3
 
   if !impl(ghc >=7.10)
     build-depends: nats ^>=1.1.2

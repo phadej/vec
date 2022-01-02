@@ -38,6 +38,7 @@ module Data.Type.Nat (
     eqNat,
     EqNat,
     discreteNat,
+    cmpNat,
     -- * Induction
     induction1,
     -- ** Example: unfoldedFix
@@ -64,12 +65,16 @@ module Data.Type.Nat (
     proofMultNOne,
     )  where
 
-import Data.Function   (fix)
-import Data.Proxy      (Proxy (..))
-import Data.Type.Dec   (Dec (..))
-import Data.Typeable   (Typeable)
-import Numeric.Natural (Natural)
-import Data.Boring     (Boring (..))
+import Control.DeepSeq   (NFData (..))
+import Data.Boring       (Boring (..))
+import Data.Function     (fix)
+import Data.GADT.Compare (GCompare (..), GEq (..), GOrdering (..))
+import Data.GADT.DeepSeq (GNFData (..))
+import Data.GADT.Show    (GShow (..))
+import Data.Proxy        (Proxy (..))
+import Data.Type.Dec     (Dec (..))
+import Data.Typeable     (Typeable)
+import Numeric.Natural   (Natural)
 
 import qualified GHC.TypeLits as GHC
 
@@ -85,6 +90,7 @@ import TrustworthyCompat
 -- >>> import Data.Type.Equality
 -- >>> import Control.Applicative (Const (..))
 -- >>> import Data.Coerce (coerce)
+-- >>> import Data.GADT.Compare (GOrdering (..))
 
 -------------------------------------------------------------------------------
 -- SNat
@@ -246,6 +252,61 @@ type instance n == m = EqNat n m
 -- | @since 0.2.1
 instance SNatI n => Boring (SNat n) where
     boring = snat
+
+-- | @since 0.2.1
+instance GShow SNat where
+    gshowsPrec = showsPrec
+
+-- | @since 0.2.1
+instance NFData (SNat n) where
+    rnf SZ = ()
+    rnf SS = ()
+
+-- | @since 0.2.1
+instance GNFData SNat where
+    grnf = rnf
+
+-- | @since 0.2.1
+instance GEq SNat where
+    geq = testEquality
+
+-- | @since 0.2.1
+instance GCompare SNat where
+    gcompare SZ SZ = GEQ
+    gcompare SZ SS = GLT
+    gcompare SS SZ = GGT
+    gcompare SS SS = cmpNat
+
+-- | Decide equality of type-level numbers.
+--
+-- >>> cmpNat :: GOrdering Nat3 (Plus Nat1 Nat2)
+-- GEQ
+--
+-- >>> cmpNat :: GOrdering Nat3 (Mult Nat2 Nat2)
+-- GLT
+--
+-- >>> cmpNat :: GOrdering Nat5 (Mult Nat2 Nat2)
+-- GGT
+--
+cmpNat :: forall n m. (SNatI n, SNatI m) => GOrdering n m
+cmpNat = getNatCmp $ induction (NatCmp start) (\p -> NatCmp (step p)) where
+    start :: forall p. SNatI p => GOrdering 'Z p
+    start = case snat :: SNat p of
+        SZ -> GEQ
+        SS -> GLT
+
+    step :: forall p q. SNatI q => NatCmp p -> GOrdering ('S p) q
+    step hind = case snat :: SNat q of
+        SZ -> GGT
+        SS -> step' hind
+
+    step' :: forall p q. SNatI q => NatCmp p -> GOrdering ('S p) ('S q)
+    step' (NatCmp hind) = case hind :: GOrdering p q of
+        GEQ -> GEQ
+        GLT -> GLT
+        GGT -> GGT
+
+newtype NatCmp n = NatCmp { getNatCmp :: forall m. SNatI m => GOrdering n m }
 
 -------------------------------------------------------------------------------
 -- Induction
