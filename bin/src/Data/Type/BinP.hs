@@ -6,6 +6,7 @@
 {-# LANGUAGE KindSignatures       #-}
 {-# LANGUAGE RankNTypes           #-}
 {-# LANGUAGE ScopedTypeVariables  #-}
+{-# LANGUAGE StandaloneDeriving   #-}
 {-# LANGUAGE TypeFamilies         #-}
 {-# LANGUAGE TypeOperators        #-}
 {-# LANGUAGE UndecidableInstances #-}
@@ -46,12 +47,16 @@ module Data.Type.BinP (
     BinP1, BinP2, BinP3, BinP4, BinP5, BinP6, BinP7, BinP8, BinP9,
     ) where
 
-import Data.BinP       (BinP (..))
-import Data.Boring     (Boring (..))
-import Data.Nat        (Nat (..))
-import Data.Proxy      (Proxy (..))
-import Data.Typeable   (Typeable)
-import Numeric.Natural (Natural)
+import Control.DeepSeq   (NFData (..))
+import Data.BinP         (BinP (..))
+import Data.Boring       (Boring (..))
+import Data.GADT.Compare (GEq (..))
+import Data.GADT.DeepSeq (GNFData (..))
+import Data.GADT.Show    (GShow (..))
+import Data.Nat          (Nat (..))
+import Data.Proxy        (Proxy (..))
+import Data.Typeable     (Typeable)
+import Numeric.Natural   (Natural)
 
 import qualified Data.Type.Nat as N
 import qualified GHC.TypeLits  as GHC
@@ -73,15 +78,17 @@ data SBinP (b :: BinP) where
     SB1 :: SBinPI b => SBinP ('B1 b)
   deriving (Typeable)
 
+deriving instance Show (SBinP b)
+
 -------------------------------------------------------------------------------
 -- Implicits
 -------------------------------------------------------------------------------
 
 -- | Let constraint solver construct 'SBinP'.
 class                SBinPI (b :: BinP) where sbinp :: SBinP b
-instance             SBinPI 'BE          where sbinp = SBE
-instance SBinPI b => SBinPI ('B0 b)      where sbinp = SB0
-instance SBinPI b => SBinPI ('B1 b)      where sbinp = SB1
+instance             SBinPI 'BE         where sbinp = SBE
+instance SBinPI b => SBinPI ('B0 b)     where sbinp = SB0
+instance SBinPI b => SBinPI ('B1 b)     where sbinp = SB1
 
 -------------------------------------------------------------------------------
 -- Conversions
@@ -270,6 +277,28 @@ induction e o i = go where
 -- | @since 0.1.2
 instance SBinPI b => Boring (SBinP b) where
     boring = sbinp
+
+-------------------------------------------------------------------------------
+-- some
+-------------------------------------------------------------------------------
+
+-- | @since 0.1.2
+instance GShow SBinP where
+    gshowsPrec = showsPrec
+
+-- | @since 0.1.2
+instance NFData (SBinP n) where
+    rnf SBE = ()
+    rnf SB0 = ()
+    rnf SB1 = ()
+
+-- | @since 0.1.2
+instance GNFData SBinP where
+    grnf = rnf
+
+-- | @since 0.1.2
+instance GEq SBinP where
+    geq = testEquality
 
 -------------------------------------------------------------------------------
 -- Aliases of BinP

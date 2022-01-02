@@ -35,6 +35,7 @@ import Prelude
        Ordering (..), Show (..), ShowS, String, either, fmap, fromIntegral, map,
        showParen, showString, ($), (*), (+), (++), (.))
 
+import Control.DeepSeq (NFData (..))
 import Data.Bin        (BinP (..))
 import Data.Nat        (Nat (..))
 import Data.Proxy      (Proxy (..))
@@ -107,6 +108,17 @@ instance (N.SNatI n, SBinPI b) => Bounded (PosP' n b) where
         SBE -> AtEnd maxBound
         SB0 -> There0 maxBound
         SB1 -> There1 maxBound
+
+-- | @since 0.1.2
+instance NFData (PosP b) where
+    rnf (PosP p) = rnf p
+
+-- | @since 0.1.2
+instance NFData (PosP' n b) where
+    rnf (AtEnd w)  = rnf w
+    rnf (Here w)   = rnf w
+    rnf (There1 p) = rnf p
+    rnf (There0 p) = rnf p
 
 -------------------------------------------------------------------------------
 -- QuickCheck

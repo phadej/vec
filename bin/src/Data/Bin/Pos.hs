@@ -32,6 +32,7 @@ import Prelude
        (Bounded (..), Eq, Int, Integer, Ord (..), Show (..), ShowS, String,
        fmap, fromIntegral, map, showParen, showString, ($), (.))
 
+import Control.DeepSeq (NFData (..))
 import Data.Bin        (Bin (..), BinP (..))
 import Data.BinP.PosP  (PosP (..))
 import Data.Typeable   (Typeable)
@@ -79,6 +80,10 @@ instance Show (Pos b) where
 instance (SBinPI n, b ~ 'BP n) => Bounded (Pos b) where
     minBound = Pos minBound
     maxBound = Pos maxBound
+
+-- | @since 0.1.2
+instance NFData (Pos b) where
+    rnf (Pos p) = rnf p
 
 -------------------------------------------------------------------------------
 -- QuickCheck

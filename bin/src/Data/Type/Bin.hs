@@ -6,6 +6,7 @@
 {-# LANGUAGE KindSignatures       #-}
 {-# LANGUAGE RankNTypes           #-}
 {-# LANGUAGE ScopedTypeVariables  #-}
+{-# LANGUAGE StandaloneDeriving   #-}
 {-# LANGUAGE TypeFamilies         #-}
 {-# LANGUAGE TypeOperators        #-}
 {-# LANGUAGE UndecidableInstances #-}
@@ -50,13 +51,17 @@ module Data.Type.Bin (
     Bin0, Bin1, Bin2, Bin3, Bin4, Bin5, Bin6, Bin7, Bin8, Bin9,
     ) where
 
-import Data.Bin        (Bin (..), BinP (..))
-import Data.Boring     (Boring (..))
-import Data.Nat        (Nat (..))
-import Data.Proxy      (Proxy (..))
-import Data.Type.BinP  (SBinP (..), SBinPI (..))
-import Data.Typeable   (Typeable)
-import Numeric.Natural (Natural)
+import Control.DeepSeq   (NFData (..))
+import Data.Bin          (Bin (..), BinP (..))
+import Data.Boring       (Boring (..))
+import Data.GADT.Compare (GEq (..))
+import Data.GADT.DeepSeq (GNFData (..))
+import Data.GADT.Show    (GShow (..))
+import Data.Nat          (Nat (..))
+import Data.Proxy        (Proxy (..))
+import Data.Type.BinP    (SBinP (..), SBinPI (..))
+import Data.Typeable     (Typeable)
+import Numeric.Natural   (Natural)
 
 import qualified Data.Type.BinP as BP
 import qualified Data.Type.Nat  as N
@@ -83,6 +88,8 @@ data SBin (b :: Bin) where
     SBZ :: SBin 'BZ
     SBP :: SBinPI b => SBin ('BP b)
   deriving (Typeable)
+
+deriving instance Show (SBin b)
 
 -------------------------------------------------------------------------------
 -- Implicits
@@ -394,6 +401,27 @@ type family Plus (a :: Bin) (b :: Bin) :: Bin where
 -- | @since 0.1.2
 instance SBinI b => Boring (SBin b) where
     boring = sbin
+
+-------------------------------------------------------------------------------
+-- some
+-------------------------------------------------------------------------------
+
+-- | @since 0.1.2
+instance GShow SBin where
+    gshowsPrec = showsPrec
+
+-- | @since 0.1.2
+instance NFData (SBin n) where
+    rnf SBZ = ()
+    rnf SBP = ()
+
+-- | @since 0.1.2
+instance GNFData SBin where
+    grnf = rnf
+
+-- | @since 0.1.2
+instance GEq SBin where
+    geq = testEquality
 
 -------------------------------------------------------------------------------
 --- Aliases of Bin

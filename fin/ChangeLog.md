@@ -3,6 +3,8 @@
 - Add `boring` instances
 - Explicitly implement `>=` and `>` for `Nat`.
 - `<=`, `>=` and `min` for `Nat` are lazier
+- Add `NFData (SNat n)` instance
+- Add `GEq`, `GCompare`, `GNFData`, `GShow` (from `some` package) instances for `SNat`.
 
 ## 0.2
 

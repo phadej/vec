@@ -4,6 +4,8 @@
 
 - Add `boring` instances
 - Add `EqBinP` and `EqBin` type families
+- Add `NFData` instances
+- Add `GEq`, `GNFData`, `GShow` (from `some` package) instances for `SBin` and `SBinP`.
 
 ## 0.1.1
 
