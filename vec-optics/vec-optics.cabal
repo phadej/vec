@@ -1,6 +1,7 @@
 cabal-version:      2.2
 name:               vec-optics
 version:            0.4
+x-revision:         1
 synopsis:           Vec: length-indexed (sized) list: optics support
 category:           Data, Dependent Types, Optics
 description:

@@ -1,6 +1,7 @@
 cabal-version:      2.2
 name:               ral-lens
 version:            0.2
+x-revision:         1
 synopsis:           Length-indexed random access lists: lens utilities.
 category:           Data, Dependent Types, Singletons, Lens
 description:
