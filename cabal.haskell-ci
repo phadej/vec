@@ -3,6 +3,7 @@ tests:    >=8.0
 doctest:  >=8.6 && <9
 docspec:  >=8.0
 haddock:  >=8.6
+haddock-components: libs
 
 jobs-selection: any
 

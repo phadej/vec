@@ -1,5 +1,4 @@
 packages: bin
-packages: dec
 packages: fin
 packages: ral
 packages: vec
