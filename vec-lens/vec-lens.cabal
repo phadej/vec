@@ -1,7 +1,7 @@
 cabal-version:      2.2
 name:               vec-lens
 version:            0.4
-x-revision:         1
+x-revision:         2
 synopsis:           Vec: length-indexed (sized) list: lens support
 category:           Data, Dependent Types, Lens
 description:
@@ -28,9 +28,10 @@ tested-with:
    || ==8.4.4
    || ==8.6.5
    || ==8.8.4
-   || ==8.10.4
-   || ==9.0.1
-   || ==9.2.1
+   || ==8.10.7
+   || ==9.0.2
+   || ==9.2.4
+   || ==9.4.1
 
 source-repository head
   type:     git
@@ -49,7 +50,7 @@ library
     Data.Vec.Pull.Lens
 
   -- GHC boot libs
-  build-depends:    base >=4.7 && <4.17
+  build-depends:    base >=4.7 && <4.18
 
   -- siblings
   build-depends:
@@ -57,7 +58,7 @@ library
     , vec  ^>=0.4
 
   -- other dependencies
-  build-depends:    lens ^>=4.18.1 || ^>=4.19.1 || ^>=5 || ^>=5.1
+  build-depends:    lens ^>=4.18.1 || ^>=4.19.1 || ^>=5 || ^>=5.1 || ^>=5.2
   other-extensions:
     CPP
     FlexibleContexts
