@@ -17,7 +17,6 @@ import GHC.Generics       (Generic)
 import Test.Inspection
 
 import qualified Data.Fin      as F
-import qualified Data.Fin.Enum as E
 import qualified Data.Type.Nat as N
 
 import Unsafe.Coerce (unsafeCoerce)
@@ -51,26 +50,6 @@ rhs = 5
 
 inspect $ 'lhsInline === 'rhs
 inspect $ 'lhsNormal =/= 'rhs
-
--------------------------------------------------------------------------------
--- Enum
--------------------------------------------------------------------------------
-
--- | Note: GHC 8.0 (but not GHC 8.2?) seems to be
--- so smart, it reuses dictionary value.
---
--- Therefore, we define own local Ordering'
-data Ordering' = LT' | EQ' | GT' deriving (Generic)
-
-lhsEnum :: Ordering' -> F.Fin N.Nat3
-lhsEnum = E.gfrom
-
-rhsEnum :: Ordering' -> F.Fin N.Nat3
-rhsEnum LT' = FZ
-rhsEnum EQ' = FS FZ
-rhsEnum GT' = FS (FS FZ)
-
-inspect $ 'lhsEnum ==- 'rhsEnum
 
 -------------------------------------------------------------------------------
 -- Proofs

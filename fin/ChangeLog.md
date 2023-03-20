@@ -1,3 +1,9 @@
+## 0.3
+
+- Remove `Data.Fin.Enum` module. It didn't work as well as hoped.
+- Add `EqP` and `OrdP` instances.
+- Add `GShow Fin` instance.
+
 ## 0.2.1
 
 - Add `boring` instances

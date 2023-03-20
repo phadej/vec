@@ -1,5 +1,11 @@
 # Version history for bin
 
+## 0.1.3
+
+- Add `EqP` and `OrdP` instances.
+- Add `GShow Pos/P` instances.
+- Better 'PosP.toNatural' implementation.
+
 ## 0.1.2
 
 - Add `boring` instances

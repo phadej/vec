@@ -28,8 +28,9 @@ tested-with:
    || ==8.8.4
    || ==8.10.7
    || ==9.0.2
-   || ==9.2.4
-   || ==9.4.1
+   || ==9.2.7
+   || ==9.4.4
+   || ==9.6.1
 
 source-repository head
   type:     git
@@ -48,12 +49,12 @@ library
     Data.Vec.Pull.Optics
 
   -- GHC boot libs
-  build-depends:    base >=4.9 && <4.18
+  build-depends:    base >=4.9 && <4.19
 
   -- siblings
   build-depends:
-    , fin  ^>=0.2
-    , vec  ^>=0.4
+    , fin  ^>=0.2 || ^>=0.3
+    , vec  ^>=0.4 || ^>=0.5
 
   -- other dependencies
   build-depends:    optics-core >=0.2 && <0.5
