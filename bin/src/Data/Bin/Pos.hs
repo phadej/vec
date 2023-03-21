@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP                    #-}
 {-# LANGUAGE DataKinds              #-}
 {-# LANGUAGE DeriveDataTypeable     #-}
 {-# LANGUAGE EmptyCase              #-}
@@ -29,14 +30,20 @@ module Data.Bin.Pos (
     ) where
 
 import Prelude
-       (Bounded (..), Eq, Int, Integer, Ord (..), Show (..), ShowS, String,
-       fmap, fromIntegral, map, showParen, showString, ($), (.))
+       (Bounded (..), Eq, Int, Integer, Ord (..), Show (..), ShowS, String, fmap, fromIntegral, map, showParen,
+       showString, ($), (.))
 
 import Control.DeepSeq (NFData (..))
 import Data.Bin        (Bin (..), BinP (..))
 import Data.BinP.PosP  (PosP (..))
+import Data.GADT.Show  (GShow (..))
 import Data.Typeable   (Typeable)
 import Numeric.Natural (Natural)
+
+#if MIN_VERSION_some(1,0,5)
+import Data.EqP  (EqP (..))
+import Data.OrdP (OrdP (..))
+#endif
 
 import qualified Data.BinP.PosP  as PP
 import qualified Data.Boring     as Boring
@@ -47,9 +54,12 @@ import qualified Test.QuickCheck as QC
 import Data.Type.Bin
 
 -- $setup
--- >>> import Prelude (map, putStrLn, Ord (..), Bounded (..), ($), (.))
+-- >>> import Prelude (map, putStrLn, Ord (..), Bounded (..), ($), (.), print)
 -- >>> import Data.Foldable (traverse_)
 -- >>> import Data.Type.Bin
+-- >>> import Data.EqP (eqp)
+-- >>> import Data.OrdP (comparep)
+-- >>> :set -XTypeApplications
 
 -------------------------------------------------------------------------------
 -- Data
@@ -72,6 +82,40 @@ deriving instance Ord (Pos b)
 
 instance Show (Pos b) where
     showsPrec d = showsPrec d . toNatural
+
+-- | @since 0.1.3
+instance GShow Pos where
+    gshowsPrec = showsPrec
+
+#if MIN_VERSION_some(1,0,5)
+-- |
+--
+-- >>> eqp (top :: Pos Bin4) (top :: Pos Bin6)
+-- True
+--
+-- >>> let xs = universe @Bin4; ys = universe @Bin6 in traverse_ print [ [ eqp x y | y <- ys ] | x <- xs ]
+-- [True,False,False,False,False,False]
+-- [False,True,False,False,False,False]
+-- [False,False,True,False,False,False]
+-- [False,False,False,True,False,False]
+--
+-- @since 0.1.3
+instance EqP Pos where
+    eqp (Pos x) (Pos y) = eqp x y
+
+-- |
+--
+-- >>> let xs = universe @Bin4; ys = universe @Bin6 in traverse_ print [ [ comparep x y | y <- ys ] | x <- xs ]
+-- [EQ,LT,LT,LT,LT,LT]
+-- [GT,EQ,LT,LT,LT,LT]
+-- [GT,GT,EQ,LT,LT,LT]
+-- [GT,GT,GT,EQ,LT,LT]
+--
+-- @since 0.1.3
+--
+instance OrdP Pos where
+    comparep (Pos x) (Pos y) = comparep x y
+#endif
 
 -- |
 --

@@ -1,7 +1,6 @@
 cabal-version:      2.2
 name:               vec
-version:            0.4.1
-x-revision:         1
+version:            0.5
 synopsis:           Vec: length-indexed (sized) list
 category:           Data, Dependent Types
 description:
@@ -80,8 +79,9 @@ tested-with:
    || ==8.8.4
    || ==8.10.7
    || ==9.0.2
-   || ==9.2.4
-   || ==9.4.1
+   || ==9.2.7
+   || ==9.4.4
+   || ==9.6.1
 
 source-repository head
   type:     git
@@ -113,19 +113,17 @@ library
   hs-source-dirs:           src
   exposed-modules:
     Data.Vec.DataFamily.SpineStrict
-    Data.Vec.DataFamily.SpineStrict.Pigeonhole
     Data.Vec.Lazy
     Data.Vec.Lazy.Inline
     Data.Vec.Pull
 
   other-modules:
     Control.Lens.Yocto
-    Data.Functor.Confusing
     SafeCompat
 
   -- GHC boot libs
   build-depends:
-    , base          >=4.7     && <4.18
+    , base          >=4.7     && <4.19
     , deepseq       >=1.3.0.1 && <1.5
     , transformers  >=0.3.0.0 && <0.7
 
@@ -140,7 +138,7 @@ library
     build-depends: transformers-compat ^>=0.6.5 || ^>=0.7.1
 
   -- siblings
-  build-depends:            fin ^>=0.2.1
+  build-depends:            fin ^>=0.3
 
   -- other dependencies
   build-depends:
@@ -156,7 +154,7 @@ library
       build-depends: adjunctions ^>=4.4
 
   if flag(semigroupoids)
-    build-depends: semigroupoids ^>=5.3.5
+    build-depends: semigroupoids ^>=5.3.5 || ^>=6
 
   other-extensions:
     CPP
@@ -178,7 +176,6 @@ test-suite inspection
   other-modules:
     Inspection
     Inspection.DataFamily.SpineStrict
-    Inspection.DataFamily.SpineStrict.Pigeonhole
 
   ghc-options:      -Wall -fprint-explicit-kinds
   hs-source-dirs:   test
@@ -187,7 +184,7 @@ test-suite inspection
     , base
     , base-compat
     , fin
-    , inspection-testing  ^>=0.4.2.2
+    , inspection-testing  ^>=0.4.2.2 || ^>=0.5.0.1
     , tagged
     , vec
 
@@ -203,7 +200,7 @@ benchmark bench
   other-modules:    DotProduct
   build-depends:
     , base
-    , criterion  >=1.4.0.0 && <1.6
+    , criterion  >=1.4.0.0 && <1.7
     , fin
     , vec
     , vector

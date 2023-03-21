@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP                  #-}
 {-# LANGUAGE DataKinds            #-}
 {-# LANGUAGE DeriveDataTypeable   #-}
 {-# LANGUAGE EmptyCase            #-}
@@ -53,6 +54,7 @@ module Data.Fin (
 
 import Control.DeepSeq    (NFData (..))
 import Data.Bifunctor     (bimap)
+import Data.GADT.Show     (GShow (..))
 import Data.Hashable      (Hashable (..))
 import Data.List.NonEmpty (NonEmpty (..))
 import Data.Proxy         (Proxy (..))
@@ -60,6 +62,11 @@ import Data.Type.Nat      (Nat (..))
 import Data.Typeable      (Typeable)
 import GHC.Exception      (ArithException (..), throw)
 import Numeric.Natural    (Natural)
+
+#if MIN_VERSION_some(1,0,5)
+import Data.EqP  (EqP (..))
+import Data.OrdP (OrdP (..))
+#endif
 
 import qualified Data.Boring           as Boring
 import qualified Data.List.NonEmpty    as NE
@@ -71,10 +78,14 @@ import qualified Test.QuickCheck       as QC
 -- $setup
 -- >>> import Data.List (genericLength)
 -- >>> import Data.List.NonEmpty (NonEmpty (..))
+-- >>> import Data.Foldable (traverse_)
 -- >>> import Numeric.Natural (Natural)
 -- >>> import qualified Data.Type.Nat as N
 -- >>> import qualified Data.Universe.Class as U
 -- >>> import qualified Data.Universe.Helpers as U
+-- >>> import Data.EqP (eqp)
+-- >>> import Data.OrdP (comparep)
+-- >>> :set -XTypeApplications
 
 -------------------------------------------------------------------------------
 -- Type
@@ -93,11 +104,56 @@ data Fin (n :: Nat) where
 deriving instance Eq (Fin n)
 deriving instance Ord (Fin n)
 
+#if MIN_VERSION_some(1,0,5)
+
+-- |
+--
+-- >>> eqp FZ FZ
+-- True
+--
+-- >>> eqp FZ (FS FZ)
+-- False
+--
+-- >>> let xs = universe @N.Nat4; ys = universe @N.Nat6 in traverse_ print [ [ eqp x y | y <- ys ] | x <- xs ]
+-- [True,False,False,False,False,False]
+-- [False,True,False,False,False,False]
+-- [False,False,True,False,False,False]
+-- [False,False,False,True,False,False]
+--
+-- @since 0.2.2
+--
+instance EqP Fin where
+    eqp FZ     FZ     = True
+    eqp FZ     (FS _) = False
+    eqp (FS _) FZ     = False
+    eqp (FS n) (FS m) = eqp n m
+
+-- |
+--
+-- >>> let xs = universe @N.Nat4; ys = universe @N.Nat6 in traverse_ print [ [ comparep x y | y <- ys ] | x <- xs ]
+-- [EQ,LT,LT,LT,LT,LT]
+-- [GT,EQ,LT,LT,LT,LT]
+-- [GT,GT,EQ,LT,LT,LT]
+-- [GT,GT,GT,EQ,LT,LT]
+--
+-- @since 0.2.2
+instance OrdP Fin where
+    comparep FZ     FZ     = EQ
+    comparep FZ     (FS _) = LT
+    comparep (FS _) FZ     = GT
+    comparep (FS n) (FS m) = comparep n m
+
+#endif
+
 -- | 'Fin' is printed as 'Natural'.
 --
 -- To see explicit structure, use 'explicitShow' or 'explicitShowsPrec'
 instance Show (Fin n) where
     showsPrec d  = showsPrec d . toNatural
+
+-- | @since 0.2.2
+instance GShow Fin where
+    gshowsPrec = showsPrec
 
 -- | Operations module @n@.
 --

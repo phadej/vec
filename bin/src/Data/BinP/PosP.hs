@@ -1,3 +1,5 @@
+{-# LANGUAGE CPP                    #-}
+{-# LANGUAGE BangPatterns           #-}
 {-# LANGUAGE DataKinds              #-}
 {-# LANGUAGE DeriveDataTypeable     #-}
 {-# LANGUAGE EmptyCase              #-}
@@ -31,17 +33,22 @@ module Data.BinP.PosP (
     ) where
 
 import Prelude
-       (Bounded (..), Either (..), Eq, Int, Integer, Num, Ord (..),
-       Ordering (..), Show (..), ShowS, String, either, fmap, fromIntegral, map,
-       showParen, showString, ($), (*), (+), (++), (.))
+       (Bounded (..), Either (..), Eq (..), Int, Integer, Num, Ord (..), Ordering (..), Show (..), ShowS, String, either,
+       fmap, fromIntegral, map, showParen, showString, ($), (*), (+), (++), (.))
 
 import Control.DeepSeq (NFData (..))
 import Data.Bin        (BinP (..))
+import Data.GADT.Show  (GShow (..))
 import Data.Nat        (Nat (..))
 import Data.Proxy      (Proxy (..))
 import Data.Typeable   (Typeable)
 import Data.Wrd        (Wrd (..))
 import Numeric.Natural (Natural)
+
+#if MIN_VERSION_some(1,0,5)
+import Data.EqP  (EqP (..))
+import Data.OrdP (OrdP (..))
+#endif
 
 import qualified Data.Bin        as B
 import qualified Data.Boring     as Boring
@@ -85,6 +92,20 @@ instance Ord (PosP' n b) where
     compare (There0 x) (There0 y) = compare x y
 
 -------------------------------------------------------------------------------
+-- some
+-------------------------------------------------------------------------------
+
+#if MIN_VERSION_some(1,0,5)
+-- | @since 0.1.3
+instance EqP PosP where
+    eqp x y = toNatural x == toNatural y
+
+-- | @since 0.1.3
+instance OrdP PosP where
+    comparep x y = compare (toNatural x) (toNatural y)
+#endif
+
+-------------------------------------------------------------------------------
 -- Instances
 -------------------------------------------------------------------------------
 
@@ -93,6 +114,14 @@ instance Show (PosP b) where
 
 instance N.SNatI n => Show (PosP' n b) where
     showsPrec d = showsPrec d . toNatural'
+
+-- | @since 0.1.3
+instance GShow PosP where
+    gshowsPrec = showsPrec
+
+-- | @since 0.1.3
+instance N.SNatI n => GShow (PosP' n) where
+    gshowsPrec = showsPrec
 
 instance SBinPI b => Bounded (PosP b) where
     minBound = PosP minBound
@@ -201,14 +230,17 @@ explicitShowsPrec' d (There0 p)
 
 -- | Convert 'PosP' to 'Natural'.
 toNatural :: PosP b -> Natural
-toNatural (PosP p) = toNatural' p
+toNatural (PosP p) = toNatural' p -- ' 0 1 p
 
 -- | Convert 'PosP'' to 'Natural'.
 toNatural' :: forall n b. N.SNatI n => PosP' n b -> Natural
-toNatural' (AtEnd v)  = W.toNatural v
-toNatural' (Here v)   = W.toNatural v
-toNatural' (There1 p) = getKNat (exp2 :: KNat Natural n) + toNatural' p
-toNatural' (There0 p) = toNatural' p
+toNatural' = toNatural'' 0 (getKNat (exp2 :: KNat Natural n))
+
+toNatural'' :: Natural -> Natural -> PosP' n b -> Natural
+toNatural'' !acc !_     (AtEnd v)  = acc + W.toNatural v
+toNatural'' !acc !_     (Here v)   = acc + W.toNatural v
+toNatural'' !acc !exp2n (There1 v) = toNatural'' (acc + exp2n) (2 * exp2n) v
+toNatural'' !acc !exp2n (There0 v) = toNatural'' acc           (2 * exp2n) v
 
 exp2 :: Num a => N.SNatI n => KNat a n
 exp2 = N.induction (KNat 1) (\(KNat n) -> KNat (n * 2))

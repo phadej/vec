@@ -58,6 +58,11 @@ import Data.Proxy        (Proxy (..))
 import Data.Typeable     (Typeable)
 import Numeric.Natural   (Natural)
 
+#if MIN_VERSION_some(1,0,5)
+import Data.EqP          (EqP (..))
+import Data.GADT.Compare (defaultEq)
+#endif
+
 import qualified Data.Type.Nat as N
 import qualified GHC.TypeLits  as GHC
 
@@ -281,6 +286,19 @@ instance SBinPI b => Boring (SBinP b) where
 -------------------------------------------------------------------------------
 -- some
 -------------------------------------------------------------------------------
+
+-- | @since 0.1.3
+instance Eq (SBinP a) where
+    _ == _ = True
+
+-- | @since 0.1.3
+instance Ord (SBinP a) where
+    compare _ _ = EQ
+
+#if MIN_VERSION_some(1,0,5)
+-- | @since 0.1.3
+instance EqP SBinP where eqp = defaultEq
+#endif
 
 -- | @since 0.1.2
 instance GShow SBinP where

@@ -63,6 +63,11 @@ import Data.Type.BinP    (SBinP (..), SBinPI (..))
 import Data.Typeable     (Typeable)
 import Numeric.Natural   (Natural)
 
+#if MIN_VERSION_some(1,0,5)
+import Data.EqP          (EqP (..))
+import Data.GADT.Compare (defaultEq)
+#endif
+
 import qualified Data.Type.BinP as BP
 import qualified Data.Type.Nat  as N
 import qualified GHC.TypeLits   as GHC
@@ -405,6 +410,19 @@ instance SBinI b => Boring (SBin b) where
 -------------------------------------------------------------------------------
 -- some
 -------------------------------------------------------------------------------
+
+-- | @since 0.1.3
+instance Eq (SBin a) where
+    _ == _ = True
+
+-- | @since 0.1.3
+instance Ord (SBin a) where
+    compare _ _ = EQ
+
+#if MIN_VERSION_some(1,0,5)
+-- | @since 0.1.3
+instance EqP SBin where eqp = defaultEq
+#endif
 
 -- | @since 0.1.2
 instance GShow SBin where

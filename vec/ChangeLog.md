@@ -1,5 +1,9 @@
 # Revision history for vec
 
+## 0.5
+
+- Remove PigeonHole module. It didn't work well.
+
 ## 0.4.1
 
 - Add `boring` instances

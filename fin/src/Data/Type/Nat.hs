@@ -76,6 +76,12 @@ import Data.Type.Dec     (Dec (..))
 import Data.Typeable     (Typeable)
 import Numeric.Natural   (Natural)
 
+#if MIN_VERSION_some(1,0,5)
+import Data.EqP          (EqP (..))
+import Data.OrdP         (OrdP (..))
+import Data.GADT.Compare (defaultCompare, defaultEq)
+#endif
+
 import qualified GHC.TypeLits as GHC
 
 import Unsafe.Coerce (unsafeCoerce)
@@ -266,6 +272,7 @@ instance NFData (SNat n) where
 instance GNFData SNat where
     grnf = rnf
 
+
 -- | @since 0.2.1
 instance GEq SNat where
     geq = testEquality
@@ -276,6 +283,22 @@ instance GCompare SNat where
     gcompare SZ SS = GLT
     gcompare SS SZ = GGT
     gcompare SS SS = cmpNat
+
+-- | @since 0.2.2
+instance Eq (SNat a) where
+    _ == _ = True
+
+-- | @since 0.2.2
+instance Ord (SNat a) where
+    compare _ _ = EQ
+
+#if MIN_VERSION_some(1,0,5)
+-- | @since 0.2.2
+instance EqP SNat where eqp = defaultEq
+
+-- | @since 0.2.2
+instance OrdP SNat where comparep = defaultCompare
+#endif
 
 -- | Decide equality of type-level numbers.
 --
