@@ -1,6 +1,7 @@
 cabal-version:      >=1.10
 name:               fin
 version:            0.3
+x-revision:         1
 synopsis:           Nat and Fin: peano naturals and finite numbers
 category:           Data, Dependent Types, Singletons, Math
 description:
@@ -98,7 +99,7 @@ library
     , universe-base  >=1.1.2   && <1.2
 
   if !impl(ghc >=8.2)
-    build-depends: bifunctors >=5.5.3 && <5.6
+    build-depends: bifunctors >=5.5.3 && <5.7
 
   if !impl(ghc >=8.0)
     build-depends: semigroups >=0.18.5 && <0.21
