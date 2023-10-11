@@ -31,6 +31,7 @@ tested-with:
    || ==9.2.7
    || ==9.4.4
    || ==9.6.1
+   || ==9.8.1
 
 source-repository head
   type:     git
@@ -49,7 +50,7 @@ library
     Data.Vec.Pull.Optics
 
   -- GHC boot libs
-  build-depends:    base >=4.9 && <4.19
+  build-depends:    base >=4.9 && <4.20
 
   -- siblings
   build-depends:

@@ -28,6 +28,7 @@ tested-with:
    || ==9.2.7
    || ==9.4.4
    || ==9.6.1
+   || ==9.8.1
 
 source-repository head
   type:     git
@@ -51,7 +52,7 @@ library
     Data.RAVec.NonEmpty.Optics.Internal
 
   build-depends:
-    , base         >=4.9 && <4.19
+    , base         >=4.9 && <4.20
     , bin          ^>=0.1
     , fin          ^>=0.2 || ^>=0.3
     , optics-core  >=0.2 && <0.5
