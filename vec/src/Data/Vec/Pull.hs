@@ -12,7 +12,7 @@
 --
 -- The module tries to have same API as "Data.Vec.Lazy", missing bits:
 -- @withDict@, @toPull@, @fromPull@, @traverse@ (and variants),
--- @(++)@, @concat@ and @split@.
+-- @scanr@ (and variants), @(++)@, @concat@ and @split@.
 module Data.Vec.Pull (
     Vec (..),
     -- * Construction
