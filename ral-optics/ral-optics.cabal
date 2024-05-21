@@ -52,7 +52,7 @@ library
     Data.RAVec.NonEmpty.Optics.Internal
 
   build-depends:
-    , base         >=4.9 && <4.20
+    , base         >=4.9 && <4.21
     , bin          ^>=0.1
     , fin          ^>=0.2 || ^>=0.3
     , optics-core  >=0.2 && <0.5

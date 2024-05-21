@@ -50,10 +50,10 @@ library
     Data.RAVec.Tree.Lens
 
   build-depends:
-    , base  >=4.7   && <4.20
+    , base  >=4.7   && <4.21
     , bin   ^>=0.1
     , fin   ^>=0.2 || ^>=0.3
-    , lens  >=4.16  && <5.3
+    , lens  >=4.16  && <5.4
     , ral   ^>=0.2
 
 -- dump-core
