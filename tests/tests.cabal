@@ -13,19 +13,15 @@ maintainer:    Oleg.Grenrus <oleg.grenrus@iki.fi>
 copyright:     (c) 2019 Oleg Grenrus
 build-type:    Simple
 tested-with:
-  GHC ==7.8.4
-   || ==7.10.3
-   || ==8.0.2
-   || ==8.2.2
-   || ==8.4.4
-   || ==8.6.5
+  GHC ==8.6.5
    || ==8.8.4
    || ==8.10.7
    || ==9.0.2
    || ==9.2.8
-   || ==9.4.7
-   || ==9.6.3
-   || ==9.8.1
+   || ==9.4.8
+   || ==9.6.5
+   || ==9.8.2
+   || ==9.10.1
 
 source-repository head
   type:     git
@@ -52,11 +48,8 @@ library
   build-depends:
     , containers
     , math-functions
-    , tasty             ^>=1.4    || ^>=1.5
-    , tasty-quickcheck  ^>=0.10.1
-
-  if !impl(ghc >=7.10)
-    build-depends: nats ^>=1.1.2
+    , tasty             ^>=1.5
+    , tasty-quickcheck  ^>=0.10.2
 
 test-suite all-tests
   type:             exitcode-stdio-1.0

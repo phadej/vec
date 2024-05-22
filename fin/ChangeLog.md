@@ -1,3 +1,9 @@
+# Version history for fin
+
+## 0.3.1
+
+- Support GHC-8.6.5...9.10.1
+
 ## 0.3
 
 - Remove `Data.Fin.Enum` module. It didn't work as well as hoped.

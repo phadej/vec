@@ -183,12 +183,10 @@ instance I.Foldable (Vec n) where
     foldr  = foldr
     foldl' = foldl'
 
-#if MIN_VERSION_base(4,8,0)
     null    = null
     length  = length
     sum     = sum
     product = product
-#endif
 
 instance I.Traversable (Vec n) where
     traverse = traverse
@@ -229,9 +227,7 @@ instance N.SNatI n => Applicative (Vec n) where
     (<*>)  = zipWith ($)
     _ *> x = x
     x <* _ = x
-#if MIN_VERSION_base(4,10,0)
     liftA2 = zipWith
-#endif
 
 instance N.SNatI n => Monad (Vec n) where
     return = pure
@@ -277,23 +273,6 @@ instance n ~ 'N.Z => Boring (Vec n a) where
 -- Data.Functor.Classes
 -------------------------------------------------------------------------------
 
-#ifndef MIN_VERSION_transformers_compat
-#define MIN_VERSION_transformers_compat(x,y,z) 0
-#endif
-
-#if MIN_VERSION_base(4,9,0)
-#define LIFTED_FUNCTOR_CLASSES 1
-#else
-#if MIN_VERSION_transformers(0,5,0)
-#define LIFTED_FUNCTOR_CLASSES 1
-#else
-#if MIN_VERSION_transformers_compat(0,5,0) && !MIN_VERSION_transformers(0,4,0)
-#define LIFTED_FUNCTOR_CLASSES 1
-#endif
-#endif
-#endif
-
-#if LIFTED_FUNCTOR_CLASSES
 -- | @since 0.4
 instance Eq1 (Vec n) where
     liftEq _eq VNil       VNil       = True
@@ -311,16 +290,6 @@ instance Show1 (Vec n) where
         $ sp 6 x
         . showString " ::: "
         . liftShowsPrec sp sl 5 xs
-#else
--- | @since 0.4
-instance Eq1 (Vec n) where eq1 = (==)
-
--- | @since 0.4
-instance Ord1 (Vec n) where compare1 = compare
-
--- | @since 0.4
-instance Show1 (Vec n) where showsPrec1 = showsPrec
-#endif
 
 -------------------------------------------------------------------------------
 -- Construction

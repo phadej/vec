@@ -43,9 +43,7 @@ import Data.Profunctor (Choice (..), Profunctor (..))
 import Prelude         (Either (..), Maybe, either, maybe, (.))
 #endif
 
-#if MIN_VERSION_base(4,11,0)
 import Data.Functor ((<&>))
-#endif
 
 -------------------------------------------------------------------------------
 -- Types
@@ -86,17 +84,6 @@ set l = over l . const
 over :: LensLike Identity s t a b -> (a -> b) -> s -> t
 over = coerce
 {-# INLINE over #-}
-
--------------------------------------------------------------------------------
--- Operators
--------------------------------------------------------------------------------
-
-#if !MIN_VERSION_base(4,11,0)
-(<&>) :: Functor f => f a -> (a -> b) -> f b
-as <&> f = fmap f as
-
-infixl 1 <&>
-#endif
 
 -------------------------------------------------------------------------------
 -- Constructors

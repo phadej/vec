@@ -1,4 +1,3 @@
-{-# LANGUAGE CPP                   #-}
 {-# LANGUAGE DataKinds             #-}
 {-# LANGUAGE GADTs                 #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
@@ -83,16 +82,3 @@ _tail f (Vec v) = f (Vec (v . FS)) <&> \xs -> cons (v FZ) xs
 -- | Prism from list.
 _Vec :: N.SNatI n => L.Prism' [a] (Vec n a)
 _Vec = L.prism' toList fromList
-
--------------------------------------------------------------------------------
--- Instances
--------------------------------------------------------------------------------
-
-#if !MIN_VERSION_lens(5,0,0)
-instance L.FunctorWithIndex (Fin n) (Vec n) where
-    imap = imap
-
-instance N.SNatI n => L.FoldableWithIndex (Fin n) (Vec n) where
-    ifoldMap = ifoldMap
-    ifoldr   = ifoldr
-#endif

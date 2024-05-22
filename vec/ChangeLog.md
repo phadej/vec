@@ -1,5 +1,9 @@
 # Revision history for vec
 
+## 0.5.1
+
+- Support GHC-8.6.5...9.10.1
+
 ## 0.5
 
 - Remove PigeonHole module. It didn't work well.

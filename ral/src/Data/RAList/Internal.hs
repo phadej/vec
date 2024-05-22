@@ -82,10 +82,8 @@ instance I.Foldable RAList where
     foldMap _ Empty = mempty
     foldMap f (NonEmpty xs) = I.foldMap f xs
 
-#if MIN_VERSION_base(4,8,0)
     length = length
     null   = null
-#endif
 
 instance NFData a => NFData (RAList a) where
     rnf Empty         = ()
@@ -304,7 +302,4 @@ instance Applicative I where
     I f <*> I x = I (f x)
     _ *> x      = x
     x <* _      = x
-#if MIN_VERSION_base(4,10,0)
     liftA2 f (I x) (I y) = I (f x y)
-#endif
-

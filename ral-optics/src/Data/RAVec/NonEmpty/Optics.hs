@@ -1,4 +1,3 @@
-{-# LANGUAGE CPP                   #-}
 {-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE TypeFamilies          #-}
@@ -34,28 +33,6 @@ ix' i = L.lensVL (ixVL' i)
 -------------------------------------------------------------------------------
 -- Instances
 -------------------------------------------------------------------------------
-
-#if !MIN_VERSION_optics_core(0,4,0)
-instance L.FunctorWithIndex (PosP b) (NERAVec b) where
-    imap = imap
-
-instance L.FunctorWithIndex (PosP' n b) (NERAVec' n b) where
-    imap = imap'
-
-instance L.FoldableWithIndex (PosP b) (NERAVec b) where
-    ifoldMap = ifoldMap
-    ifoldr   = ifoldr
-
-instance L.FoldableWithIndex (PosP' n b) (NERAVec' n b) where
-    ifoldMap = ifoldMap'
-    ifoldr   = ifoldr'
-
-instance L.TraversableWithIndex (PosP b) (NERAVec b) where
-    itraverse = itraverse
-
-instance L.TraversableWithIndex (PosP' n b) (NERAVec' n b) where
-    itraverse = itraverse'
-#endif
 
 instance L.Each (PosP n) (NERAVec n a) (NERAVec n b) a b where
 

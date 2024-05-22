@@ -1,7 +1,6 @@
 cabal-version:      2.2
 name:               vec-optics
-version:            0.4
-x-revision:         4
+version:            0.4.1
 synopsis:           Vec: length-indexed (sized) list: optics support
 category:           Data, Dependent Types, Optics
 description:
@@ -21,17 +20,15 @@ copyright:          (c) 2017-2021 Oleg Grenrus
 build-type:         Simple
 extra-source-files: ChangeLog.md
 tested-with:
-  GHC ==8.0.2
-   || ==8.2.2
-   || ==8.4.4
-   || ==8.6.5
+  GHC ==8.6.5
    || ==8.8.4
    || ==8.10.7
    || ==9.0.2
    || ==9.2.8
-   || ==9.4.7
-   || ==9.6.3
-   || ==9.8.1
+   || ==9.4.8
+   || ==9.6.5
+   || ==9.8.2
+   || ==9.10.1
 
 source-repository head
   type:     git
@@ -50,15 +47,15 @@ library
     Data.Vec.Pull.Optics
 
   -- GHC boot libs
-  build-depends:    base >=4.9 && <4.20
+  build-depends:    base >=4.12.0.0 && <4.21
 
   -- siblings
   build-depends:
-    , fin  ^>=0.2 || ^>=0.3
-    , vec  ^>=0.4 || ^>=0.5
+    , fin  ^>=0.3.1
+    , vec  ^>=0.5.1
 
   -- other dependencies
-  build-depends:    optics-core >=0.2 && <0.5
+  build-depends:    optics-core ^>=0.4.1.1
   other-extensions:
     CPP
     FlexibleContexts

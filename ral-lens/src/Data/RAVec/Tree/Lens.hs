@@ -1,4 +1,3 @@
-{-# LANGUAGE CPP                   #-}
 {-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE RankNTypes            #-}
@@ -41,19 +40,6 @@ ix (W1 is) f (Node x y) = (x `Node`) <$> ix is f y
 -------------------------------------------------------------------------------
 -- Instances
 -------------------------------------------------------------------------------
-
-#if !MIN_VERSION_lens(5,0,0)
-instance L.FunctorWithIndex (Wrd n) (Tree n) where
-    imap = imap
-
-instance L.FoldableWithIndex (Wrd n) (Tree n) where
-    ifoldMap = ifoldMap
-    ifoldr   = ifoldr
-    ifoldl   = ifoldl
-
-instance L.TraversableWithIndex (Wrd n) (Tree n) where
-    itraverse = itraverse
-#endif
 
 instance L.Each (Tree n a) (Tree n b) a b
 

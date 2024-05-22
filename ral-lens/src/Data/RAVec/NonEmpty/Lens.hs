@@ -1,4 +1,3 @@
-{-# LANGUAGE CPP                   #-}
 {-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE RankNTypes            #-}
@@ -39,28 +38,6 @@ ix' (Here i)   f (Cons1 t r) = (`Cons1` r) <$> Tree.ix i f t
 -------------------------------------------------------------------------------
 -- Instances
 -------------------------------------------------------------------------------
-
-#if !MIN_VERSION_lens(5,0,0)
-instance L.FunctorWithIndex (PosP b) (NERAVec b) where
-    imap = imap
-
-instance L.FunctorWithIndex (PosP' n b) (NERAVec' n b) where
-    imap = imap'
-
-instance L.FoldableWithIndex (PosP b) (NERAVec b) where
-    ifoldMap = ifoldMap
-    ifoldr   = ifoldr
-
-instance L.FoldableWithIndex (PosP' n b) (NERAVec' n b) where
-    ifoldMap = ifoldMap'
-    ifoldr   = ifoldr'
-
-instance L.TraversableWithIndex (PosP b) (NERAVec b) where
-    itraverse = itraverse
-
-instance L.TraversableWithIndex (PosP' n b) (NERAVec' n b) where
-    itraverse = itraverse'
-#endif
 
 instance L.Each (NERAVec n a) (NERAVec n b) a b where
     each = traverse

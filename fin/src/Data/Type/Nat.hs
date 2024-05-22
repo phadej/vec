@@ -1,4 +1,3 @@
-{-# LANGUAGE CPP                  #-}
 {-# LANGUAGE DataKinds            #-}
 {-# LANGUAGE DeriveDataTypeable   #-}
 {-# LANGUAGE EmptyCase            #-}
@@ -67,20 +66,16 @@ module Data.Type.Nat (
 
 import Control.DeepSeq   (NFData (..))
 import Data.Boring       (Boring (..))
+import Data.EqP          (EqP (..))
 import Data.Function     (fix)
-import Data.GADT.Compare (GCompare (..), GEq (..), GOrdering (..))
+import Data.GADT.Compare (GCompare (..), GEq (..), GOrdering (..), defaultCompare, defaultEq)
 import Data.GADT.DeepSeq (GNFData (..))
 import Data.GADT.Show    (GShow (..))
+import Data.OrdP         (OrdP (..))
 import Data.Proxy        (Proxy (..))
 import Data.Type.Dec     (Dec (..))
 import Data.Typeable     (Typeable)
 import Numeric.Natural   (Natural)
-
-#if MIN_VERSION_some(1,0,5)
-import Data.EqP          (EqP (..))
-import Data.OrdP         (OrdP (..))
-import Data.GADT.Compare (defaultCompare, defaultEq)
-#endif
 
 import qualified GHC.TypeLits as GHC
 
@@ -251,10 +246,6 @@ type family EqNat (n :: Nat) (m :: Nat) where
     EqNat ('S n) ('S m) = EqNat n m
     EqNat n      m      = 'False
 
-#if !MIN_VERSION_base(4,11,0)
-type instance n == m = EqNat n m
-#endif
-
 -- | @since 0.2.1
 instance SNatI n => Boring (SNat n) where
     boring = snat
@@ -292,13 +283,11 @@ instance Eq (SNat a) where
 instance Ord (SNat a) where
     compare _ _ = EQ
 
-#if MIN_VERSION_some(1,0,5)
 -- | @since 0.2.2
 instance EqP SNat where eqp = defaultEq
 
 -- | @since 0.2.2
 instance OrdP SNat where comparep = defaultCompare
-#endif
 
 -- | Decide equality of type-level numbers.
 --

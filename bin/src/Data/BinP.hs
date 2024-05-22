@@ -1,12 +1,6 @@
 {-# LANGUAGE BangPatterns       #-}
-{-# LANGUAGE CPP                #-}
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE Safe               #-}
-
-#if __GLASGOW_HASKELL__ < 710
-{-# LANGUAGE DataKinds          #-}
-{-# LANGUAGE StandaloneDeriving #-}
-#endif
 -- | Positive binary natural numbers, 'BinP'.
 --
 -- This module is designed to be imported qualified.
@@ -60,12 +54,6 @@ data BinP
 -------------------------------------------------------------------------------
 -- Instances
 -------------------------------------------------------------------------------
-
-#if __GLASGOW_HASKELL__ < 710
-deriving instance Typeable 'BE
-deriving instance Typeable 'B0
-deriving instance Typeable 'B1
-#endif
 
 -- |
 --

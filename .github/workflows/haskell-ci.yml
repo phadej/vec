@@ -8,9 +8,9 @@
 #
 # For more information, see https://github.com/haskell-CI/haskell-ci
 #
-# version: 0.17.20231010
+# version: 0.19.20240514
 #
-# REGENDATA ("0.17.20231010",["github","--config=cabal.haskell-ci","cabal.project"])
+# REGENDATA ("0.19.20240514",["github","--config=cabal.haskell-ci","cabal.project"])
 #
 name: Haskell-CI
 on:
@@ -27,24 +27,29 @@ jobs:
     timeout-minutes:
       60
     container:
-      image: buildpack-deps:bionic
+      image: buildpack-deps:jammy
     continue-on-error: ${{ matrix.allow-failure }}
     strategy:
       matrix:
         include:
-          - compiler: ghc-9.8.1
+          - compiler: ghc-9.10.1
             compilerKind: ghc
-            compilerVersion: 9.8.1
+            compilerVersion: 9.10.1
             setup-method: ghcup
             allow-failure: false
-          - compiler: ghc-9.6.3
+          - compiler: ghc-9.8.2
             compilerKind: ghc
-            compilerVersion: 9.6.3
+            compilerVersion: 9.8.2
             setup-method: ghcup
             allow-failure: false
-          - compiler: ghc-9.4.7
+          - compiler: ghc-9.6.5
             compilerKind: ghc
-            compilerVersion: 9.4.7
+            compilerVersion: 9.6.5
+            setup-method: ghcup
+            allow-failure: false
+          - compiler: ghc-9.4.8
+            compilerKind: ghc
+            compilerVersion: 9.4.8
             setup-method: ghcup
             allow-failure: false
           - compiler: ghc-9.2.8
@@ -65,37 +70,12 @@ jobs:
           - compiler: ghc-8.8.4
             compilerKind: ghc
             compilerVersion: 8.8.4
-            setup-method: hvr-ppa
+            setup-method: ghcup
             allow-failure: false
           - compiler: ghc-8.6.5
             compilerKind: ghc
             compilerVersion: 8.6.5
-            setup-method: hvr-ppa
-            allow-failure: false
-          - compiler: ghc-8.4.4
-            compilerKind: ghc
-            compilerVersion: 8.4.4
-            setup-method: hvr-ppa
-            allow-failure: false
-          - compiler: ghc-8.2.2
-            compilerKind: ghc
-            compilerVersion: 8.2.2
-            setup-method: hvr-ppa
-            allow-failure: false
-          - compiler: ghc-8.0.2
-            compilerKind: ghc
-            compilerVersion: 8.0.2
-            setup-method: hvr-ppa
-            allow-failure: false
-          - compiler: ghc-7.10.3
-            compilerKind: ghc
-            compilerVersion: 7.10.3
-            setup-method: hvr-ppa
-            allow-failure: false
-          - compiler: ghc-7.8.4
-            compilerKind: ghc
-            compilerVersion: 7.8.4
-            setup-method: hvr-ppa
+            setup-method: ghcup
             allow-failure: false
       fail-fast: false
     steps:
@@ -103,21 +83,11 @@ jobs:
         run: |
           apt-get update
           apt-get install -y --no-install-recommends gnupg ca-certificates dirmngr curl git software-properties-common libtinfo5
-          if [ "${{ matrix.setup-method }}" = ghcup ]; then
-            mkdir -p "$HOME/.ghcup/bin"
-            curl -sL https://downloads.haskell.org/ghcup/0.1.19.5/x86_64-linux-ghcup-0.1.19.5 > "$HOME/.ghcup/bin/ghcup"
-            chmod a+x "$HOME/.ghcup/bin/ghcup"
-            "$HOME/.ghcup/bin/ghcup" install ghc "$HCVER" || (cat "$HOME"/.ghcup/logs/*.* && false)
-            "$HOME/.ghcup/bin/ghcup" install cabal 3.10.1.0 || (cat "$HOME"/.ghcup/logs/*.* && false)
-          else
-            apt-add-repository -y 'ppa:hvr/ghc'
-            apt-get update
-            apt-get install -y "$HCNAME"
-            mkdir -p "$HOME/.ghcup/bin"
-            curl -sL https://downloads.haskell.org/ghcup/0.1.19.5/x86_64-linux-ghcup-0.1.19.5 > "$HOME/.ghcup/bin/ghcup"
-            chmod a+x "$HOME/.ghcup/bin/ghcup"
-            "$HOME/.ghcup/bin/ghcup" install cabal 3.10.1.0 || (cat "$HOME"/.ghcup/logs/*.* && false)
-          fi
+          mkdir -p "$HOME/.ghcup/bin"
+          curl -sL https://downloads.haskell.org/ghcup/0.1.20.0/x86_64-linux-ghcup-0.1.20.0 > "$HOME/.ghcup/bin/ghcup"
+          chmod a+x "$HOME/.ghcup/bin/ghcup"
+          "$HOME/.ghcup/bin/ghcup" install ghc "$HCVER" || (cat "$HOME"/.ghcup/logs/*.* && false)
+          "$HOME/.ghcup/bin/ghcup" install cabal 3.10.2.0 || (cat "$HOME"/.ghcup/logs/*.* && false)
         env:
           HCKIND: ${{ matrix.compilerKind }}
           HCNAME: ${{ matrix.compiler }}
@@ -129,25 +99,16 @@ jobs:
           echo "CABAL_DIR=$HOME/.cabal" >> "$GITHUB_ENV"
           echo "CABAL_CONFIG=$HOME/.cabal/config" >> "$GITHUB_ENV"
           HCDIR=/opt/$HCKIND/$HCVER
-          if [ "${{ matrix.setup-method }}" = ghcup ]; then
-            HC=$("$HOME/.ghcup/bin/ghcup" whereis ghc "$HCVER")
-            HCPKG=$(echo "$HC" | sed 's#ghc$#ghc-pkg#')
-            HADDOCK=$(echo "$HC" | sed 's#ghc$#haddock#')
-            echo "HC=$HC" >> "$GITHUB_ENV"
-            echo "HCPKG=$HCPKG" >> "$GITHUB_ENV"
-            echo "HADDOCK=$HADDOCK" >> "$GITHUB_ENV"
-            echo "CABAL=$HOME/.ghcup/bin/cabal-3.10.1.0 -vnormal+nowrap" >> "$GITHUB_ENV"
-          else
-            HC=$HCDIR/bin/$HCKIND
-            echo "HC=$HC" >> "$GITHUB_ENV"
-            echo "HCPKG=$HCDIR/bin/$HCKIND-pkg" >> "$GITHUB_ENV"
-            echo "HADDOCK=$HCDIR/bin/haddock" >> "$GITHUB_ENV"
-            echo "CABAL=$HOME/.ghcup/bin/cabal-3.10.1.0 -vnormal+nowrap" >> "$GITHUB_ENV"
-          fi
-
+          HC=$("$HOME/.ghcup/bin/ghcup" whereis ghc "$HCVER")
+          HCPKG=$(echo "$HC" | sed 's#ghc$#ghc-pkg#')
+          HADDOCK=$(echo "$HC" | sed 's#ghc$#haddock#')
+          echo "HC=$HC" >> "$GITHUB_ENV"
+          echo "HCPKG=$HCPKG" >> "$GITHUB_ENV"
+          echo "HADDOCK=$HADDOCK" >> "$GITHUB_ENV"
+          echo "CABAL=$HOME/.ghcup/bin/cabal-3.10.2.0 -vnormal+nowrap" >> "$GITHUB_ENV"
           HCNUMVER=$(${HC} --numeric-version|perl -ne '/^(\d+)\.(\d+)\.(\d+)(\.(\d+))?$/; print(10000 * $1 + 100 * $2 + ($3 == 0 ? $5 != 1 : $3))')
           echo "HCNUMVER=$HCNUMVER" >> "$GITHUB_ENV"
-          if [ $((HCNUMVER >= 80000)) -ne 0 ] ; then echo "ARG_TESTS=--enable-tests" >> "$GITHUB_ENV" ; else echo "ARG_TESTS=--disable-tests" >> "$GITHUB_ENV" ; fi
+          echo "ARG_TESTS=--enable-tests" >> "$GITHUB_ENV"
           echo "ARG_BENCH=--enable-benchmarks" >> "$GITHUB_ENV"
           echo "HEADHACKAGE=false" >> "$GITHUB_ENV"
           echo "ARG_COMPILER=--$HCKIND --with-compiler=$HC" >> "$GITHUB_ENV"
@@ -191,11 +152,6 @@ jobs:
       - name: update cabal index
         run: |
           $CABAL v2-update -v
-      - name: cache (tools)
-        uses: actions/cache/restore@v3
-        with:
-          key: ${{ runner.os }}-${{ matrix.compiler }}-tools-1504b45f
-          path: ~/.haskell-ci-tools
       - name: install cabal-plan
         run: |
           mkdir -p $HOME/.cabal/bin
@@ -208,24 +164,14 @@ jobs:
       - name: install cabal-docspec
         run: |
           mkdir -p $HOME/.cabal/bin
-          curl -sL https://github.com/phadej/cabal-extras/releases/download/cabal-docspec-0.0.0.20230517/cabal-docspec-0.0.0.20230517-x86_64-linux.xz > cabal-docspec.xz
-          echo '3b31bbe463ad4d671abbc103db49628562ec48a6604cab278207b5b6acd21ed7  cabal-docspec.xz' | sha256sum -c -
+          curl -sL https://github.com/phadej/cabal-extras/releases/download/cabal-docspec-0.0.0.20240414/cabal-docspec-0.0.0.20240414-x86_64-linux.xz > cabal-docspec.xz
+          echo '2d18a3f79619e8ec5f11870f926f6dc2616e02a6c889315b7f82044b95a1adb9  cabal-docspec.xz' | sha256sum -c -
           xz -d < cabal-docspec.xz > $HOME/.cabal/bin/cabal-docspec
           rm -f cabal-docspec.xz
           chmod a+x $HOME/.cabal/bin/cabal-docspec
           cabal-docspec --version
-      - name: install doctest
-        run: |
-          if [ $((HCNUMVER >= 80600 && HCNUMVER < 90000)) -ne 0 ] ; then $CABAL --store-dir=$HOME/.haskell-ci-tools/store v2-install $ARG_COMPILER --ignore-project -j2 doctest --constraint='doctest ^>=0.20' ; fi
-          if [ $((HCNUMVER >= 80600 && HCNUMVER < 90000)) -ne 0 ] ; then doctest --version ; fi
-      - name: save cache (tools)
-        uses: actions/cache/save@v3
-        if: always()
-        with:
-          key: ${{ runner.os }}-${{ matrix.compiler }}-tools-1504b45f
-          path: ~/.haskell-ci-tools
       - name: checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           path: source
       - name: initial cabal.project for sdist
@@ -237,8 +183,8 @@ jobs:
           echo "packages: $GITHUB_WORKSPACE/source/vec" >> cabal.project
           echo "packages: $GITHUB_WORKSPACE/source/ral-lens" >> cabal.project
           echo "packages: $GITHUB_WORKSPACE/source/vec-lens" >> cabal.project
-          if [ $((HCNUMVER >= 80000)) -ne 0 ] ; then echo "packages: $GITHUB_WORKSPACE/source/ral-optics" >> cabal.project ; fi
-          if [ $((HCNUMVER >= 80000)) -ne 0 ] ; then echo "packages: $GITHUB_WORKSPACE/source/vec-optics" >> cabal.project ; fi
+          echo "packages: $GITHUB_WORKSPACE/source/ral-optics" >> cabal.project
+          echo "packages: $GITHUB_WORKSPACE/source/vec-optics" >> cabal.project
           echo "packages: $GITHUB_WORKSPACE/source/tests" >> cabal.project
           cat cabal.project
       - name: sdist
@@ -278,33 +224,33 @@ jobs:
           echo "packages: ${PKGDIR_vec}" >> cabal.project
           echo "packages: ${PKGDIR_ral_lens}" >> cabal.project
           echo "packages: ${PKGDIR_vec_lens}" >> cabal.project
-          if [ $((HCNUMVER >= 80000)) -ne 0 ] ; then echo "packages: ${PKGDIR_ral_optics}" >> cabal.project ; fi
-          if [ $((HCNUMVER >= 80000)) -ne 0 ] ; then echo "packages: ${PKGDIR_vec_optics}" >> cabal.project ; fi
+          echo "packages: ${PKGDIR_ral_optics}" >> cabal.project
+          echo "packages: ${PKGDIR_vec_optics}" >> cabal.project
           echo "packages: ${PKGDIR_tests}" >> cabal.project
-          if [ $((HCNUMVER >= 80200)) -ne 0 ] ; then echo "package bin" >> cabal.project ; fi
-          if [ $((HCNUMVER >= 80200)) -ne 0 ] ; then echo "    ghc-options: -Werror=missing-methods" >> cabal.project ; fi
-          if [ $((HCNUMVER >= 80200)) -ne 0 ] ; then echo "package fin" >> cabal.project ; fi
-          if [ $((HCNUMVER >= 80200)) -ne 0 ] ; then echo "    ghc-options: -Werror=missing-methods" >> cabal.project ; fi
-          if [ $((HCNUMVER >= 80200)) -ne 0 ] ; then echo "package ral" >> cabal.project ; fi
-          if [ $((HCNUMVER >= 80200)) -ne 0 ] ; then echo "    ghc-options: -Werror=missing-methods" >> cabal.project ; fi
-          if [ $((HCNUMVER >= 80200)) -ne 0 ] ; then echo "package vec" >> cabal.project ; fi
-          if [ $((HCNUMVER >= 80200)) -ne 0 ] ; then echo "    ghc-options: -Werror=missing-methods" >> cabal.project ; fi
-          if [ $((HCNUMVER >= 80200)) -ne 0 ] ; then echo "package ral-lens" >> cabal.project ; fi
-          if [ $((HCNUMVER >= 80200)) -ne 0 ] ; then echo "    ghc-options: -Werror=missing-methods" >> cabal.project ; fi
-          if [ $((HCNUMVER >= 80200)) -ne 0 ] ; then echo "package vec-lens" >> cabal.project ; fi
-          if [ $((HCNUMVER >= 80200)) -ne 0 ] ; then echo "    ghc-options: -Werror=missing-methods" >> cabal.project ; fi
-          if [ $((HCNUMVER >= 80200)) -ne 0 ] ; then echo "package ral-optics" >> cabal.project ; fi
-          if [ $((HCNUMVER >= 80200)) -ne 0 ] ; then echo "    ghc-options: -Werror=missing-methods" >> cabal.project ; fi
-          if [ $((HCNUMVER >= 80200)) -ne 0 ] ; then echo "package vec-optics" >> cabal.project ; fi
-          if [ $((HCNUMVER >= 80200)) -ne 0 ] ; then echo "    ghc-options: -Werror=missing-methods" >> cabal.project ; fi
-          if [ $((HCNUMVER >= 80200)) -ne 0 ] ; then echo "package tests" >> cabal.project ; fi
-          if [ $((HCNUMVER >= 80200)) -ne 0 ] ; then echo "    ghc-options: -Werror=missing-methods" >> cabal.project ; fi
+          echo "package bin" >> cabal.project
+          echo "    ghc-options: -Werror=missing-methods" >> cabal.project
+          echo "package fin" >> cabal.project
+          echo "    ghc-options: -Werror=missing-methods" >> cabal.project
+          echo "package ral" >> cabal.project
+          echo "    ghc-options: -Werror=missing-methods" >> cabal.project
+          echo "package vec" >> cabal.project
+          echo "    ghc-options: -Werror=missing-methods" >> cabal.project
+          echo "package ral-lens" >> cabal.project
+          echo "    ghc-options: -Werror=missing-methods" >> cabal.project
+          echo "package vec-lens" >> cabal.project
+          echo "    ghc-options: -Werror=missing-methods" >> cabal.project
+          echo "package ral-optics" >> cabal.project
+          echo "    ghc-options: -Werror=missing-methods" >> cabal.project
+          echo "package vec-optics" >> cabal.project
+          echo "    ghc-options: -Werror=missing-methods" >> cabal.project
+          echo "package tests" >> cabal.project
+          echo "    ghc-options: -Werror=missing-methods" >> cabal.project
           cat >> cabal.project <<EOF
           allow-newer: cassava-0.5.2.0:base
           allow-newer: vector-th-unbox-0.2.1.7:base
           allow-newer: vector-th-unbox-0.2.1.7:template-haskell
           EOF
-          $HCPKG list --simple-output --names-only | perl -ne 'for (split /\s+/) { print "constraints: $_ installed\n" unless /^(bin|fin|ral|ral-lens|ral-optics|tests|vec|vec-lens|vec-optics)$/; }' >> cabal.project.local
+          $HCPKG list --simple-output --names-only | perl -ne 'for (split /\s+/) { print "constraints: any.$_ installed\n" unless /^(bin|fin|ral|ral-lens|ral-optics|tests|vec|vec-lens|vec-optics)$/; }' >> cabal.project.local
           cat cabal.project
           cat cabal.project.local
       - name: dump install plan
@@ -312,7 +258,7 @@ jobs:
           $CABAL v2-build $ARG_COMPILER $ARG_TESTS $ARG_BENCH --dry-run all
           cabal-plan
       - name: restore cache
-        uses: actions/cache/restore@v3
+        uses: actions/cache/restore@v4
         with:
           key: ${{ runner.os }}-${{ matrix.compiler }}-${{ github.sha }}
           path: ~/.cabal/store
@@ -329,31 +275,11 @@ jobs:
           $CABAL v2-build $ARG_COMPILER $ARG_TESTS $ARG_BENCH all --write-ghc-environment-files=always
       - name: tests
         run: |
-          if [ $((HCNUMVER >= 80000)) -ne 0 ] ; then $CABAL v2-test $ARG_COMPILER $ARG_TESTS $ARG_BENCH all --test-show-details=direct ; fi
-      - name: doctest
-        run: |
-          if [ $((HCNUMVER >= 80600 && HCNUMVER < 90000)) -ne 0 ] ; then cd ${PKGDIR_bin} || false ; fi
-          if [ $((HCNUMVER >= 80600 && HCNUMVER < 90000)) -ne 0 ] ; then doctest  -XHaskell2010 src ; fi
-          if [ $((HCNUMVER >= 80600 && HCNUMVER < 90000)) -ne 0 ] ; then cd ${PKGDIR_fin} || false ; fi
-          if [ $((HCNUMVER >= 80600 && HCNUMVER < 90000)) -ne 0 ] ; then doctest  -XHaskell2010 src ; fi
-          if [ $((HCNUMVER >= 80600 && HCNUMVER < 90000)) -ne 0 ] ; then cd ${PKGDIR_ral} || false ; fi
-          if [ $((HCNUMVER >= 80600 && HCNUMVER < 90000)) -ne 0 ] ; then doctest  -XHaskell2010 src ; fi
-          if [ $((HCNUMVER >= 80600 && HCNUMVER < 90000)) -ne 0 ] ; then cd ${PKGDIR_vec} || false ; fi
-          if [ $((HCNUMVER >= 80600 && HCNUMVER < 90000)) -ne 0 ] ; then doctest  -XHaskell2010 src ; fi
-          if [ $((HCNUMVER >= 80600 && HCNUMVER < 90000)) -ne 0 ] ; then cd ${PKGDIR_ral_lens} || false ; fi
-          if [ $((HCNUMVER >= 80600 && HCNUMVER < 90000)) -ne 0 ] ; then doctest  -XHaskell2010 src ; fi
-          if [ $((HCNUMVER >= 80600 && HCNUMVER < 90000)) -ne 0 ] ; then cd ${PKGDIR_vec_lens} || false ; fi
-          if [ $((HCNUMVER >= 80600 && HCNUMVER < 90000)) -ne 0 ] ; then doctest  -XHaskell2010 src ; fi
-          if [ $((HCNUMVER >= 80600 && HCNUMVER < 90000)) -ne 0 ] ; then cd ${PKGDIR_ral_optics} || false ; fi
-          if [ $((HCNUMVER >= 80600 && HCNUMVER < 90000)) -ne 0 ] ; then doctest  -XHaskell2010 src ; fi
-          if [ $((HCNUMVER >= 80600 && HCNUMVER < 90000)) -ne 0 ] ; then cd ${PKGDIR_vec_optics} || false ; fi
-          if [ $((HCNUMVER >= 80600 && HCNUMVER < 90000)) -ne 0 ] ; then doctest  -XHaskell2010 src ; fi
-          if [ $((HCNUMVER >= 80600 && HCNUMVER < 90000)) -ne 0 ] ; then cd ${PKGDIR_tests} || false ; fi
-          if [ $((HCNUMVER >= 80600 && HCNUMVER < 90000)) -ne 0 ] ; then doctest  -XHaskell2010 src ; fi
+          $CABAL v2-test $ARG_COMPILER $ARG_TESTS $ARG_BENCH all --test-show-details=direct
       - name: docspec
         run: |
-          if [ $((HCNUMVER >= 80600 && HCNUMVER < 90600)) -ne 0 ] ; then $CABAL v2-build $ARG_COMPILER $ARG_TESTS $ARG_BENCH all ; fi
-          if [ $((HCNUMVER >= 80600 && HCNUMVER < 90600)) -ne 0 ] ; then cabal-docspec $ARG_COMPILER ; fi
+          if [ $((HCNUMVER < 90600)) -ne 0 ] ; then $CABAL v2-build $ARG_COMPILER $ARG_TESTS $ARG_BENCH all ; fi
+          if [ $((HCNUMVER < 90600)) -ne 0 ] ; then cabal-docspec $ARG_COMPILER ; fi
       - name: cabal check
         run: |
           cd ${PKGDIR_bin} || false
@@ -368,15 +294,15 @@ jobs:
           ${CABAL} -vnormal check
           cd ${PKGDIR_vec_lens} || false
           ${CABAL} -vnormal check
-          if [ $((HCNUMVER >= 80000)) -ne 0 ] ; then cd ${PKGDIR_ral_optics} || false ; fi
-          if [ $((HCNUMVER >= 80000)) -ne 0 ] ; then ${CABAL} -vnormal check ; fi
-          if [ $((HCNUMVER >= 80000)) -ne 0 ] ; then cd ${PKGDIR_vec_optics} || false ; fi
-          if [ $((HCNUMVER >= 80000)) -ne 0 ] ; then ${CABAL} -vnormal check ; fi
+          cd ${PKGDIR_ral_optics} || false
+          ${CABAL} -vnormal check
+          cd ${PKGDIR_vec_optics} || false
+          ${CABAL} -vnormal check
           cd ${PKGDIR_tests} || false
           ${CABAL} -vnormal check
       - name: haddock
         run: |
-          if [ $((HCNUMVER >= 80600)) -ne 0 ] ; then $CABAL v2-haddock --disable-documentation $ARG_COMPILER --with-haddock $HADDOCK $ARG_TESTS $ARG_BENCH all ; fi
+          $CABAL v2-haddock --disable-documentation $ARG_COMPILER --with-haddock $HADDOCK $ARG_TESTS $ARG_BENCH all
       - name: unconstrained build
         run: |
           rm -f cabal.project.local
@@ -427,7 +353,7 @@ jobs:
           $CABAL v2-build $ARG_COMPILER --disable-tests --disable-benchmarks --constraint='vec -distributive' --dependencies-only -j2 all
           $CABAL v2-build $ARG_COMPILER --disable-tests --disable-benchmarks --constraint='vec -distributive' all
       - name: save cache
-        uses: actions/cache/save@v3
+        uses: actions/cache/save@v4
         if: always()
         with:
           key: ${{ runner.os }}-${{ matrix.compiler }}-${{ github.sha }}

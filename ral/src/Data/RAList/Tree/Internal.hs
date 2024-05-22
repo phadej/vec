@@ -75,10 +75,8 @@ instance I.Foldable Leaf where
     foldr' f z (Lf x) = f x z
     foldl' f z (Lf x) = f z x
 
-#if MIN_VERSION_base(4,8,0)
     length _ = 1
     null _ = False
-#endif
 
 instance I.Foldable f => I.Foldable (Node f) where
     foldMap f (Nd x y) = mappend (I.foldMap f x) (I.foldMap f y)
@@ -89,10 +87,8 @@ instance I.Foldable f => I.Foldable (Node f) where
     foldr' f z (Nd x y) = let !acc = I.foldr' f z y in I.foldr' f acc x
     foldl' f z (Nd x y) = let !acc = I.foldl' f z x in I.foldl' f acc y
 
-#if MIN_VERSION_base(4,8,0)
     length (Nd x y) = I.length x + I.length y
     null (Nd x y)   = I.null x && I.null y
-#endif
 
 #ifdef MIN_VERSION_semigroupoids
 instance I.Foldable1 Leaf where
@@ -283,4 +279,3 @@ instance IsTree f => IsTree (Node f) where
       where
         s2 = s `div` 2
 #endif
-

@@ -158,17 +158,13 @@ instance I.Foldable (NERAVec b) where
     foldMap = foldMap
     foldr   = foldr
 
-#if MIN_VERSION_base(4,8,0)
     null _ = False
-#endif
 
 instance I.Foldable (NERAVec' n b) where
     foldMap = foldMap'
     foldr   = foldr'
 
-#if MIN_VERSION_base(4,8,0)
     null _ = False
-#endif
 
 instance I.Traversable (NERAVec b) where
     traverse = traverse
@@ -237,18 +233,14 @@ instance SBinPI b => Applicative (NERAVec b) where
     (<*>)  = zipWith ($)
     x <* _ = x
     _ *> x = x
-#if MIN_VERSION_base(4,10,0)
     liftA2 = zipWith
-#endif
 
 instance (SBinPI b, N.SNatI n) => Applicative (NERAVec' n b) where
     pure   = repeat'
     (<*>)  = zipWith' ($)
     x <* _ = x
     _ *> x = x
-#if MIN_VERSION_base(4,10,0)
     liftA2 = zipWith'
-#endif
 
 #ifdef MIN_VERSION_distributive
 instance SBinPI b => I.Distributive (NERAVec b) where

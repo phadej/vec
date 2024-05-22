@@ -1,4 +1,3 @@
-{-# LANGUAGE CPP                    #-}
 {-# LANGUAGE DataKinds              #-}
 {-# LANGUAGE DeriveDataTypeable     #-}
 {-# LANGUAGE EmptyCase              #-}
@@ -36,14 +35,11 @@ import Prelude
 import Control.DeepSeq (NFData (..))
 import Data.Bin        (Bin (..), BinP (..))
 import Data.BinP.PosP  (PosP (..))
+import Data.EqP        (EqP (..))
 import Data.GADT.Show  (GShow (..))
+import Data.OrdP       (OrdP (..))
 import Data.Typeable   (Typeable)
 import Numeric.Natural (Natural)
-
-#if MIN_VERSION_some(1,0,5)
-import Data.EqP  (EqP (..))
-import Data.OrdP (OrdP (..))
-#endif
 
 import qualified Data.BinP.PosP  as PP
 import qualified Data.Boring     as Boring
@@ -87,7 +83,6 @@ instance Show (Pos b) where
 instance GShow Pos where
     gshowsPrec = showsPrec
 
-#if MIN_VERSION_some(1,0,5)
 -- |
 --
 -- >>> eqp (top :: Pos Bin4) (top :: Pos Bin6)
@@ -115,7 +110,6 @@ instance EqP Pos where
 --
 instance OrdP Pos where
     comparep (Pos x) (Pos y) = comparep x y
-#endif
 
 -- |
 --

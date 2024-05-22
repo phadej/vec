@@ -1,11 +1,6 @@
 {-# LANGUAGE CPP                #-}
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE Safe               #-}
-
-#if __GLASGOW_HASKELL__ < 710
-{-# LANGUAGE DataKinds          #-}
-{-# LANGUAGE StandaloneDeriving #-}
-#endif
 -- | 'Nat' numbers.
 --
 -- This module is designed to be imported qualified.
@@ -44,11 +39,6 @@ import qualified Test.QuickCheck     as QC
 -- Better than GHC's built-in 'GHC.TypeLits.Nat' for some use cases.
 --
 data Nat = Z | S Nat deriving (Eq, Typeable, Data)
-
-#if __GLASGOW_HASKELL__ < 710
-deriving instance Typeable 'Z
-deriving instance Typeable 'S
-#endif
 
 -- | 'Nat' is printed as 'Natural'.
 --

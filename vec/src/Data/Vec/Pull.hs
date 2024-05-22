@@ -148,9 +148,7 @@ instance Applicative (Vec n) where
     (<*>)  = zipWith ($)
     _ *> x = x
     x <* _ = x
-#if MIN_VERSION_base(4,10,0)
     liftA2 = zipWith
-#endif
 
 instance Monad (Vec n) where
     return = pure

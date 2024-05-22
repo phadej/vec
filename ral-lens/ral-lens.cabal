@@ -1,7 +1,6 @@
 cabal-version:      2.2
 name:               ral-lens
-version:            0.2
-x-revision:         4
+version:            0.2.1
 synopsis:           Length-indexed random access lists: lens utilities.
 category:           Data, Dependent Types, Singletons, Lens
 description:
@@ -18,19 +17,15 @@ copyright:          (c) 2019-2021 Oleg Grenrus
 build-type:         Simple
 extra-source-files: ChangeLog.md
 tested-with:
-  GHC ==7.8.4
-   || ==7.10.3
-   || ==8.0.2
-   || ==8.2.2
-   || ==8.4.4
-   || ==8.6.5
+  GHC ==8.6.5
    || ==8.8.4
    || ==8.10.7
    || ==9.0.2
    || ==9.2.8
-   || ==9.4.7
-   || ==9.6.3
-   || ==9.8.1
+   || ==9.4.8
+   || ==9.6.5
+   || ==9.8.2
+   || ==9.10.1
 
 source-repository head
   type:     git
@@ -50,13 +45,12 @@ library
     Data.RAVec.Tree.Lens
 
   build-depends:
-    , base  >=4.7   && <4.20
-    , bin   ^>=0.1
-    , fin   ^>=0.2 || ^>=0.3
-    , lens  >=4.16  && <5.3
-    , ral   ^>=0.2
+    , base  >=4.12.0.0 && <4.21
+    , bin   ^>=0.1.4
+    , fin   ^>=0.3.1
+    , lens  ^>=5.2.2   || ^>=5.3.2
+    , ral   ^>=0.2.1
 
 -- dump-core
--- if impl(ghc >= 8.0)
 --  build-depends: dump-core
 --  ghc-options: -fplugin=DumpCore -fplugin-opt DumpCore:core-html

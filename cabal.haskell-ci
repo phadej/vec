@@ -1,13 +1,9 @@
 branches: master
-tests:    >=8.0
-doctest:  >=8.6 && <9
 
 -- GHC-9.6 doesn't print ticks
-docspec:  >=8.6 && <9.6
-haddock:  >=8.6
+docspec:  <9.6
+haddock:  True
 haddock-components: libs
-
-jobs-selection: any
 
 constraint-set vec-no-distributive
   constraints: vec -distributive

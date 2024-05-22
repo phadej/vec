@@ -10,11 +10,7 @@
 {-# LANGUAGE TypeFamilies         #-}
 {-# LANGUAGE TypeOperators        #-}
 {-# LANGUAGE UndecidableInstances #-}
-#if MIN_VERSION_base(4,8,0)
 {-# LANGUAGE Safe                 #-}
-#else
-{-# LANGUAGE Trustworthy          #-}
-#endif
 -- | Positive binary natural numbers. @DataKinds@ stuff.
 module Data.Type.BinP (
     -- * Singleton
@@ -57,11 +53,8 @@ import Data.Nat          (Nat (..))
 import Data.Proxy        (Proxy (..))
 import Data.Typeable     (Typeable)
 import Numeric.Natural   (Natural)
-
-#if MIN_VERSION_some(1,0,5)
 import Data.EqP          (EqP (..))
 import Data.GADT.Compare (defaultEq)
-#endif
 
 import qualified Data.Type.Nat as N
 import qualified GHC.TypeLits  as GHC
@@ -166,10 +159,6 @@ type family EqBinP (n :: BinP) (m :: BinP) where
     EqBinP ('B0 n) ('B0 m) = EqBinP n m
     EqBinP ('B1 n) ('B1 m) = EqBinP n m
     EqBinP n       m       = 'False
-
-#if !MIN_VERSION_base(4,11,0)
-type instance n == m = EqBinP n m
-#endif
 
 -------------------------------------------------------------------------------
 -- Convert to GHC Nat
@@ -295,10 +284,8 @@ instance Eq (SBinP a) where
 instance Ord (SBinP a) where
     compare _ _ = EQ
 
-#if MIN_VERSION_some(1,0,5)
 -- | @since 0.1.3
 instance EqP SBinP where eqp = defaultEq
-#endif
 
 -- | @since 0.1.2
 instance GShow SBinP where
