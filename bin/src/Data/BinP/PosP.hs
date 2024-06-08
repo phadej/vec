@@ -1,4 +1,3 @@
-{-# LANGUAGE CPP                    #-}
 {-# LANGUAGE BangPatterns           #-}
 {-# LANGUAGE DataKinds              #-}
 {-# LANGUAGE DeriveDataTypeable     #-}
@@ -33,22 +32,19 @@ module Data.BinP.PosP (
     ) where
 
 import Prelude
-       (Bounded (..), Either (..), Eq (..), Int, Integer, Num, Ord (..), Ordering (..), Show (..), ShowS, String, either,
-       fmap, fromIntegral, map, showParen, showString, ($), (*), (+), (++), (.))
+       (Bounded (..), Either (..), Eq (..), Int, Integer, Num, Ord (..), Ordering (..), Show (..), ShowS, String,
+       either, fmap, fromIntegral, map, showParen, showString, ($), (*), (+), (++), (.))
 
 import Control.DeepSeq (NFData (..))
 import Data.Bin        (BinP (..))
+import Data.EqP        (EqP (..))
 import Data.GADT.Show  (GShow (..))
 import Data.Nat        (Nat (..))
+import Data.OrdP       (OrdP (..))
 import Data.Proxy      (Proxy (..))
 import Data.Typeable   (Typeable)
 import Data.Wrd        (Wrd (..))
 import Numeric.Natural (Natural)
-
-#if MIN_VERSION_some(1,0,5)
-import Data.EqP  (EqP (..))
-import Data.OrdP (OrdP (..))
-#endif
 
 import qualified Data.Bin        as B
 import qualified Data.Boring     as Boring
@@ -95,7 +91,6 @@ instance Ord (PosP' n b) where
 -- some
 -------------------------------------------------------------------------------
 
-#if MIN_VERSION_some(1,0,5)
 -- | @since 0.1.3
 instance EqP PosP where
     eqp x y = toNatural x == toNatural y
@@ -103,7 +98,6 @@ instance EqP PosP where
 -- | @since 0.1.3
 instance OrdP PosP where
     comparep x y = compare (toNatural x) (toNatural y)
-#endif
 
 -------------------------------------------------------------------------------
 -- Instances

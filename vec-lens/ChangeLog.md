@@ -1,4 +1,8 @@
-# Revision history for vec
+# Version history for vec-lens
+
+## 0.4.1
+
+- Support GHC-8.6.5...9.10.1
 
 ## 0.4
 

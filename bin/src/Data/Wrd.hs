@@ -1,5 +1,4 @@
 {-# LANGUAGE BangPatterns        #-}
-{-# LANGUAGE CPP                 #-}
 {-# LANGUAGE DataKinds           #-}
 {-# LANGUAGE DeriveDataTypeable  #-}
 {-# LANGUAGE GADTs               #-}
@@ -215,10 +214,7 @@ instance N.SNatI n => I.Bits (Wrd n) where
 
 instance N.SNatI n => I.FiniteBits (Wrd n) where
     finiteBitSize _ = N.reflectToNum (Proxy :: Proxy n)
-
-#if MIN_VERSION_base(4,8,0)
     countLeadingZeros = countLeadingZeros
-#endif
 
 testBit :: Wrd n -> Int -> Bool
 testBit w0 i = snd (go 0 w0) where

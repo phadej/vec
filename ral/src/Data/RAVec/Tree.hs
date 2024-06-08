@@ -151,11 +151,10 @@ instance I.Foldable (Tree n) where
     foldMap = foldMap
     foldr   = foldr
     foldl   = foldl
-#if MIN_VERSION_base(4,8,0)
+
     null   = null
     toList = toList
     length = length
-#endif
 
 instance I.Traversable (Tree n) where
     traverse = traverse
@@ -197,9 +196,7 @@ instance N.SNatI n => Applicative (Tree n) where
     (<*>) = zipWith ($)
     x <* _ = x
     _ *> x = x
-#if MIN_VERSION_base(4,10,0)
     liftA2 = zipWith
-#endif
 
 -- TODO: Monad
 

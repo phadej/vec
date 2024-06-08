@@ -1,20 +1,15 @@
-{-# LANGUAGE CPP                  #-}
 {-# LANGUAGE DataKinds            #-}
 {-# LANGUAGE DeriveDataTypeable   #-}
 {-# LANGUAGE FlexibleContexts     #-}
 {-# LANGUAGE GADTs                #-}
 {-# LANGUAGE KindSignatures       #-}
 {-# LANGUAGE RankNTypes           #-}
+{-# LANGUAGE Safe                 #-}
 {-# LANGUAGE ScopedTypeVariables  #-}
 {-# LANGUAGE StandaloneDeriving   #-}
 {-# LANGUAGE TypeFamilies         #-}
 {-# LANGUAGE TypeOperators        #-}
 {-# LANGUAGE UndecidableInstances #-}
-#if MIN_VERSION_base(4,8,0)
-{-# LANGUAGE Safe                 #-}
-#else
-{-# LANGUAGE Trustworthy          #-}
-#endif
 -- | Binary natural numbers. @DataKinds@ stuff.
 module Data.Type.Bin (
     -- * Singleton
@@ -54,7 +49,8 @@ module Data.Type.Bin (
 import Control.DeepSeq   (NFData (..))
 import Data.Bin          (Bin (..), BinP (..))
 import Data.Boring       (Boring (..))
-import Data.GADT.Compare (GEq (..))
+import Data.EqP          (EqP (..))
+import Data.GADT.Compare (GEq (..), defaultEq)
 import Data.GADT.DeepSeq (GNFData (..))
 import Data.GADT.Show    (GShow (..))
 import Data.Nat          (Nat (..))
@@ -62,11 +58,6 @@ import Data.Proxy        (Proxy (..))
 import Data.Type.BinP    (SBinP (..), SBinPI (..))
 import Data.Typeable     (Typeable)
 import Numeric.Natural   (Natural)
-
-#if MIN_VERSION_some(1,0,5)
-import Data.EqP          (EqP (..))
-import Data.GADT.Compare (defaultEq)
-#endif
 
 import qualified Data.Type.BinP as BP
 import qualified Data.Type.Nat  as N
@@ -188,10 +179,6 @@ type family EqBin (n :: Bin) (m :: Bin) where
     EqBin 'BZ     'BZ     = 'True
     EqBin ('BP n) ('BP m) = BP.EqBinP n m
     EqBin n       m       = 'False
-
-#if !MIN_VERSION_base(4,11,0)
-type instance n == m = EqBin n m
-#endif
 
 -------------------------------------------------------------------------------
 -- Induction
@@ -419,10 +406,8 @@ instance Eq (SBin a) where
 instance Ord (SBin a) where
     compare _ _ = EQ
 
-#if MIN_VERSION_some(1,0,5)
 -- | @since 0.1.3
 instance EqP SBin where eqp = defaultEq
-#endif
 
 -- | @since 0.1.2
 instance GShow SBin where

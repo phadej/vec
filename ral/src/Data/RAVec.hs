@@ -155,9 +155,7 @@ instance I.Foldable (RAVec b) where
     foldMap    = foldMap
     foldr      = foldr
 
-#if MIN_VERSION_base(4,8,0)
     null = null
-#endif
 
 instance I.Traversable (RAVec b) where
     traverse = traverse
@@ -196,9 +194,7 @@ instance SBinI b => Applicative (RAVec b) where
     (<*>)  = zipWith ($)
     x <* _ = x
     _ *> x = x
-#if MIN_VERSION_base(4,10,0)
     liftA2 = zipWith
-#endif
 
 -- TODO: Monad?
 

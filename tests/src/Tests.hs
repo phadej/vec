@@ -1,9 +1,4 @@
-{-# LANGUAGE CPP       #-}
 {-# LANGUAGE DataKinds #-}
-
-#if __GLASGOW_HASKELL__ <710
-{-# OPTIONS_GHC -fcontext-stack=60 #-}
-#endif
 module Tests (main) where
 
 import Data.Bin        (BinP (..))

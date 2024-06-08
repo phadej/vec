@@ -1,11 +1,5 @@
-{-# LANGUAGE CPP                #-}
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE Safe               #-}
-
-#if __GLASGOW_HASKELL__ < 710
-{-# LANGUAGE DataKinds          #-}
-{-# LANGUAGE StandaloneDeriving #-}
-#endif
 -- | Binary natural numbers, 'Bin'.
 --
 -- This module is designed to be imported qualified.
@@ -80,11 +74,6 @@ data Bin
 -------------------------------------------------------------------------------
 -- Instances
 -------------------------------------------------------------------------------
-
-#if __GLASGOW_HASKELL__ < 710
-deriving instance Typeable 'BZ
-deriving instance Typeable 'BP
-#endif
 
 -- | 'Bin' is printed as 'Natural'.
 --

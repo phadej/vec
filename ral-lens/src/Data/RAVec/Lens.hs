@@ -1,4 +1,3 @@
-{-# LANGUAGE CPP                   #-}
 {-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE RankNTypes            #-}
@@ -39,18 +38,6 @@ ix (Pos n) f (NonEmpty x) = NonEmpty <$> NE.ix n f x
 -------------------------------------------------------------------------------
 -- Instances
 -------------------------------------------------------------------------------
-
-#if !MIN_VERSION_lens(5,0,0)
-instance L.FunctorWithIndex (Pos b) (RAVec b) where
-    imap = imap
-
-instance L.FoldableWithIndex (Pos b) (RAVec b) where
-    ifoldMap = ifoldMap
-    ifoldr   = ifoldr
-
-instance L.TraversableWithIndex (Pos b) (RAVec b) where
-    itraverse = itraverse
-#endif
 
 instance L.Each (RAVec n a) (RAVec n b) a b where
     each = traverse

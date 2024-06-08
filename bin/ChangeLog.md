@@ -1,5 +1,9 @@
 # Version history for bin
 
+## 0.1.4
+
+- Support GHC-8.6.5...9.10.1
+
 ## 0.1.3
 
 - Add `EqP` and `OrdP` instances.

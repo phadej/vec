@@ -1,4 +1,3 @@
-{-# LANGUAGE CPP                  #-}
 {-# LANGUAGE DataKinds            #-}
 {-# LANGUAGE DeriveDataTypeable   #-}
 {-# LANGUAGE EmptyCase            #-}
@@ -54,19 +53,16 @@ module Data.Fin (
 
 import Control.DeepSeq    (NFData (..))
 import Data.Bifunctor     (bimap)
+import Data.EqP           (EqP (..))
 import Data.GADT.Show     (GShow (..))
 import Data.Hashable      (Hashable (..))
 import Data.List.NonEmpty (NonEmpty (..))
+import Data.OrdP          (OrdP (..))
 import Data.Proxy         (Proxy (..))
 import Data.Type.Nat      (Nat (..))
 import Data.Typeable      (Typeable)
 import GHC.Exception      (ArithException (..), throw)
 import Numeric.Natural    (Natural)
-
-#if MIN_VERSION_some(1,0,5)
-import Data.EqP  (EqP (..))
-import Data.OrdP (OrdP (..))
-#endif
 
 import qualified Data.Boring           as Boring
 import qualified Data.List.NonEmpty    as NE
@@ -104,8 +100,6 @@ data Fin (n :: Nat) where
 deriving instance Eq (Fin n)
 deriving instance Ord (Fin n)
 
-#if MIN_VERSION_some(1,0,5)
-
 -- |
 --
 -- >>> eqp FZ FZ
@@ -142,8 +136,6 @@ instance OrdP Fin where
     comparep FZ     (FS _) = LT
     comparep (FS _) FZ     = GT
     comparep (FS n) (FS m) = comparep n m
-
-#endif
 
 -- | 'Fin' is printed as 'Natural'.
 --

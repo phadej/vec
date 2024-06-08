@@ -1,4 +1,3 @@
-{-# LANGUAGE CPP                 #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 module Models where
 
@@ -84,10 +83,7 @@ bitsTests' testComplement a2b = testGroup ("Bits: " ++ nameA ++ " compared to " 
     , modelTest a2b constraint "xor"           (mapAAA xor)
     , modelTest a2b constraint "shift"         (mapAXA shift)
     , modelTest a2b constraint "rotate"        (mapAXA rotate)
-#if !MIN_VERSION_base(4,9,0) || MIN_VERSION_base(4,10,0)
-    -- broken Natural clearBit in base-4.9
     , modelTest a2b constraint "clearBit"      (mapAXA $ limitBits clearBit)
-#endif
     , modelTest a2b constraint "setBit"        (mapAXA $ limitBits setBit)
     , modelTest a2b constraint "complementBit" (mapAXA $ limitBits complementBit)
     , modelTest a2b constraint "testBit"       (mapAXY $ limitBits testBit)
@@ -111,9 +107,7 @@ finiteBitsTests
     -> TestTree
 finiteBitsTests a2b = testGroup ("FiniteBits: " ++ nameA ++ " compared to " ++ nameB)
     [ modelTest a2b constraint "finiteBitSize"     (mapAX finiteBitSize)
-#if MIN_VERSION_base(4,8,0)
     , modelTest a2b constraint "countLeadingZeros" (mapAX countLeadingZeros)
-#endif
     ]
   where
     nameA      = show $ typeRep (Proxy :: Proxy a)

@@ -75,10 +75,6 @@ import qualified Data.Semigroup.Foldable    as I (Foldable1 (..))
 import qualified Data.Semigroup.Traversable as I (Traversable1 (..))
 #endif
 
-#if !MIN_VERSION_base(4,11,0)
-import Data.Semigroup (WrappedMonoid (..))
-#endif
-
 import qualified Data.RAList.Tree.Internal as Tr
 
 import Data.RAList.Tree (Leaf (..), Node (..))
@@ -120,10 +116,8 @@ instance (Ord a, I.Foldable f, Eq (f a)) => Ord (NERAList' f a) where
 instance I.Foldable NERAList where
     foldMap f (NE xs) = I.foldMap f xs
 
-#if MIN_VERSION_base(4,8,0)
     length = length
     null   = null
-#endif
 
 #ifdef MIN_VERSION_semigroupoids
 instance I.Foldable1 NERAList where
@@ -343,11 +337,7 @@ foldr1Map' f z (Cons0  r)  = foldr1Map' f z r
 foldr1Map' f z (Cons1 t r) = I.foldr f (foldr1Map' f z r) t
 
 ifoldMap :: Monoid m => (Int -> a -> m) -> NERAList a -> m
-#if MIN_VERSION_base(4,11,0)
 ifoldMap = ifoldMap1
-#else
-ifoldMap f = unwrapMonoid . ifoldMap1 (\i a -> WrapMonoid (f i a))
-#endif
 
 -- |
 --
@@ -478,7 +468,4 @@ instance Applicative I where
     I f <*> I x = I (f x)
     _ *> x      = x
     x <* _      = x
-#if MIN_VERSION_base(4,10,0)
     liftA2 f (I x) (I y) = I (f x y)
-#endif
-

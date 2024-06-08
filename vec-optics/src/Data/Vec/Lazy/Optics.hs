@@ -118,18 +118,6 @@ _Vec = L.prism' toList fromList
 -- Instances
 -------------------------------------------------------------------------------
 
-#if !MIN_VERSION_optics_core(0,4,0)
-instance L.FunctorWithIndex (Fin n) (Vec n) where
-    imap = imap
-
-instance L.FoldableWithIndex (Fin n) (Vec n) where
-    ifoldMap = ifoldMap
-    ifoldr   = ifoldr
-
-instance L.TraversableWithIndex (Fin n) (Vec n) where
-    itraverse = itraverse
-#endif
-
 instance L.Each (Fin n) (Vec n a) (Vec n b) a b where
 
 type instance L.Index (Vec n a)   = Fin n

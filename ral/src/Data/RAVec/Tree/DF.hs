@@ -177,12 +177,10 @@ instance N.SNatI n => I.Foldable (Tree n) where
     foldr  = foldr
     -- foldl' = foldl'
 
-#if MIN_VERSION_base(4,8,0)
     null    = null
     length  = length
     sum     = sum
     product = product
-#endif
 
 #ifdef MIN_VERSION_semigroupoids
 instance (N.SNatI n) => I.Foldable1 (Tree n) where
@@ -227,9 +225,7 @@ instance N.SNatI n => Applicative (Tree n) where
     (<*>)  = zipWith ($)
     _ *> x = x
     x <* _ = x
-#if MIN_VERSION_base(4,10,0)
     liftA2 = zipWith
-#endif
 
 -- TODO: Monad
 
