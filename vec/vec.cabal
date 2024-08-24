@@ -1,6 +1,7 @@
 cabal-version:      2.2
 name:               vec
 version:            0.5.1
+x-revision:         1
 synopsis:           Vec: length-indexed (sized) list
 category:           Data, Dependent Types
 description:
@@ -130,7 +131,7 @@ library
   -- other dependencies
   build-depends:
     , boring               ^>=0.2.2
-    , hashable             ^>=1.4.4.0
+    , hashable             ^>=1.4.4.0 || ^>=1.5.0.0
     , indexed-traversable  ^>=0.1.4
     , QuickCheck           ^>=2.14.2  || ^>=2.15.0.1
 
