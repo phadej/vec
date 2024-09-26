@@ -114,6 +114,10 @@ library
     -- https://gitlab.haskell.org/ghc/ghc/-/merge_requests/3295
     ghc-options: -Winferred-safe-imports -Wmissing-safe-haskell-mode
 
+  if impl(ghc >=8.0)
+    exposed-modules: Data.HRAL
+    build-depends:   hkd ==0.1.*
+
 -- dump-core
 --  build-depends: dump-core
 --  ghc-options: -fplugin=DumpCore -fplugin-opt DumpCore:core-html
