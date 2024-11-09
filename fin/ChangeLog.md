@@ -1,5 +1,9 @@
 # Version history for fin
 
+## 0.3.2
+
+- Add `SS' :: SNat n -> SNat (S n)`, pattern synonym with explicit argument.
+
 ## 0.3.1
 
 - Support GHC-8.6.5...9.10.1
