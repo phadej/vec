@@ -3,6 +3,7 @@
 {-# LANGUAGE EmptyCase            #-}
 {-# LANGUAGE GADTs                #-}
 {-# LANGUAGE KindSignatures       #-}
+{-# LANGUAGE PatternSynonyms      #-}
 {-# LANGUAGE RankNTypes           #-}
 {-# LANGUAGE ScopedTypeVariables  #-}
 {-# LANGUAGE StandaloneDeriving   #-}
@@ -10,6 +11,7 @@
 {-# LANGUAGE TypeFamilies         #-}
 {-# LANGUAGE TypeOperators        #-}
 {-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE ViewPatterns         #-}
 -- | 'Nat' numbers. @DataKinds@ stuff.
 --
 -- This module re-exports "Data.Nat", and adds type-level things.
@@ -23,7 +25,7 @@ module Data.Type.Nat (
     explicitShow,
     explicitShowsPrec,
     -- * Singleton
-    SNat(..),
+    SNat(SZ,SS,SS'),
     snatToNat,
     snatToNatural,
     -- * Implicit
@@ -176,6 +178,35 @@ snatToNat SS = unKonst (induction (Konst Z) (kmap S) :: Konst Nat n)
 snatToNatural :: forall n. SNat n -> Natural
 snatToNatural SZ = 0
 snatToNatural SS = unKonst (induction (Konst 0) (kmap succ) :: Konst Natural n)
+
+-------------------------------------------------------------------------------
+-- Explicit constructor
+-------------------------------------------------------------------------------
+
+data SNat_ (n :: Nat) where
+    SZ_ :: SNat_ 'Z
+    SS_ :: SNat n -> SNat_ ('S n)
+
+snat_ :: SNat n -> SNat_ n
+snat_ SZ = SZ_
+snat_ SS = SS_ snat
+
+-- | A pattern with explicit argument
+--
+-- >>> let predSNat :: SNat (S n) -> SNat n; predSNat (SS' n) = n
+-- >>> predSNat (SS' (SS' SZ))
+-- SS
+--
+-- >>> reflect $ predSNat (SS' (SS' SZ))
+-- 1
+--
+--
+-- @since 0.3.2
+pattern SS' :: () => (m ~ 'S n) => SNat n -> SNat m
+pattern SS' n <- (snat_ -> SS_ n)
+  where SS' n = withSNat n SS
+
+{-# COMPLETE SZ, SS' #-}
 
 -------------------------------------------------------------------------------
 -- Equality

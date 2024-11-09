@@ -81,7 +81,7 @@ import qualified Test.QuickCheck       as QC
 -- >>> import qualified Data.Universe.Helpers as U
 -- >>> import Data.EqP (eqp)
 -- >>> import Data.OrdP (comparep)
--- >>> :set -XTypeApplications
+-- >>> :set -XTypeApplications -XGADTs
 
 -------------------------------------------------------------------------------
 -- Type
