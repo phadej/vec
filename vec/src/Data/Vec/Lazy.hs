@@ -480,7 +480,7 @@ init (x ::: xs@(_ ::: _)) = x ::: init xs
 -- @since 0.2.1
 --
 reverse :: Vec n a -> Vec n a
-reverse xs = unflipVec (dfoldl c (FlipVec VNil) xs)
+reverse xs = unflipVec (dfoldl' c (FlipVec VNil) xs)
   where
     c :: forall a m. FlippedVec a m -> a -> FlippedVec a ('S m)
     c = coerce (flip (:::) :: Vec m a -> a -> Vec ('S m) a)
