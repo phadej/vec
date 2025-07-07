@@ -99,7 +99,7 @@ library
     , boring               ^>=0.2.2
     , hashable             ^>=1.4.4.0 || ^>=1.5.0.0
     , indexed-traversable  ^>=0.1.4
-    , QuickCheck           ^>=2.14.2  || ^>=2.15
+    , QuickCheck           ^>=2.14.2  || ^>=2.15 || ^>=2.16
 
   if flag(distributive)
     build-depends: distributive ^>=0.6.2
