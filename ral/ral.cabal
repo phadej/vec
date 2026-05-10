@@ -1,7 +1,7 @@
 cabal-version:      2.2
 name:               ral
 version:            0.2.2
-x-revision:         2
+x-revision:         3
 synopsis:           Random access lists
 category:           Data, Dependent Types, Singletons
 description:
@@ -38,8 +38,9 @@ tested-with:
    || ==9.4.8
    || ==9.6.6
    || ==9.8.4
-   || ==9.10.1
+   || ==9.10.3
    || ==9.12.2
+   || ==9.14.1
 
 source-repository head
   type:     git
@@ -86,7 +87,7 @@ library
 
   -- GHC boot libs
   build-depends:
-    , base     >=4.12.0.0 && <4.22
+    , base     >=4.12.0.0 && <4.23
     , deepseq  >=1.4.4.0  && <1.6
 
   -- siblings
@@ -99,7 +100,7 @@ library
     , boring               ^>=0.2.2
     , hashable             ^>=1.4.4.0 || ^>=1.5.0.0
     , indexed-traversable  ^>=0.1.4
-    , QuickCheck           ^>=2.14.2  || ^>=2.15
+    , QuickCheck           ^>=2.14.2  || ^>=2.15 || ^>=2.18.0.0
 
   if flag(distributive)
     build-depends: distributive ^>=0.6.2

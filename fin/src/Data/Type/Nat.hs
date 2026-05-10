@@ -411,7 +411,7 @@ type family ToGHC (n :: Nat) :: GHC.Nat where
 --
 -- >>> :kind! FromGHC 7
 -- FromGHC 7 :: Nat
--- = 'S ('S ('S ('S ('S ('S ('S 'Z))))))
+-- = S (S (S (S (S (S (S Z))))))
 --
 type family FromGHC (n :: GHC.Nat) :: Nat where
     FromGHC 0 = 'Z
@@ -450,11 +450,11 @@ type family Mult2 (n :: Nat) :: Nat where
 --
 -- >>> :kind! DivMod2 Nat7 == '(Nat3, True)
 -- DivMod2 Nat7 == '(Nat3, True) :: Bool
--- = 'True
+-- = True
 --
 -- >>> :kind! DivMod2 Nat4 == '(Nat2, False)
 -- DivMod2 Nat4 == '(Nat2, False) :: Bool
--- = 'True
+-- = True
 --
 type family DivMod2 (n :: Nat) :: (Nat, Bool) where
     DivMod2 'Z          = '( 'Z, 'False)

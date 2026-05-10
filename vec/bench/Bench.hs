@@ -36,12 +36,14 @@ xsp = P.Vec $ \i -> case i of
     FS (FS FZ)           -> 3
     FS (FS (FS FZ))      -> 4
     FS (FS (FS (FS FZ))) -> 5
+    _                    -> -1
 ysp = P.Vec $ \i -> case i of
     FZ                   -> 6
     FS FZ                -> 7
     FS (FS FZ)           -> 8
     FS (FS (FS FZ))      -> 9
     FS (FS (FS (FS FZ))) -> 0
+    _                    -> -1
 
 main :: IO ()
 main = defaultMain

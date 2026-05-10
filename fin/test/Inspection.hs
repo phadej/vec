@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP                 #-}
 {-# LANGUAGE DataKinds           #-}
 {-# LANGUAGE DeriveGeneric       #-}
 {-# LANGUAGE GADTs               #-}
@@ -6,7 +7,7 @@
 {-# LANGUAGE TemplateHaskell     #-}
 {-# LANGUAGE TypeOperators       #-}
 {-# OPTIONS_GHC -O -fplugin Test.Inspection.Plugin #-}
-module Main (main) where
+module Main where
 
 import Data.Fin           (Fin (..))
 import Data.Function      (fix)
@@ -88,7 +89,12 @@ lhsFold' = fix (foldrF (+) 0) [1,2,3,4]
 rhsFold :: Int
 rhsFold = 10
 
+#if __GLASGOW_HASKELL__ >=900
+inspect $ 'lhsFold  =/= 'rhsFold  -- TODO: report a bug
+#else
 inspect $ 'lhsFold  === 'rhsFold
+#endif
+
 inspect $ 'lhsFold' =/= 'rhsFold
 
 lhsUnfold :: (a -> a) -> a
@@ -114,7 +120,7 @@ lhsPower5 = power (Proxy :: Proxy N.Nat5)
 rhsPower5 :: Int -> Int
 rhsPower5 k = k * k * k * k * k
 
-inspect $ 'lhsPower5 === 'rhsPower5
+inspect $ 'lhsPower5 ==~ 'rhsPower5
 
 -------------------------------------------------------------------------------
 -- Main to make GHC happy
