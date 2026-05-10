@@ -1,7 +1,7 @@
 branches: master
 
 -- GHC-9.6 doesn't print ticks
-docspec:  <9.6
+docspec:  >=9.6
 haddock:  True
 haddock-components: libs
 

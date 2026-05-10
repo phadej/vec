@@ -1,7 +1,7 @@
 cabal-version:      2.2
 name:               fin
 version:            0.3.2
-x-revision:         1
+x-revision:         2
 synopsis:           Nat and Fin: peano naturals and finite numbers
 category:           Data, Dependent Types, Singletons, Math
 description:
@@ -65,8 +65,9 @@ tested-with:
    || ==9.4.8
    || ==9.6.6
    || ==9.8.4
-   || ==9.10.1
+   || ==9.10.3
    || ==9.12.2
+   || ==9.14.1
 
 source-repository head
   type:     git
@@ -89,7 +90,7 @@ library
 
   -- GHC boot libs
   build-depends:
-    , base     >=4.12.0.0 && <4.22
+    , base     >=4.12.0.0 && <4.23
     , deepseq  >=1.4.4.0  && <1.6
 
   -- other dependencies
@@ -97,8 +98,8 @@ library
     , boring         ^>=0.2.2
     , dec            ^>=0.0.6
     , hashable       ^>=1.4.4.0 || ^>=1.5.0.0
-    , QuickCheck     ^>=2.14.2  || ^>=2.15
-    , some           ^>=1.0.6
+    , QuickCheck     ^>=2.14.2  || ^>=2.15    || ^>=2.18.0.0
+    , some           ^>=1.0.6   || ^>=1.1
     , universe-base  ^>=1.1.4
 
   if impl(ghc >=9.0)

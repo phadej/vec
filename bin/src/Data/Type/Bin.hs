@@ -220,7 +220,7 @@ type family ToGHC (b :: Bin) :: GHC.Nat where
 --
 -- >>> :kind! FromGHC 7
 -- FromGHC 7 :: Bin
--- = 'BP ('B1 ('B1 'BE))
+-- = BP (B1 (B1 BE))
 --
 type family FromGHC (n :: GHC.Nat) :: Bin where
     FromGHC n = FromGHC' (GhcDivMod2 n)
@@ -251,7 +251,7 @@ type family GhcDivMod2' (p :: (GHC.Nat, Bool)) :: (GHC.Nat, Bool) where
 --
 -- >>> :kind! ToNat Bin5
 -- ToNat Bin5 :: Nat
--- = 'S ('S ('S ('S ('S 'Z))))
+-- = S (S (S (S (S Z))))
 --
 type family ToNat (b :: Bin) :: Nat where
     ToNat 'BZ     = 'Z
@@ -261,7 +261,7 @@ type family ToNat (b :: Bin) :: Nat where
 --
 -- >>> :kind! FromNat N.Nat5
 -- FromNat N.Nat5 :: Bin
--- = 'BP ('B1 ('B0 'BE))
+-- = BP (B1 (B0 BE))
 --
 type family FromNat (n :: Nat) :: Bin where
     FromNat n = FromNat' (N.DivMod2 n)
@@ -280,11 +280,11 @@ type family FromNat' (p :: (Nat, Bool)) :: Bin where
 --
 -- >>> :kind! Mult2 Bin0 == Bin0
 -- Mult2 Bin0 == Bin0 :: Bool
--- = 'True
+-- = True
 --
 -- >>> :kind! Mult2 Bin3 == Bin6
 -- Mult2 Bin3 == Bin6 :: Bool
--- = 'True
+-- = True
 --
 type family Mult2 (b :: Bin) :: Bin where
     Mult2 'BZ     = 'BZ
@@ -294,11 +294,11 @@ type family Mult2 (b :: Bin) :: Bin where
 --
 -- >>> :kind! Mult2Plus1 Bin0
 -- Mult2Plus1 Bin0 :: BinP
--- = 'BE
+-- = BE
 --
 -- >>> :kind! Mult2Plus1 Bin4 == BinP9
 -- Mult2Plus1 Bin4 == BinP9 :: Bool
--- = 'True
+-- = True
 --
 type family Mult2Plus1 (b :: Bin) :: BinP where
     Mult2Plus1 'BZ     = 'BE
@@ -312,7 +312,7 @@ type family Mult2Plus1 (b :: Bin) :: BinP where
 --
 -- >>> :kind! Succ Bin5
 -- Succ Bin5 :: Bin
--- = 'BP ('B0 ('B1 'BE))
+-- = BP (B0 (B1 BE))
 --
 -- @
 -- `Succ`   :: 'Bin' -> 'Bin'
@@ -343,19 +343,19 @@ withSucc' _ k = BP.withSucc (Proxy :: Proxy b) k
 --
 -- >>> :kind! Pred BP.BinP1
 -- Pred BP.BinP1 :: Bin
--- = 'BZ
+-- = BZ
 --
 -- >>> :kind! Pred BP.BinP5 == Bin4
 -- Pred BP.BinP5 == Bin4 :: Bool
--- = 'True
+-- = True
 --
 -- >>> :kind! Pred BP.BinP8 == Bin7
 -- Pred BP.BinP8 == Bin7 :: Bool
--- = 'True
+-- = True
 --
 -- >>> :kind! Pred BP.BinP6 == Bin5
 -- Pred BP.BinP6 == Bin5 :: Bool
--- = 'True
+-- = True
 --
 type family Pred (b :: BinP) :: Bin where
     Pred 'BE     = 'BZ
@@ -375,11 +375,11 @@ type family Pred' (b :: BinP) :: BinP where
 --
 -- >>> :kind! Plus Bin3 Bin3 == Bin6
 -- Plus Bin3 Bin3 == Bin6 :: Bool
--- = 'True
+-- = True
 --
 -- >>> :kind! Mult2 Bin3 == Bin6
 -- Mult2 Bin3 == Bin6 :: Bool
--- = 'True
+-- = True
 --
 type family Plus (a :: Bin) (b :: Bin) :: Bin where
     Plus 'BZ     b       = b
