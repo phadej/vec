@@ -131,7 +131,7 @@ lhsLast = I.last $ 'a' ::: 'b' ::: 'c' ::: VNil
 lhsLast' :: Char
 lhsLast' = L.last $ 'a' ::: 'b' ::: 'c' :::VNil
 
-rhsLast :: Char 
+rhsLast :: Char
 rhsLast = 'c'
 
 inspect $ 'lhsLast === 'rhsLast
@@ -168,3 +168,99 @@ rhsToNonEmpty = 'a' :| ['b', 'c']
 
 inspect $ 'lhsToNonEmpty  === 'rhsToNonEmpty
 inspect $ 'lhsToNonEmpty' =/= 'rhsToNonEmpty
+
+-------------------------------------------------------------------------------
+-- scanr
+-------------------------------------------------------------------------------
+
+lhsScanr :: Vec N.Nat5 Int
+lhsScanr = I.scanr (-) 0 $ 1 ::: 2 ::: 3 ::: 4 ::: VNil
+
+lhsScanr' :: Vec N.Nat5 Int
+lhsScanr' = L.scanr (-) 0 $ 1 ::: 2 ::: 3 ::: 4 ::: VNil
+
+rhsScanr :: Vec N.Nat5 Int
+rhsScanr = (-2) ::: 3 ::: (-1) ::: 4 ::: 0 ::: VNil
+
+inspect $ 'lhsScanr  === 'rhsScanr
+inspect $ 'lhsScanr' =/= 'rhsScanr
+
+-------------------------------------------------------------------------------
+-- scanl
+-------------------------------------------------------------------------------
+
+lhsScanl :: Vec N.Nat5 Int
+lhsScanl = I.scanl (-) 0 $ 1 ::: 2 ::: 3 ::: 4 ::: VNil
+
+lhsScanl0 :: Vec N.Nat5 Int
+lhsScanl0 = L.scanl (-) 0 $ 1 ::: 2 ::: 3 ::: 4 ::: VNil
+
+rhsScanl :: Vec N.Nat5 Int
+rhsScanl = 0 ::: (-1) ::: (-3) ::: (-6) ::: (-10) ::: VNil
+
+inspect $ 'lhsScanl  === 'rhsScanl
+inspect $ 'lhsScanl0 =/= 'rhsScanl
+
+-------------------------------------------------------------------------------
+-- scanl'
+-------------------------------------------------------------------------------
+
+lhsScanl' :: Vec N.Nat5 Int
+lhsScanl' = I.scanl' (-) 0 $ 1 ::: 2 ::: 3 ::: 4 ::: VNil
+
+lhsScanl'0 :: Vec N.Nat5 Int
+lhsScanl'0 = L.scanl' (-) 0 $ 1 ::: 2 ::: 3 ::: 4 ::: VNil
+
+rhsScanl' :: Vec N.Nat5 Int
+rhsScanl' = 0 ::: (-1) ::: (-3) ::: (-6) ::: (-10) ::: VNil
+
+inspect $ 'lhsScanl'  === 'rhsScanl'
+inspect $ 'lhsScanl'0 =/= 'rhsScanl'
+
+-------------------------------------------------------------------------------
+-- scanr1
+-------------------------------------------------------------------------------
+
+lhsScanr1 :: Vec N.Nat4 Int
+lhsScanr1 = I.scanr1 (-) $ 1 ::: 2 ::: 3 ::: 4 ::: VNil
+
+lhsScanr1' :: Vec N.Nat4 Int
+lhsScanr1' = L.scanr1 (-) $ 1 ::: 2 ::: 3 ::: 4 ::: VNil
+
+rhsScanr1 :: Vec N.Nat4 Int
+rhsScanr1 = (-2) ::: 3 ::: (-1) ::: 4 ::: VNil
+
+inspect $ 'lhsScanr1  === 'rhsScanr1
+inspect $ 'lhsScanr1' =/= 'rhsScanr1
+
+-------------------------------------------------------------------------------
+-- scanl1
+-------------------------------------------------------------------------------
+
+lhsScanl1 :: Vec N.Nat4 Int
+lhsScanl1 = I.scanl1 (-) $ 1 ::: 2 ::: 3 ::: 4 ::: VNil
+
+lhsScanl10 :: Vec N.Nat4 Int
+lhsScanl10 = L.scanl1 (-) $ 1 ::: 2 ::: 3 ::: 4 ::: VNil
+
+rhsScanl1 :: Vec N.Nat4 Int
+rhsScanl1 = 1 ::: (-1) ::: (-4) ::: (-8) ::: VNil
+
+inspect $ 'lhsScanl1  === 'rhsScanl1
+inspect $ 'lhsScanl10 =/= 'rhsScanl1
+
+-------------------------------------------------------------------------------
+-- scanl1'
+-------------------------------------------------------------------------------
+
+lhsScanl1' :: Vec N.Nat4 Int
+lhsScanl1' = I.scanl1' (-) $ 1 ::: 2 ::: 3 ::: 4 ::: VNil
+
+lhsScanl1'0 :: Vec N.Nat4 Int
+lhsScanl1'0 = L.scanl1' (-) $ 1 ::: 2 ::: 3 ::: 4 ::: VNil
+
+rhsScanl1' :: Vec N.Nat4 Int
+rhsScanl1' = 1 ::: (-1) ::: (-4) ::: (-8) ::: VNil
+
+inspect $ 'lhsScanl1'  === 'rhsScanl1'
+inspect $ 'lhsScanl1'0 =/= 'rhsScanl1'
